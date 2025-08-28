@@ -1,4 +1,4 @@
-// Major road coordinates in San Francisco for realistic vehicle positioning
+// Major road coordinates in Ireland for realistic fleet vehicle positioning
 export interface RoadPoint {
   latitude: number;
   longitude: number;
@@ -17,283 +17,482 @@ export interface RoadSegment {
   connectedSegments: number[]; // IDs of connected segments
 }
 
-export const SF_ROAD_COORDINATES: RoadPoint[] = [
-  // Downtown Financial District - Market St
-  { id: 0, latitude: 37.7949, longitude: -122.4094, roadName: 'Market St' },
-  { id: 1, latitude: 37.7956, longitude: -122.4058, roadName: 'Market St' },
-  { id: 2, latitude: 37.7963, longitude: -122.4024, roadName: 'Market St' },
-  { id: 3, latitude: 37.7970, longitude: -122.3992, roadName: 'Market St' },
-  
-  // Mission St
-  { id: 4, latitude: 37.7879, longitude: -122.4074, roadName: 'Mission St' },
-  { id: 5, latitude: 37.7899, longitude: -122.4084, roadName: 'Mission St' },
-  { id: 6, latitude: 37.7919, longitude: -122.4094, roadName: 'Mission St' },
-  { id: 7, latitude: 37.7939, longitude: -122.4104, roadName: 'Mission St' },
-  
-  // Folsom St
-  { id: 8, latitude: 37.7869, longitude: -122.4089, roadName: 'Folsom St' },
-  { id: 9, latitude: 37.7889, longitude: -122.4099, roadName: 'Folsom St' },
-  { id: 10, latitude: 37.7909, longitude: -122.4109, roadName: 'Folsom St' },
-  { id: 11, latitude: 37.7929, longitude: -122.4119, roadName: 'Folsom St' },
-  
-  // Van Ness Ave (North-South)
-  { id: 12, latitude: 37.7749, longitude: -122.4194, roadName: 'Van Ness Ave' },
-  { id: 13, latitude: 37.7789, longitude: -122.4194, roadName: 'Van Ness Ave' },
-  { id: 14, latitude: 37.7829, longitude: -122.4194, roadName: 'Van Ness Ave' },
-  { id: 15, latitude: 37.7869, longitude: -122.4194, roadName: 'Van Ness Ave' },
-  
-  // Geary Blvd (East-West)
-  { latitude: 37.7817, longitude: -122.4089, roadName: 'Geary Blvd' },
-  { latitude: 37.7817, longitude: -122.4149, roadName: 'Geary Blvd' },
-  { latitude: 37.7817, longitude: -122.4209, roadName: 'Geary Blvd' },
-  { latitude: 37.7817, longitude: -122.4269, roadName: 'Geary Blvd' },
-  
-  // California St
-  { latitude: 37.7919, longitude: -122.4089, roadName: 'California St' },
-  { latitude: 37.7919, longitude: -122.4149, roadName: 'California St' },
-  { latitude: 37.7919, longitude: -122.4209, roadName: 'California St' },
-  { latitude: 37.7919, longitude: -122.4269, roadName: 'California St' },
-  
-  // Pine St
-  { latitude: 37.7887, longitude: -122.4089, roadName: 'Pine St' },
-  { latitude: 37.7887, longitude: -122.4149, roadName: 'Pine St' },
-  { latitude: 37.7887, longitude: -122.4209, roadName: 'Pine St' },
-  { latitude: 37.7887, longitude: -122.4269, roadName: 'Pine St' },
-  
-  // Bush St
-  { latitude: 37.7907, longitude: -122.4089, roadName: 'Bush St' },
-  { latitude: 37.7907, longitude: -122.4149, roadName: 'Bush St' },
-  { latitude: 37.7907, longitude: -122.4209, roadName: 'Bush St' },
-  { latitude: 37.7907, longitude: -122.4269, roadName: 'Bush St' },
-  
-  // 19th Ave (North-South)
-  { latitude: 37.7549, longitude: -122.4749, roadName: '19th Ave' },
-  { latitude: 37.7649, longitude: -122.4749, roadName: '19th Ave' },
-  { latitude: 37.7749, longitude: -122.4749, roadName: '19th Ave' },
-  { latitude: 37.7849, longitude: -122.4749, roadName: '19th Ave' },
-  
-  // Irving St (Sunset District)
-  { latitude: 37.7639, longitude: -122.4539, roadName: 'Irving St' },
-  { latitude: 37.7639, longitude: -122.4639, roadName: 'Irving St' },
-  { latitude: 37.7639, longitude: -122.4739, roadName: 'Irving St' },
-  { latitude: 37.7639, longitude: -122.4839, roadName: 'Irving St' },
-  
-  // Judah St
-  { latitude: 37.7619, longitude: -122.4539, roadName: 'Judah St' },
-  { latitude: 37.7619, longitude: -122.4639, roadName: 'Judah St' },
-  { latitude: 37.7619, longitude: -122.4739, roadName: 'Judah St' },
-  { latitude: 37.7619, longitude: -122.4839, roadName: 'Judah St' },
-  
-  // Lombard St
-  { latitude: 37.8019, longitude: -122.4089, roadName: 'Lombard St' },
-  { latitude: 37.8019, longitude: -122.4149, roadName: 'Lombard St' },
-  { latitude: 37.8019, longitude: -122.4209, roadName: 'Lombard St' },
-  { latitude: 37.8019, longitude: -122.4269, roadName: 'Lombard St' },
-  
-  // Broadway
-  { latitude: 37.7969, longitude: -122.4089, roadName: 'Broadway' },
-  { latitude: 37.7969, longitude: -122.4149, roadName: 'Broadway' },
-  { latitude: 37.7969, longitude: -122.4209, roadName: 'Broadway' },
-  { latitude: 37.7969, longitude: -122.4269, roadName: 'Broadway' },
-  
-  // Union St
-  { latitude: 37.7989, longitude: -122.4089, roadName: 'Union St' },
-  { latitude: 37.7989, longitude: -122.4149, roadName: 'Union St' },
-  { latitude: 37.7989, longitude: -122.4209, roadName: 'Union St' },
-  { latitude: 37.7989, longitude: -122.4269, roadName: 'Union St' },
-  
-  // Fillmore St (North-South)
-  { latitude: 37.7749, longitude: -122.4319, roadName: 'Fillmore St' },
-  { latitude: 37.7789, longitude: -122.4319, roadName: 'Fillmore St' },
-  { latitude: 37.7829, longitude: -122.4319, roadName: 'Fillmore St' },
-  { latitude: 37.7869, longitude: -122.4319, roadName: 'Fillmore St' },
-  
-  // Divisadero St
-  { latitude: 37.7749, longitude: -122.4389, roadName: 'Divisadero St' },
-  { latitude: 37.7789, longitude: -122.4389, roadName: 'Divisadero St' },
-  { latitude: 37.7829, longitude: -122.4389, roadName: 'Divisadero St' },
-  { latitude: 37.7869, longitude: -122.4389, roadName: 'Divisadero St' },
-  
-  // 3rd St (South of Market)
-  { latitude: 37.7709, longitude: -122.3909, roadName: '3rd St' },
-  { latitude: 37.7749, longitude: -122.3909, roadName: '3rd St' },
-  { latitude: 37.7789, longitude: -122.3909, roadName: '3rd St' },
-  { latitude: 37.7829, longitude: -122.3909, roadName: '3rd St' },
-  
-  // 4th St
-  { latitude: 37.7709, longitude: -122.3979, roadName: '4th St' },
-  { latitude: 37.7749, longitude: -122.3979, roadName: '4th St' },
-  { latitude: 37.7789, longitude: -122.3979, roadName: '4th St' },
-  { latitude: 37.7829, longitude: -122.3979, roadName: '4th St' },
-  
-  // 101 Freeway (US-101)
-  { latitude: 37.7569, longitude: -122.4049, roadName: 'US-101' },
-  { latitude: 37.7629, longitude: -122.4049, roadName: 'US-101' },
-  { latitude: 37.7689, longitude: -122.4049, roadName: 'US-101' },
-  { latitude: 37.7749, longitude: -122.4049, roadName: 'US-101' },
-  
-  // 280 Freeway (I-280)
-  { latitude: 37.7409, longitude: -122.4319, roadName: 'I-280' },
-  { latitude: 37.7469, longitude: -122.4389, roadName: 'I-280' },
-  { latitude: 37.7529, longitude: -122.4459, roadName: 'I-280' },
-  { latitude: 37.7589, longitude: -122.4529, roadName: 'I-280' },
+export const IRELAND_ROAD_COORDINATES: RoadPoint[] = [
+  // Dublin City Centre
+  {
+    id: 0,
+    latitude: 53.3498,
+    longitude: -6.2603,
+    roadName: "O'Connell Street",
+  },
+  { id: 1, latitude: 53.351, longitude: -6.2603, roadName: "O'Connell Street" },
+  {
+    id: 2,
+    latitude: 53.3522,
+    longitude: -6.2603,
+    roadName: "O'Connell Street",
+  },
+  {
+    id: 3,
+    latitude: 53.3534,
+    longitude: -6.2603,
+    roadName: "O'Connell Street",
+  },
+
+  // Grafton Street
+  { id: 4, latitude: 53.3415, longitude: -6.26, roadName: 'Grafton Street' },
+  { id: 5, latitude: 53.3425, longitude: -6.26, roadName: 'Grafton Street' },
+  { id: 6, latitude: 53.3435, longitude: -6.26, roadName: 'Grafton Street' },
+  { id: 7, latitude: 53.3445, longitude: -6.26, roadName: 'Grafton Street' },
+
+  // Dame Street
+  { id: 8, latitude: 53.3439, longitude: -6.2674, roadName: 'Dame Street' },
+  { id: 9, latitude: 53.3439, longitude: -6.2644, roadName: 'Dame Street' },
+  { id: 10, latitude: 53.3439, longitude: -6.2614, roadName: 'Dame Street' },
+  { id: 11, latitude: 53.3439, longitude: -6.2584, roadName: 'Dame Street' },
+
+  // Quays (River Liffey)
+  { id: 12, latitude: 53.3472, longitude: -6.2693, roadName: 'North Quays' },
+  { id: 13, latitude: 53.3472, longitude: -6.2663, roadName: 'North Quays' },
+  { id: 14, latitude: 53.3472, longitude: -6.2633, roadName: 'North Quays' },
+  { id: 15, latitude: 53.3472, longitude: -6.2603, roadName: 'North Quays' },
+
+  // M50 Motorway (Dublin Ring Road)
+  { latitude: 53.3867, longitude: -6.4429, roadName: 'M50' },
+  { latitude: 53.3667, longitude: -6.4229, roadName: 'M50' },
+  { latitude: 53.3467, longitude: -6.4029, roadName: 'M50' },
+  { latitude: 53.3267, longitude: -6.3829, roadName: 'M50' },
+  { latitude: 53.3067, longitude: -6.3629, roadName: 'M50' },
+  { latitude: 53.2867, longitude: -6.3429, roadName: 'M50' },
+  { latitude: 53.2667, longitude: -6.3229, roadName: 'M50' },
+  { latitude: 53.2567, longitude: -6.3029, roadName: 'M50' },
+
+  // N1 - Dublin to Belfast
+  { latitude: 53.3598, longitude: -6.2503, roadName: 'N1' },
+  { latitude: 53.3898, longitude: -6.2403, roadName: 'N1' },
+  { latitude: 53.4198, longitude: -6.2303, roadName: 'N1' },
+  { latitude: 53.4498, longitude: -6.2203, roadName: 'N1' },
+  { latitude: 53.4798, longitude: -6.2103, roadName: 'N1' },
+
+  // N2 - Dublin to Derry
+  { latitude: 53.3598, longitude: -6.2703, roadName: 'N2' },
+  { latitude: 53.3898, longitude: -6.2803, roadName: 'N2' },
+  { latitude: 53.4198, longitude: -6.2903, roadName: 'N2' },
+  { latitude: 53.4498, longitude: -6.3003, roadName: 'N2' },
+
+  // N3 - Dublin to Cavan/Sligo
+  { latitude: 53.3598, longitude: -6.2903, roadName: 'N3' },
+  { latitude: 53.3798, longitude: -6.3203, roadName: 'N3' },
+  { latitude: 53.3998, longitude: -6.3503, roadName: 'N3' },
+  { latitude: 53.4198, longitude: -6.3803, roadName: 'N3' },
+
+  // N4 - Dublin to Galway
+  { latitude: 53.3398, longitude: -6.2903, roadName: 'N4' },
+  { latitude: 53.3298, longitude: -6.3203, roadName: 'N4' },
+  { latitude: 53.3198, longitude: -6.3503, roadName: 'N4' },
+  { latitude: 53.3098, longitude: -6.3803, roadName: 'N4' },
+  { latitude: 53.2998, longitude: -6.4103, roadName: 'N4' },
+
+  // N7 - Dublin to Limerick
+  { latitude: 53.3298, longitude: -6.2503, roadName: 'N7' },
+  { latitude: 53.3098, longitude: -6.2703, roadName: 'N7' },
+  { latitude: 53.2898, longitude: -6.2903, roadName: 'N7' },
+  { latitude: 53.2698, longitude: -6.3103, roadName: 'N7' },
+  { latitude: 53.2498, longitude: -6.3303, roadName: 'N7' },
+
+  // N11 - Dublin to Wexford
+  { latitude: 53.3398, longitude: -6.2403, roadName: 'N11' },
+  { latitude: 53.3198, longitude: -6.2203, roadName: 'N11' },
+  { latitude: 53.2998, longitude: -6.2003, roadName: 'N11' },
+  { latitude: 53.2798, longitude: -6.1803, roadName: 'N11' },
+  { latitude: 53.2598, longitude: -6.1603, roadName: 'N11' },
+
+  // Cork routes (M8/N8)
+  { latitude: 51.8985, longitude: -8.4756, roadName: 'Patrick Street' },
+  { latitude: 51.8995, longitude: -8.4766, roadName: 'Patrick Street' },
+  { latitude: 51.9005, longitude: -8.4776, roadName: 'Patrick Street' },
+  { latitude: 51.9015, longitude: -8.4786, roadName: 'Patrick Street' },
+
+  // Cork to Dublin M8
+  { latitude: 52.1985, longitude: -8.1756, roadName: 'M8' },
+  { latitude: 52.4985, longitude: -7.8756, roadName: 'M8' },
+  { latitude: 52.7985, longitude: -7.5756, roadName: 'M8' },
+  { latitude: 53.0985, longitude: -7.2756, roadName: 'M8' },
+
+  // Galway routes
+  { latitude: 53.2744, longitude: -9.0492, roadName: 'Shop Street' },
+  { latitude: 53.2754, longitude: -9.0502, roadName: 'Shop Street' },
+  { latitude: 53.2764, longitude: -9.0512, roadName: 'Shop Street' },
+  { latitude: 53.2774, longitude: -9.0522, roadName: 'Shop Street' },
+
+  // Limerick routes
+  { latitude: 52.6638, longitude: -8.6267, roadName: "O'Connell Street" },
+  { latitude: 52.6648, longitude: -8.6277, roadName: "O'Connell Street" },
+  { latitude: 52.6658, longitude: -8.6287, roadName: "O'Connell Street" },
+  { latitude: 52.6668, longitude: -8.6297, roadName: "O'Connell Street" },
+
+  // M1 Motorway - Dublin to Belfast
+  { latitude: 53.5598, longitude: -6.2103, roadName: 'M1' },
+  { latitude: 53.8598, longitude: -6.1703, roadName: 'M1' },
+  { latitude: 54.1598, longitude: -6.1303, roadName: 'M1' },
+  { latitude: 54.4598, longitude: -6.0903, roadName: 'M1' },
+
+  // Regional roads around Dublin
+  { latitude: 53.4098, longitude: -6.1803, roadName: 'R132' }, // Swords Road
+  { latitude: 53.4298, longitude: -6.1603, roadName: 'R132' },
+  { latitude: 53.4498, longitude: -6.1403, roadName: 'R132' },
+
+  { latitude: 53.2798, longitude: -6.1203, roadName: 'R118' }, // Blackrock
+  { latitude: 53.2598, longitude: -6.1003, roadName: 'R118' },
+  { latitude: 53.2398, longitude: -6.0803, roadName: 'R118' },
+
+  // Airport routes
+  { latitude: 53.4213, longitude: -6.2701, roadName: 'Airport Road' },
+  { latitude: 53.4313, longitude: -6.2601, roadName: 'Airport Road' },
+  { latitude: 53.4413, longitude: -6.2501, roadName: 'Airport Road' },
+
+  // Port routes (Dublin Port)
+  { latitude: 53.3498, longitude: -6.2103, roadName: 'East Wall Road' },
+  { latitude: 53.3598, longitude: -6.2003, roadName: 'East Wall Road' },
+  { latitude: 53.3698, longitude: -6.1903, roadName: 'East Wall Road' },
 ];
 
 export function getRandomRoadCoordinate(): RoadPoint {
-  return SF_ROAD_COORDINATES[Math.floor(Math.random() * SF_ROAD_COORDINATES.length)]!;
+  return IRELAND_ROAD_COORDINATES[
+    Math.floor(Math.random() * IRELAND_ROAD_COORDINATES.length)
+  ]!;
 }
 
-export function getNearbyRoadCoordinates(point: RoadPoint, radiusKm: number = 2): RoadPoint[] {
-  return SF_ROAD_COORDINATES.filter(road => {
-    const distance = calculateDistance(point.latitude, point.longitude, road.latitude, road.longitude);
+export function getNearbyRoadCoordinates(
+  point: RoadPoint,
+  radiusKm: number = 2
+): RoadPoint[] {
+  return IRELAND_ROAD_COORDINATES.filter((road) => {
+    const distance = calculateDistance(
+      point.latitude,
+      point.longitude,
+      road.latitude,
+      road.longitude
+    );
     return distance <= radiusKm;
   });
 }
 
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
   const R = 6371; // Earth's radius in kilometers
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
-// Road segments for realistic path following
-export const SF_ROAD_SEGMENTS: RoadSegment[] = [
-  // Market St segments
+// Road segments for realistic path following in Ireland
+export const IRELAND_ROAD_SEGMENTS: RoadSegment[] = [
+  // O'Connell Street segments (Dublin City Centre)
   {
-    id: 0, 
-    start: { id: 0, latitude: 37.7949, longitude: -122.4094, roadName: 'Market St' },
-    end: { id: 1, latitude: 37.7956, longitude: -122.4058, roadName: 'Market St' },
-    length: 320,
-    roadName: 'Market St',
+    id: 0,
+    start: {
+      id: 0,
+      latitude: 53.3498,
+      longitude: -6.2603,
+      roadName: "O'Connell Street",
+    },
+    end: {
+      id: 1,
+      latitude: 53.351,
+      longitude: -6.2603,
+      roadName: "O'Connell Street",
+    },
+    length: 130,
+    roadName: "O'Connell Street",
     roadType: 'boulevard',
-    speedLimit: 40,
-    connectedSegments: [1, 4] // connects to next Market segment and Mission St
+    speedLimit: 30,
+    connectedSegments: [1, 4], // connects to next O'Connell segment and Dame Street
   },
   {
     id: 1,
-    start: { id: 1, latitude: 37.7956, longitude: -122.4058, roadName: 'Market St' },
-    end: { id: 2, latitude: 37.7963, longitude: -122.4024, roadName: 'Market St' },
-    length: 300,
-    roadName: 'Market St',
-    roadType: 'boulevard', 
-    speedLimit: 40,
-    connectedSegments: [0, 2, 5] // previous Market, next Market, Mission
+    start: {
+      id: 1,
+      latitude: 53.351,
+      longitude: -6.2603,
+      roadName: "O'Connell Street",
+    },
+    end: {
+      id: 2,
+      latitude: 53.3522,
+      longitude: -6.2603,
+      roadName: "O'Connell Street",
+    },
+    length: 130,
+    roadName: "O'Connell Street",
+    roadType: 'boulevard',
+    speedLimit: 30,
+    connectedSegments: [0, 2, 5], // previous O'Connell, next O'Connell, Dame
   },
   {
     id: 2,
-    start: { id: 2, latitude: 37.7963, longitude: -122.4024, roadName: 'Market St' },
-    end: { id: 3, latitude: 37.7970, longitude: -122.3992, roadName: 'Market St' },
-    length: 290,
-    roadName: 'Market St',
+    start: {
+      id: 2,
+      latitude: 53.3522,
+      longitude: -6.2603,
+      roadName: "O'Connell Street",
+    },
+    end: {
+      id: 3,
+      latitude: 53.3534,
+      longitude: -6.2603,
+      roadName: "O'Connell Street",
+    },
+    length: 130,
+    roadName: "O'Connell Street",
     roadType: 'boulevard',
-    speedLimit: 40,
-    connectedSegments: [1, 6] // previous Market, Mission
+    speedLimit: 30,
+    connectedSegments: [1, 6], // previous O'Connell, Quays
   },
-  
-  // Mission St segments
+
+  // Dame Street segments
   {
     id: 3,
-    start: { id: 4, latitude: 37.7879, longitude: -122.4074, roadName: 'Mission St' },
-    end: { id: 5, latitude: 37.7899, longitude: -122.4084, roadName: 'Mission St' },
+    start: {
+      id: 8,
+      latitude: 53.3439,
+      longitude: -6.2674,
+      roadName: 'Dame Street',
+    },
+    end: {
+      id: 9,
+      latitude: 53.3439,
+      longitude: -6.2644,
+      roadName: 'Dame Street',
+    },
     length: 220,
-    roadName: 'Mission St',
+    roadName: 'Dame Street',
     roadType: 'street',
-    speedLimit: 35,
-    connectedSegments: [4, 8] // next Mission, Folsom
+    speedLimit: 30,
+    connectedSegments: [4, 8], // next Dame, Grafton
   },
   {
     id: 4,
-    start: { id: 5, latitude: 37.7899, longitude: -122.4084, roadName: 'Mission St' },
-    end: { id: 6, latitude: 37.7919, longitude: -122.4094, roadName: 'Mission St' },
-    length: 225,
-    roadName: 'Mission St', 
+    start: {
+      id: 9,
+      latitude: 53.3439,
+      longitude: -6.2644,
+      roadName: 'Dame Street',
+    },
+    end: {
+      id: 10,
+      latitude: 53.3439,
+      longitude: -6.2614,
+      roadName: 'Dame Street',
+    },
+    length: 220,
+    roadName: 'Dame Street',
     roadType: 'street',
-    speedLimit: 35,
-    connectedSegments: [0, 3, 5, 9] // Market, prev Mission, next Mission, Folsom
+    speedLimit: 30,
+    connectedSegments: [0, 3, 5, 9], // O'Connell, prev Dame, next Dame, Grafton
   },
   {
     id: 5,
-    start: { id: 6, latitude: 37.7919, longitude: -122.4094, roadName: 'Mission St' },
-    end: { id: 7, latitude: 37.7939, longitude: -122.4104, roadName: 'Mission St' },
-    length: 225,
-    roadName: 'Mission St',
+    start: {
+      id: 10,
+      latitude: 53.3439,
+      longitude: -6.2614,
+      roadName: 'Dame Street',
+    },
+    end: {
+      id: 11,
+      latitude: 53.3439,
+      longitude: -6.2584,
+      roadName: 'Dame Street',
+    },
+    length: 220,
+    roadName: 'Dame Street',
     roadType: 'street',
-    speedLimit: 35,
-    connectedSegments: [1, 4, 10] // Market, prev Mission, Folsom
+    speedLimit: 30,
+    connectedSegments: [1, 4, 10], // O'Connell, prev Dame, Grafton
   },
-  
-  // Van Ness Ave segments (North-South)
+
+  // Quays segments (North-South along River Liffey)
   {
     id: 6,
-    start: { id: 12, latitude: 37.7749, longitude: -122.4194, roadName: 'Van Ness Ave' },
-    end: { id: 13, latitude: 37.7789, longitude: -122.4194, roadName: 'Van Ness Ave' },
-    length: 440,
-    roadName: 'Van Ness Ave',
+    start: {
+      id: 12,
+      latitude: 53.3472,
+      longitude: -6.2693,
+      roadName: 'North Quays',
+    },
+    end: {
+      id: 13,
+      latitude: 53.3472,
+      longitude: -6.2663,
+      roadName: 'North Quays',
+    },
+    length: 220,
+    roadName: 'North Quays',
     roadType: 'avenue',
-    speedLimit: 45,
-    connectedSegments: [7]
+    speedLimit: 50,
+    connectedSegments: [7],
   },
   {
     id: 7,
-    start: { id: 13, latitude: 37.7789, longitude: -122.4194, roadName: 'Van Ness Ave' },
-    end: { id: 14, latitude: 37.7829, longitude: -122.4194, roadName: 'Van Ness Ave' },
-    length: 440,
-    roadName: 'Van Ness Ave',
+    start: {
+      id: 13,
+      latitude: 53.3472,
+      longitude: -6.2663,
+      roadName: 'North Quays',
+    },
+    end: {
+      id: 14,
+      latitude: 53.3472,
+      longitude: -6.2633,
+      roadName: 'North Quays',
+    },
+    length: 220,
+    roadName: 'North Quays',
     roadType: 'avenue',
-    speedLimit: 45,
-    connectedSegments: [6, 8]
+    speedLimit: 50,
+    connectedSegments: [6, 8],
   },
   {
     id: 8,
-    start: { id: 14, latitude: 37.7829, longitude: -122.4194, roadName: 'Van Ness Ave' },
-    end: { id: 15, latitude: 37.7869, longitude: -122.4194, roadName: 'Van Ness Ave' },
-    length: 440,
-    roadName: 'Van Ness Ave',
-    roadType: 'avenue', 
-    speedLimit: 45,
-    connectedSegments: [7, 3] // connects to Mission
+    start: {
+      id: 14,
+      latitude: 53.3472,
+      longitude: -6.2633,
+      roadName: 'North Quays',
+    },
+    end: {
+      id: 15,
+      latitude: 53.3472,
+      longitude: -6.2603,
+      roadName: 'North Quays',
+    },
+    length: 220,
+    roadName: 'North Quays',
+    roadType: 'avenue',
+    speedLimit: 50,
+    connectedSegments: [7, 2], // connects to O'Connell
   },
-  
-  // Cross-connections between streets
+
+  // M50 Motorway segments (Dublin Ring Road)
   {
     id: 9,
-    start: { id: 9, latitude: 37.7889, longitude: -122.4099, roadName: 'Folsom St' },
-    end: { id: 5, latitude: 37.7899, longitude: -122.4084, roadName: 'Mission St' },
-    length: 180,
-    roadName: 'Cross St',
-    roadType: 'street',
-    speedLimit: 30,
-    connectedSegments: [4, 10]
+    start: { latitude: 53.3867, longitude: -6.4429, roadName: 'M50' },
+    end: { latitude: 53.3667, longitude: -6.4229, roadName: 'M50' },
+    length: 2800,
+    roadName: 'M50',
+    roadType: 'freeway',
+    speedLimit: 120,
+    connectedSegments: [10, 15],
   },
   {
     id: 10,
-    start: { id: 10, latitude: 37.7909, longitude: -122.4109, roadName: 'Folsom St' },
-    end: { id: 6, latitude: 37.7919, longitude: -122.4094, roadName: 'Mission St' },
+    start: { latitude: 53.3667, longitude: -6.4229, roadName: 'M50' },
+    end: { latitude: 53.3467, longitude: -6.4029, roadName: 'M50' },
+    length: 2800,
+    roadName: 'M50',
+    roadType: 'freeway',
+    speedLimit: 120,
+    connectedSegments: [9, 11, 16],
+  },
+  {
+    id: 11,
+    start: { latitude: 53.3467, longitude: -6.4029, roadName: 'M50' },
+    end: { latitude: 53.3267, longitude: -6.3829, roadName: 'M50' },
+    length: 2800,
+    roadName: 'M50',
+    roadType: 'freeway',
+    speedLimit: 120,
+    connectedSegments: [10, 12, 17],
+  },
+
+  // N1 segments (Dublin to Belfast)
+  {
+    id: 12,
+    start: { latitude: 53.3598, longitude: -6.2503, roadName: 'N1' },
+    end: { latitude: 53.3898, longitude: -6.2403, roadName: 'N1' },
+    length: 3500,
+    roadName: 'N1',
+    roadType: 'freeway',
+    speedLimit: 100,
+    connectedSegments: [13, 0],
+  },
+  {
+    id: 13,
+    start: { latitude: 53.3898, longitude: -6.2403, roadName: 'N1' },
+    end: { latitude: 53.4198, longitude: -6.2303, roadName: 'N1' },
+    length: 3500,
+    roadName: 'N1',
+    roadType: 'freeway',
+    speedLimit: 100,
+    connectedSegments: [12, 14],
+  },
+
+  // Cross-connections between streets
+  {
+    id: 14,
+    start: {
+      id: 5,
+      latitude: 53.3425,
+      longitude: -6.26,
+      roadName: 'Grafton Street',
+    },
+    end: {
+      id: 9,
+      latitude: 53.3439,
+      longitude: -6.2644,
+      roadName: 'Dame Street',
+    },
     length: 180,
-    roadName: 'Cross St',
+    roadName: 'Nassau Street',
     roadType: 'street',
     speedLimit: 30,
-    connectedSegments: [5, 9]
-  }
+    connectedSegments: [4, 15],
+  },
+  {
+    id: 15,
+    start: {
+      id: 6,
+      latitude: 53.3435,
+      longitude: -6.26,
+      roadName: 'Grafton Street',
+    },
+    end: {
+      id: 10,
+      latitude: 53.3439,
+      longitude: -6.2614,
+      roadName: 'Dame Street',
+    },
+    length: 180,
+    roadName: 'Dawson Street',
+    roadType: 'street',
+    speedLimit: 30,
+    connectedSegments: [5, 14],
+  },
 ];
 
 // Helper function to get segment by ID
 export function getSegmentById(id: number): RoadSegment | undefined {
-  return SF_ROAD_SEGMENTS.find(segment => segment.id === id);
+  return IRELAND_ROAD_SEGMENTS.find((segment) => segment.id === id);
 }
 
 // Get all segments connected to a given segment
 export function getConnectedSegments(segmentId: number): RoadSegment[] {
   const segment = getSegmentById(segmentId);
   if (!segment) return [];
-  
+
   return segment.connectedSegments
-    .map(id => getSegmentById(id))
+    .map((id) => getSegmentById(id))
     .filter((s): s is RoadSegment => s !== undefined);
 }

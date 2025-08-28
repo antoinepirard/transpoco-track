@@ -32,10 +32,11 @@ export const MAP_STYLES = {
   positron: 'https://api.maptiler.com/maps/positron/style.json', // Light, minimal style from CartoDB
 } as const;
 
+// Center on Dublin, Ireland for Transpoco fleet operations
 export const INITIAL_VIEWPORT = {
-  latitude: 37.7749,
-  longitude: -122.4194,
-  zoom: 12,
+  latitude: 53.3498,
+  longitude: -6.2603,
+  zoom: 10,
   bearing: 0,
   pitch: 0,
 };

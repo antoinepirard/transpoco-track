@@ -177,6 +177,55 @@ export function FleetMap({
     handleVehicleHover,
   ]);
 
+  // Calculate fleet bounds and auto-center map
+  const calculateFleetBounds = useCallback(() => {
+    if (vehicles.length === 0) return null;
+
+    const bounds = vehicles.reduce(
+      (acc, vehicle) => {
+        const lat = vehicle.currentPosition.latitude;
+        const lng = vehicle.currentPosition.longitude;
+
+        return {
+          north: Math.max(acc.north, lat),
+          south: Math.min(acc.south, lat),
+          east: Math.max(acc.east, lng),
+          west: Math.min(acc.west, lng),
+        };
+      },
+      {
+        north: -90,
+        south: 90,
+        east: -180,
+        west: 180,
+      }
+    );
+
+    // Calculate center and zoom level
+    const centerLat = (bounds.north + bounds.south) / 2;
+    const centerLng = (bounds.east + bounds.west) / 2;
+
+    // Calculate zoom based on bounds size
+    const latDiff = bounds.north - bounds.south;
+    const lngDiff = bounds.east - bounds.west;
+    const maxDiff = Math.max(latDiff, lngDiff);
+
+    let zoom = 10; // Default zoom for Ireland
+    if (maxDiff > 0.5) zoom = 8;
+    else if (maxDiff > 0.2) zoom = 9;
+    else if (maxDiff > 0.1) zoom = 10;
+    else if (maxDiff > 0.05) zoom = 11;
+    else zoom = 12;
+
+    return {
+      latitude: centerLat,
+      longitude: centerLng,
+      zoom,
+      bearing: 0,
+      pitch: 0,
+    };
+  }, [vehicles]);
+
   useEffect(() => {
     if (selectedVehicleId) {
       const vehicle = vehicles.find((v) => v.id === selectedVehicleId);
@@ -185,6 +234,16 @@ export function FleetMap({
       setSelectedVehicle(null);
     }
   }, [selectedVehicleId, vehicles]);
+
+  // Auto-center on fleet when vehicles are first loaded
+  useEffect(() => {
+    if (vehicles.length > 0 && !selectedVehicleId) {
+      const fleetBounds = calculateFleetBounds();
+      if (fleetBounds) {
+        setViewport(fleetBounds);
+      }
+    }
+  }, [vehicles.length, selectedVehicleId, calculateFleetBounds, setViewport]);
 
   return (
     <div className="w-full h-full relative">
