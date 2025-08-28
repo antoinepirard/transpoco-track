@@ -24,6 +24,12 @@ export function VehicleSearch({
 
   const { vehicles, selectedVehicleId, selectVehicle } = useFleetStore();
 
+  // Get the currently selected vehicle
+  const selectedVehicle = useMemo(
+    () => vehicles.find((v) => v.id === selectedVehicleId),
+    [vehicles, selectedVehicleId]
+  );
+
   // Handle vehicle selection
   const handleVehicleSelect = useCallback(
     (vehicle: Vehicle) => {
@@ -147,6 +153,13 @@ export function VehicleSearch({
     inputRef.current?.focus();
   };
 
+  const handleClearSelection = () => {
+    setQuery('');
+    selectVehicle(null);
+    onVehicleSelect?.(null);
+    inputRef.current?.focus();
+  };
+
   return (
     <div className={`relative ${className}`}>
       {/* Search Input */}
@@ -165,8 +178,19 @@ export function VehicleSearch({
             setQuery(e.target.value);
             setIsOpen(true);
             setHighlightedIndex(-1);
+            // Clear selection when user starts typing
+            if (selectedVehicle) {
+              selectVehicle(null);
+              onVehicleSelect?.(null);
+            }
           }}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => {
+            if (selectedVehicle) {
+              handleClearSelection();
+            } else {
+              setIsOpen(true);
+            }
+          }}
           className="block w-full pl-10 pr-10 py-3 ring-1 ring-gray-300/20 rounded-4xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent shadow-md"
           placeholder={placeholder}
           autoComplete="off"
@@ -188,8 +212,85 @@ export function VehicleSearch({
         )}
       </div>
 
-      {/* Dropdown Results */}
-      {isOpen && filteredVehicles.length > 0 && (
+      {/* Vehicle Details Card - shown when vehicle is selected */}
+      {selectedVehicle && !isOpen && (
+        <div className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg">
+          <div className="p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {selectedVehicle.name}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {selectedVehicle.registrationNumber}
+                </p>
+              </div>
+              <button
+                onClick={handleClearSelection}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Clear selection"
+              >
+                <XIcon className="h-5 w-5 text-gray-400" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-gray-500">Status:</span>
+                <div className="flex items-center mt-1">
+                  <div
+                    className={`w-2 h-2 rounded-full mr-2 ${
+                      selectedVehicle.status === 'active'
+                        ? 'bg-green-500'
+                        : selectedVehicle.status === 'maintenance'
+                          ? 'bg-yellow-500'
+                          : selectedVehicle.status === 'offline'
+                            ? 'bg-red-500'
+                            : 'bg-gray-400'
+                    }`}
+                  />
+                  <span className="capitalize font-medium">
+                    {selectedVehicle.status}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-gray-500">Type:</span>
+                <p className="capitalize font-medium mt-1">
+                  {selectedVehicle.type}
+                </p>
+              </div>
+
+              {selectedVehicle.driver && (
+                <div className="col-span-2">
+                  <span className="text-gray-500">Driver:</span>
+                  <p className="font-medium mt-1">
+                    {selectedVehicle.driver.name}
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <span className="text-gray-500">Speed:</span>
+                <p className="font-medium mt-1">
+                  {Math.round(selectedVehicle.currentPosition.speed)} km/h
+                </p>
+              </div>
+
+              <div>
+                <span className="text-gray-500">Last Update:</span>
+                <p className="font-medium mt-1">
+                  {new Date(selectedVehicle.lastUpdate).toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dropdown Results - only shown when searching and no vehicle selected */}
+      {isOpen && !selectedVehicle && filteredVehicles.length > 0 && (
         <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-auto">
           <ul
             ref={listRef}
@@ -251,13 +352,16 @@ export function VehicleSearch({
       )}
 
       {/* No Results */}
-      {isOpen && query.trim() && filteredVehicles.length === 0 && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
-          <div className="px-3 py-4 text-sm text-gray-500 text-center">
-            No vehicles found matching &quot;{query}&quot;
+      {isOpen &&
+        !selectedVehicle &&
+        query.trim() &&
+        filteredVehicles.length === 0 && (
+          <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
+            <div className="px-3 py-4 text-sm text-gray-500 text-center">
+              No vehicles found matching &quot;{query}&quot;
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }
