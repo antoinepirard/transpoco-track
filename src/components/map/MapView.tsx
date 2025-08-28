@@ -51,7 +51,7 @@ export function MapView({
       const vs = info.viewState;
 
       // 1) Update DeckGL local view state immediately
-      setViewState(prev => ({
+      setViewState((prev) => ({
         ...prev,
         ...vs,
         transitionDuration: 0,
@@ -207,10 +207,9 @@ export function MapView({
     }
   }, [getMapStyle]);
 
-
   // Update viewport state when prop changes
   useEffect(() => {
-    setViewState(prev => ({
+    setViewState((prev) => ({
       ...prev,
       ...viewport,
       transitionDuration: 300,
