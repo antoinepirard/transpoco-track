@@ -185,8 +185,8 @@ class FakeDataGenerator {
       const latDelta = (distanceM * Math.cos((movement.angle * Math.PI) / 180)) / 111000; // ~111km per degree lat
       const lngDelta = (distanceM * Math.sin((movement.angle * Math.PI) / 180)) / (111000 * Math.cos((vehicle.currentPosition.latitude * Math.PI) / 180));
 
-      let newLat = vehicle.currentPosition.latitude + latDelta;
-      let newLng = vehicle.currentPosition.longitude + lngDelta;
+      const newLat = vehicle.currentPosition.latitude + latDelta;
+      const newLng = vehicle.currentPosition.longitude + lngDelta;
 
       // Keep within SF bounds (fallback)
       if (newLat > this.SF_BOUNDS.north || newLat < this.SF_BOUNDS.south || 
