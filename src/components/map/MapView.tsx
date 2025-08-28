@@ -48,21 +48,40 @@ export function MapView({
 
   const handleViewStateChange = useCallback(
     (info: ViewStateChangeParameters<MapViewState>) => {
-      const newViewState = info.viewState;
-      setViewState(newViewState);
+      const vs = info.viewState;
 
-      // Throttle viewport writes to store (10Hz max, or on interaction end)
+      // 1) Update DeckGL local view state immediately
+      setViewState(prev => ({
+        ...prev,
+        ...vs,
+        transitionDuration: 0,
+      }));
+
+      // 2) Keep MapLibre in lockstep (same frame if possible)
+      const map = mapInstanceRef.current;
+      if (map) {
+        try {
+          map.jumpTo({
+            center: [vs.longitude, vs.latitude],
+            zoom: vs.zoom,
+            bearing: vs.bearing || 0,
+            pitch: vs.pitch || 0,
+          });
+        } catch {}
+      }
+
+      // 3) Persist to store with light throttling or when drag ends
       throttleRef.current ??= { t: 0 };
       const now = performance.now();
       const isDragging = info.interactionState?.isDragging;
-      if (now - throttleRef.current.t > 100 || isDragging === false) {
+      if (now - throttleRef.current.t > 66 || isDragging === false) {
         throttleRef.current.t = now;
         onViewportChange?.({
-          latitude: newViewState.latitude,
-          longitude: newViewState.longitude,
-          zoom: newViewState.zoom,
-          bearing: newViewState.bearing || 0,
-          pitch: newViewState.pitch || 0,
+          latitude: vs.latitude,
+          longitude: vs.longitude,
+          zoom: vs.zoom,
+          bearing: vs.bearing || 0,
+          pitch: vs.pitch || 0,
         });
       }
     },
@@ -188,30 +207,13 @@ export function MapView({
     }
   }, [getMapStyle]);
 
-  // Sync viewport changes with MapLibre
-  useEffect(() => {
-    if (!mapInstanceRef.current || isLoading) return;
-
-    const map = mapInstanceRef.current;
-    try {
-      map.jumpTo({
-        center: [viewState.longitude, viewState.latitude],
-        zoom: viewState.zoom,
-        bearing: viewState.bearing || 0,
-        pitch: viewState.pitch || 0,
-      });
-    } catch (error) {
-      // Ignore errors during viewport sync (map might not be ready)
-      console.log('Viewport sync skipped:', error);
-    }
-  }, [viewState, isLoading]);
 
   // Update viewport state when prop changes
   useEffect(() => {
-    setViewState((prev) => ({
+    setViewState(prev => ({
       ...prev,
       ...viewport,
-      transitionDuration: 1000,
+      transitionDuration: 300,
     }));
   }, [viewport]);
 
