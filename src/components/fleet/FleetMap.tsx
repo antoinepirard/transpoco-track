@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import type { Map as MapLibreMap } from 'maplibre-gl';
 import { MapView } from '@/components/map/MapView';
+import { MapFeatureControls } from '@/components/map/MapFeatureControls';
 import { Sidebar } from '@/components/sidebar/Sidebar';
 import { useFleetStore } from '@/stores/fleet';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { useMapLayers } from '@/hooks/useMapLayers';
 import { createVehicleLayer, createTrailLayer } from '@/lib/deckgl/layers';
 import { fakeDataGenerator } from '@/lib/demo/fakeDataGenerator';
 import type { Vehicle } from '@/types/fleet';
@@ -32,6 +35,8 @@ export function FleetMap({
 }: FleetMapProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [internalShowTrails, setInternalShowTrails] = useState(showTrails);
+  const mapInstanceRef = useRef<MapLibreMap | null>(null);
+  const { toggleMapLayer } = useMapLayers();
 
   const {
     vehicles,
@@ -59,13 +64,17 @@ export function FleetMap({
 
     setConnectionStatus(true);
 
-    const unsubscribeVehicles = fakeDataGenerator.onVehicleUpdate((demoVehicles) => {
-      setVehicles(demoVehicles);
-    });
+    const unsubscribeVehicles = fakeDataGenerator.onVehicleUpdate(
+      (demoVehicles) => {
+        setVehicles(demoVehicles);
+      }
+    );
 
-    const unsubscribeTrails = fakeDataGenerator.onTrailUpdate((vehicleId, positions) => {
-      addTrail(vehicleId, positions);
-    });
+    const unsubscribeTrails = fakeDataGenerator.onTrailUpdate(
+      (vehicleId, positions) => {
+        addTrail(vehicleId, positions);
+      }
+    );
 
     fakeDataGenerator.start();
 
@@ -76,27 +85,62 @@ export function FleetMap({
     };
   }, [demoMode, setVehicles, addTrail, setConnectionStatus]);
 
-  const handleVehicleClick = useCallback((vehicle: Vehicle) => {
-    if (selectedVehicleId === vehicle.id) {
-      // Deselect if clicking the same vehicle
-      selectVehicle(null);
-      setSelectedVehicle(null);
-    } else {
-      selectVehicle(vehicle.id);
-      setSelectedVehicle(vehicle);
-    }
-  }, [selectVehicle, selectedVehicleId]);
+  const handleVehicleClick = useCallback(
+    (vehicle: Vehicle) => {
+      if (selectedVehicleId === vehicle.id) {
+        // Deselect if clicking the same vehicle
+        selectVehicle(null);
+        setSelectedVehicle(null);
+      } else {
+        selectVehicle(vehicle.id);
+        setSelectedVehicle(vehicle);
+      }
+    },
+    [selectVehicle, selectedVehicleId]
+  );
 
   const handleVehicleHover = useCallback((_vehicle: Vehicle | null) => {}, []);
+
+  const handleMapLoad = useCallback((map: MapLibreMap) => {
+    mapInstanceRef.current = map;
+    console.log('Map loaded and ready for layers');
+    
+    // Wait a brief moment to ensure map is fully initialized
+    setTimeout(() => {
+      console.log('Map initialization complete, layer toggles enabled');
+    }, 100);
+  }, []);
+
+  const handleFeatureToggle = useCallback(
+    (featureId: string, enabled: boolean) => {
+      if (mapInstanceRef.current) {
+        try {
+          toggleMapLayer(mapInstanceRef.current, featureId, enabled);
+          console.log(`Feature ${featureId} ${enabled ? 'enabled' : 'disabled'}`);
+        } catch (error) {
+          console.error(`Failed to toggle ${featureId}:`, error);
+        }
+      } else {
+        console.warn('Map not yet loaded, cannot toggle feature:', featureId);
+      }
+    },
+    [toggleMapLayer]
+  );
 
   const layers = useMemo(() => {
     const deckLayers: unknown[] = [];
 
     // Show trails only for selected vehicle, or all trails if showTrails is enabled
-    if (Object.keys(trails).length > 0 && (selectedVehicleId || internalShowTrails)) {
-      const selectedTrails = selectedVehicleId && !internalShowTrails
-        ? (trails[selectedVehicleId] ? [trails[selectedVehicleId]] : [])
-        : Object.values(trails);
+    if (
+      Object.keys(trails).length > 0 &&
+      (selectedVehicleId || internalShowTrails)
+    ) {
+      const selectedTrails =
+        selectedVehicleId && !internalShowTrails
+          ? trails[selectedVehicleId]
+            ? [trails[selectedVehicleId]]
+            : []
+          : Object.values(trails);
 
       if (selectedTrails.length > 0) {
         const trailLayer = createTrailLayer({
@@ -120,7 +164,14 @@ export function FleetMap({
     }
 
     return deckLayers;
-  }, [vehicles, trails, internalShowTrails, selectedVehicleId, handleVehicleClick, handleVehicleHover]);
+  }, [
+    vehicles,
+    trails,
+    internalShowTrails,
+    selectedVehicleId,
+    handleVehicleClick,
+    handleVehicleHover,
+  ]);
 
   useEffect(() => {
     if (selectedVehicleId) {
@@ -156,27 +207,15 @@ export function FleetMap({
           viewport={viewport}
           onViewportChange={setViewport}
           layers={layers}
+          onMapLoad={handleMapLoad}
           {...(mapStyle ? { mapStyle } : {})}
           {...(apiKey ? { apiKey } : {})}
           className="w-full h-full"
         />
 
-        {/* Connection Status - moved to top-right of map area */}
+        {/* Map Feature Controls - positioned in top-right of map area */}
         <div className="absolute top-4 right-4 z-10">
-          <div
-            className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
-              isConnected
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
-            }`}
-          >
-            <div
-              className={`w-2 h-2 rounded-full mr-2 ${
-                isConnected ? 'bg-green-500' : 'bg-red-500'
-              }`}
-            />
-            {isConnected ? 'Connected' : 'Disconnected'}
-          </div>
+          <MapFeatureControls onFeatureToggle={handleFeatureToggle} />
         </div>
 
         {/* WebSocket Error */}

@@ -5,17 +5,20 @@ A modern fleet tracking application built with the golden-path stack for 2025. T
 ## 🚀 Tech Stack
 
 ### Core Frontend
+
 - **Next.js 14** with App Router and TypeScript
 - **Tailwind CSS** for styling
 - **TanStack Query** for server state management
 - **Zustand** for UI state management
 
 ### Mapping & Visualization
+
 - **MapLibre GL JS** for WebGL-based basemap rendering
 - **deck.gl** for high-performance vehicle overlays
 - **MapTiler** vector tiles integration
 
 ### Real-time Communication
+
 - **Native WebSocket** client with Web Workers
 - **Ably** integration ready (with fallback)
 - Efficient diff-based updates
@@ -34,29 +37,39 @@ This application follows the recommended 2025 architecture for fleet tracking:
 
 - **Real-time Vehicle Tracking**: Live position updates with smooth interpolation
 - **Interactive Maps**: WebGL-powered maps with zoom, pan, and rotation
+- **Map Layer Controls**: Toggle traffic, locations (POI), routes, and heatmap overlays
 - **Vehicle Trails**: Historical path visualization
 - **Fleet Dashboard**: Vehicle status, speed, and driver information
 - **Responsive Design**: Works on desktop and mobile devices
-- **Connection Status**: Real-time connection health monitoring
 - **Performance Optimized**: GPU-accelerated rendering for thousands of vehicles
+
+### Map Features
+
+- **Traffic Layer**: Real-time traffic conditions with color-coded congestion levels
+- **Locations Layer**: Points of interest including restaurants, fuel stations, hospitals, and shops
+- **Routes Layer**: Navigation routes with primary and secondary route visualization
+- **Heatmap Layer**: Vehicle activity density visualization with dynamic zoom-based rendering
 
 ## 📦 Installation
 
 1. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 2. **Set up environment variables**
+
    ```bash
    cp .env.example .env.local
    ```
-   
+
    Edit `.env.local` and add your API keys:
    - `NEXT_PUBLIC_MAPTILER_API_KEY`: Get from [MapTiler](https://www.maptiler.com/)
    - `NEXT_PUBLIC_ABLY_API_KEY`: Get from [Ably](https://ably.com/) (optional)
 
 3. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -67,6 +80,7 @@ This application follows the recommended 2025 architecture for fleet tracking:
 ## 🔧 Configuration
 
 ### Map Styles
+
 The application supports multiple map styles. Edit `src/lib/maplibre/config.ts`:
 
 ```typescript
@@ -79,6 +93,7 @@ export const MAP_STYLES = {
 ```
 
 ### WebSocket Configuration
+
 Configure your WebSocket server in `src/components/fleet/FleetMap.tsx`:
 
 ```typescript
@@ -153,12 +168,14 @@ The application uses Zustand for state management:
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
 ```bash
 npm run build
 vercel deploy
 ```
 
 ### Docker
+
 ```bash
 docker build -t transpoco-track .
 docker run -p 3000:3000 transpoco-track

@@ -23,6 +23,7 @@ interface MapViewProps {
   apiKey?: string;
   className?: string;
   children?: React.ReactNode;
+  onMapLoad?: (map: maplibregl.Map) => void;
 }
 
 export function MapView({
@@ -33,6 +34,7 @@ export function MapView({
   apiKey,
   className = 'w-full h-full',
   children,
+  onMapLoad,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
@@ -127,6 +129,7 @@ export function MapView({
       clearTimeout(loadTimeout);
       setIsLoading(false);
       retryCountRef.current = 0;
+      onMapLoad?.(map);
     });
 
     map.on('error', (e) => {
