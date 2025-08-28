@@ -1,0 +1,210 @@
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { MapView } from '@/components/map/MapView';
+import { VehicleLayer } from './VehicleLayer';
+import { TrailLayer } from './TrailLayer';
+import { useFleetStore } from '@/stores/fleet';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import type { Vehicle } from '@/types/fleet';
+import type { DeckGLLayer } from '@/types/map';
+
+interface FleetMapProps {
+  organizationId: string;
+  websocketUrl?: string;
+  apiKey?: string;
+  mapStyle?: string;
+  showTrails?: boolean;
+  autoConnect?: boolean;
+}
+
+export function FleetMap({
+  organizationId,
+  websocketUrl = 'ws://localhost:8080',
+  apiKey,
+  mapStyle,
+  showTrails = false,
+  autoConnect = true,
+}: FleetMapProps) {
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  
+  const {
+    vehicles,
+    selectedVehicleId,
+    viewport,
+    trails,
+    isConnected,
+    selectVehicle,
+    setViewport,
+  } = useFleetStore();
+
+  const { error: wsError } = useWebSocket({
+    url: websocketUrl,
+    organizationId,
+    apiKey,
+    autoConnect,
+  });
+
+  const layers = useMemo(() => {
+    const deckLayers: DeckGLLayer[] = [];
+
+    if (showTrails && Object.keys(trails).length > 0) {
+      const trailData = Object.values(trails);
+      const trailLayer = {
+        id: 'trails',
+        type: 'TrailLayer',
+        data: trailData,
+        visible: true,
+        pickable: false,
+        updateTriggers: { data: trails },
+      } as DeckGLLayer;
+      deckLayers.push(trailLayer);
+    }
+
+    if (vehicles.length > 0) {
+      const vehicleLayer = {
+        id: 'vehicles',
+        type: 'VehicleLayer',
+        data: vehicles,
+        visible: true,
+        pickable: true,
+        updateTriggers: { data: vehicles, selectedVehicleId },
+      } as DeckGLLayer;
+      deckLayers.push(vehicleLayer);
+    }
+
+    return deckLayers;
+  }, [vehicles, trails, showTrails, selectedVehicleId]);
+
+  const handleVehicleClick = (vehicle: Vehicle) => {
+    selectVehicle(vehicle.id);
+    setSelectedVehicle(vehicle);
+  };
+
+  const handleVehicleHover = (vehicle: Vehicle | null) => {
+  };
+
+  useEffect(() => {
+    if (selectedVehicleId) {
+      const vehicle = vehicles.find((v) => v.id === selectedVehicleId);
+      setSelectedVehicle(vehicle || null);
+    } else {
+      setSelectedVehicle(null);
+    }
+  }, [selectedVehicleId, vehicles]);
+
+  return (
+    <div className="relative w-full h-full">
+      <MapView
+        viewport={viewport}
+        onViewportChange={setViewport}
+        layers={layers}
+        mapStyle={mapStyle}
+        apiKey={apiKey}
+        className="w-full h-full"
+      >
+        <VehicleLayer
+          vehicles={vehicles}
+          selectedVehicleId={selectedVehicleId}
+          onVehicleClick={handleVehicleClick}
+          onVehicleHover={handleVehicleHover}
+          showTrails={showTrails}
+        />
+        
+        {showTrails && (
+          <TrailLayer
+            trails={Object.values(trails)}
+            selectedVehicleId={selectedVehicleId}
+          />
+        )}
+      </MapView>
+
+      {/* Connection Status */}
+      <div className="absolute top-4 right-4 z-10">
+        <div
+          className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+            isConnected
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
+          }`}
+        >
+          <div
+            className={`w-2 h-2 rounded-full mr-2 ${
+              isConnected ? 'bg-green-500' : 'bg-red-500'
+            }`}
+          />
+          {isConnected ? 'Connected' : 'Disconnected'}
+        </div>
+      </div>
+
+      {/* Vehicle Count */}
+      <div className="absolute top-4 left-4 z-10">
+        <div className="bg-white px-3 py-2 rounded-md shadow-md text-sm font-medium text-gray-800">
+          {vehicles.length} Vehicle{vehicles.length !== 1 ? 's' : ''}
+        </div>
+      </div>
+
+      {/* Selected Vehicle Info */}
+      {selectedVehicle && (
+        <div className="absolute bottom-4 left-4 z-10 max-w-sm">
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {selectedVehicle.name}
+              </h3>
+              <button
+                onClick={() => selectVehicle(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-1 text-sm text-gray-600">
+              <p>
+                <span className="font-medium">Registration:</span>{' '}
+                {selectedVehicle.registrationNumber}
+              </p>
+              <p>
+                <span className="font-medium">Status:</span>{' '}
+                <span
+                  className={`inline-block px-2 py-1 rounded-full text-xs ${
+                    selectedVehicle.status === 'active'
+                      ? 'bg-green-100 text-green-800'
+                      : selectedVehicle.status === 'offline'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}
+                >
+                  {selectedVehicle.status}
+                </span>
+              </p>
+              <p>
+                <span className="font-medium">Speed:</span>{' '}
+                {Math.round(selectedVehicle.currentPosition.speed)} km/h
+              </p>
+              {selectedVehicle.driver && (
+                <p>
+                  <span className="font-medium">Driver:</span>{' '}
+                  {selectedVehicle.driver.name}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WebSocket Error */}
+      {wsError && (
+        <div className="absolute bottom-4 right-4 z-10 max-w-sm">
+          <div className="bg-red-50 border border-red-200 rounded-md p-3">
+            <div className="flex">
+              <div className="text-red-800 text-sm">
+                Connection Error: {wsError.message}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

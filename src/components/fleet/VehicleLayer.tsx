@@ -1,0 +1,45 @@
+'use client';
+
+import { useMemo } from 'react';
+import type { Vehicle } from '@/types/fleet';
+import { createVehicleLayer } from '@/lib/deckgl/layers';
+
+interface VehicleLayerProps {
+  vehicles: Vehicle[];
+  selectedVehicleId?: string;
+  onVehicleClick?: (vehicle: Vehicle) => void;
+  onVehicleHover?: (vehicle: Vehicle | null) => void;
+  showTrails?: boolean;
+  clusterVehicles?: boolean;
+}
+
+export function VehicleLayer({
+  vehicles,
+  selectedVehicleId,
+  onVehicleClick,
+  onVehicleHover,
+  showTrails = false,
+  clusterVehicles = false,
+}: VehicleLayerProps) {
+  const layer = useMemo(() => {
+    if (!vehicles.length) return null;
+
+    return createVehicleLayer({
+      vehicles,
+      selectedVehicleId,
+      onVehicleClick,
+      onVehicleHover,
+      showTrails,
+      clusterVehicles,
+    });
+  }, [
+    vehicles,
+    selectedVehicleId,
+    onVehicleClick,
+    onVehicleHover,
+    showTrails,
+    clusterVehicles,
+  ]);
+
+  return layer;
+}
