@@ -18,8 +18,6 @@ interface FleetMapProps {
   autoConnect?: boolean;
   demoMode?: boolean;
   showSidebar?: boolean;
-  sidebarCollapsed?: boolean;
-  onToggleSidebar?: () => void;
 }
 
 export function FleetMap({
@@ -30,9 +28,7 @@ export function FleetMap({
   showTrails = false,
   autoConnect = true,
   demoMode = false,
-  showSidebar = true,
-  sidebarCollapsed = false,
-  onToggleSidebar,
+  showSidebar = false,
 }: FleetMapProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [internalShowTrails, setInternalShowTrails] = useState(showTrails);
@@ -81,29 +77,42 @@ export function FleetMap({
   }, [demoMode, setVehicles, addTrail, setConnectionStatus]);
 
   const handleVehicleClick = useCallback((vehicle: Vehicle) => {
-    selectVehicle(vehicle.id);
-    setSelectedVehicle(vehicle);
-  }, [selectVehicle]);
+    if (selectedVehicleId === vehicle.id) {
+      // Deselect if clicking the same vehicle
+      selectVehicle(null);
+      setSelectedVehicle(null);
+    } else {
+      selectVehicle(vehicle.id);
+      setSelectedVehicle(vehicle);
+    }
+  }, [selectVehicle, selectedVehicleId]);
 
   const handleVehicleHover = useCallback((_vehicle: Vehicle | null) => {}, []);
 
   const layers = useMemo(() => {
     const deckLayers: unknown[] = [];
 
-    if (internalShowTrails && Object.keys(trails).length > 0) {
-      const trailLayer = createTrailLayer({
-        trails: Object.values(trails),
-        selectedVehicleId: selectedVehicleId ?? undefined,
-        width: 3,
-        opacity: 0.8,
-      });
-      deckLayers.push(trailLayer);
+    // Show trails only for selected vehicle, or all trails if showTrails is enabled
+    if (Object.keys(trails).length > 0 && (selectedVehicleId || internalShowTrails)) {
+      const selectedTrails = selectedVehicleId && !internalShowTrails
+        ? (trails[selectedVehicleId] ? [trails[selectedVehicleId]] : [])
+        : Object.values(trails);
+
+      if (selectedTrails.length > 0) {
+        const trailLayer = createTrailLayer({
+          trails: selectedTrails,
+          selectedVehicleId: selectedVehicleId || undefined,
+          width: 3,
+          opacity: 0.8,
+        });
+        deckLayers.push(trailLayer);
+      }
     }
 
     if (vehicles.length > 0) {
       const vehicleLayer = createVehicleLayer({
         vehicles,
-        selectedVehicleId: selectedVehicleId ?? undefined,
+        selectedVehicleId: selectedVehicleId || undefined,
         onVehicleClick: handleVehicleClick,
         onVehicleHover: handleVehicleHover,
       });
@@ -123,26 +132,26 @@ export function FleetMap({
   }, [selectedVehicleId, vehicles]);
 
   return (
-    <div className="flex w-full h-full">
-      {/* Sidebar */}
+    <div className="w-full h-full relative">
+      {/* Sidebar - conditionally render if needed */}
       {showSidebar && (
-        <Sidebar
-          vehicles={vehicles}
-          selectedVehicle={selectedVehicle}
-          isConnected={isConnected}
-          showTrails={internalShowTrails}
-          onVehicleSelect={(vehicle) => {
-            setSelectedVehicle(vehicle);
-            selectVehicle(vehicle?.id || null);
-          }}
-          onToggleTrails={setInternalShowTrails}
-          isCollapsed={sidebarCollapsed}
-          onToggleCollapse={onToggleSidebar}
-        />
+        <div className="absolute top-0 left-0 z-20 h-full">
+          <Sidebar
+            vehicles={vehicles}
+            selectedVehicle={selectedVehicle}
+            isConnected={isConnected}
+            showTrails={internalShowTrails}
+            onVehicleSelect={(vehicle) => {
+              setSelectedVehicle(vehicle);
+              selectVehicle(vehicle?.id || null);
+            }}
+            onToggleTrails={setInternalShowTrails}
+          />
+        </div>
       )}
 
       {/* Map Container */}
-      <div className="flex-1 relative">
+      <div className="w-full h-full">
         <MapView
           viewport={viewport}
           onViewportChange={setViewport}

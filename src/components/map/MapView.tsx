@@ -233,9 +233,9 @@ export function MapView({
 
       {/* Loading overlay - non-blocking */}
       {isLoading && (
-        <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
+        <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center decorative">
           <div className="bg-white shadow rounded-md px-4 py-3 gap-3 flex items-center">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500" />
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500 gpu-accelerate" />
             <span className="text-sm text-gray-700">Loading map…</span>
           </div>
         </div>
@@ -247,7 +247,7 @@ export function MapView({
           <div className="text-red-600 mt-0.5">⚠</div>
           <div className="flex-1 text-sm text-red-700">{mapError}</div>
           <button
-            className="inline-flex items-center rounded bg-red-600 px-2 py-1 text-white text-xs hover:bg-red-700"
+            className="inline-flex items-center rounded bg-red-600 px-2 py-1 text-white text-xs hover:bg-red-700 focus-ring transition-colors duration-150"
             onClick={() => {
               if (mapInstanceRef.current) {
                 mapInstanceRef.current.remove();
@@ -257,6 +257,7 @@ export function MapView({
               setMapError(null);
               setRetryTrigger((prev) => prev + 1);
             }}
+            aria-label="Retry loading map"
           >
             Retry
           </button>

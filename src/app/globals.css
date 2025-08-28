@@ -19,8 +19,125 @@
   }
 }
 
+/* Typography improvements following web interface guidelines */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  /* Better font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* Prevent text resizing on iOS landscape */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Remove default tap highlight on iOS */
+* {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+/* Ensure minimum font weights */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+}
+
+/* Tabular figures for numbers */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus ring styles using box-shadow instead of outline for better radius support */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
+}
+
+/* Interactive elements should disable user-select for inner content */
+button, [role="button"], .interactive {
+  user-select: none;
+}
+
+/* Smooth scrolling for anchor navigation */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Touch improvements - hover states only for devices with hover capability */
+@media (hover: hover) {
+  .hover\:hover-only\:bg-gray-50:hover {
+    background-color: rgb(249 250 251);
+  }
+  
+  .hover\:hover-only\:bg-gray-100:hover {
+    background-color: rgb(243 244 246);
+  }
+  
+  .hover\:hover-only\:text-gray-500:hover {
+    color: rgb(107 114 128);
+  }
+  
+  .hover\:hover-only\:text-gray-900:hover {
+    color: rgb(17 24 39);
+  }
+}
+
+/* Performance optimizations */
+.gpu-accelerate {
+  transform: translateZ(0);
+}
+
+/* Disable pointer events for decorative elements */
+.decorative {
+  pointer-events: none;
+}
+
+/* Animation improvements following web interface guidelines */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Optimized transition durations - max 200ms for immediate feel */
+.transition-immediate {
+  transition-duration: 150ms;
+}
+
+.transition-quick {
+  transition-duration: 100ms;
+}
+
+/* Proportional scale animations - don't scale from 0 to 1 */
+.scale-press {
+  transform: scale(0.96);
+}
+
+.scale-dialog {
+  transform: scale(0.8);
+}
+
+/* Disable transitions during theme switching */
+.no-transitions * {
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+}
+
+/* Loading animations should pause when not visible */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-spin:not(.in-viewport) {
+    animation-play-state: paused;
+  }
+}
+
+/* Form validation feedback positioning */
+.form-error {
+  @apply mt-1 text-sm text-red-600;
+}
+
+.form-success {
+  @apply mt-1 text-sm text-green-600;
 }

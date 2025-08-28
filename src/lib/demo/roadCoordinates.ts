@@ -3,32 +3,44 @@ export interface RoadPoint {
   latitude: number;
   longitude: number;
   roadName?: string;
+  id?: number;
+}
+
+export interface RoadSegment {
+  id: number;
+  start: RoadPoint;
+  end: RoadPoint;
+  length: number; // in meters
+  roadName: string;
+  roadType: 'street' | 'boulevard' | 'avenue' | 'freeway';
+  speedLimit: number; // km/h
+  connectedSegments: number[]; // IDs of connected segments
 }
 
 export const SF_ROAD_COORDINATES: RoadPoint[] = [
-  // Downtown Financial District
-  { latitude: 37.7949, longitude: -122.4094, roadName: 'Market St' },
-  { latitude: 37.7956, longitude: -122.4058, roadName: 'Market St' },
-  { latitude: 37.7963, longitude: -122.4024, roadName: 'Market St' },
-  { latitude: 37.7970, longitude: -122.3992, roadName: 'Market St' },
+  // Downtown Financial District - Market St
+  { id: 0, latitude: 37.7949, longitude: -122.4094, roadName: 'Market St' },
+  { id: 1, latitude: 37.7956, longitude: -122.4058, roadName: 'Market St' },
+  { id: 2, latitude: 37.7963, longitude: -122.4024, roadName: 'Market St' },
+  { id: 3, latitude: 37.7970, longitude: -122.3992, roadName: 'Market St' },
   
   // Mission St
-  { latitude: 37.7879, longitude: -122.4074, roadName: 'Mission St' },
-  { latitude: 37.7899, longitude: -122.4084, roadName: 'Mission St' },
-  { latitude: 37.7919, longitude: -122.4094, roadName: 'Mission St' },
-  { latitude: 37.7939, longitude: -122.4104, roadName: 'Mission St' },
+  { id: 4, latitude: 37.7879, longitude: -122.4074, roadName: 'Mission St' },
+  { id: 5, latitude: 37.7899, longitude: -122.4084, roadName: 'Mission St' },
+  { id: 6, latitude: 37.7919, longitude: -122.4094, roadName: 'Mission St' },
+  { id: 7, latitude: 37.7939, longitude: -122.4104, roadName: 'Mission St' },
   
   // Folsom St
-  { latitude: 37.7869, longitude: -122.4089, roadName: 'Folsom St' },
-  { latitude: 37.7889, longitude: -122.4099, roadName: 'Folsom St' },
-  { latitude: 37.7909, longitude: -122.4109, roadName: 'Folsom St' },
-  { latitude: 37.7929, longitude: -122.4119, roadName: 'Folsom St' },
+  { id: 8, latitude: 37.7869, longitude: -122.4089, roadName: 'Folsom St' },
+  { id: 9, latitude: 37.7889, longitude: -122.4099, roadName: 'Folsom St' },
+  { id: 10, latitude: 37.7909, longitude: -122.4109, roadName: 'Folsom St' },
+  { id: 11, latitude: 37.7929, longitude: -122.4119, roadName: 'Folsom St' },
   
   // Van Ness Ave (North-South)
-  { latitude: 37.7749, longitude: -122.4194, roadName: 'Van Ness Ave' },
-  { latitude: 37.7789, longitude: -122.4194, roadName: 'Van Ness Ave' },
-  { latitude: 37.7829, longitude: -122.4194, roadName: 'Van Ness Ave' },
-  { latitude: 37.7869, longitude: -122.4194, roadName: 'Van Ness Ave' },
+  { id: 12, latitude: 37.7749, longitude: -122.4194, roadName: 'Van Ness Ave' },
+  { id: 13, latitude: 37.7789, longitude: -122.4194, roadName: 'Van Ness Ave' },
+  { id: 14, latitude: 37.7829, longitude: -122.4194, roadName: 'Van Ness Ave' },
+  { id: 15, latitude: 37.7869, longitude: -122.4194, roadName: 'Van Ness Ave' },
   
   // Geary Blvd (East-West)
   { latitude: 37.7817, longitude: -122.4089, roadName: 'Geary Blvd' },
@@ -128,7 +140,7 @@ export const SF_ROAD_COORDINATES: RoadPoint[] = [
 ];
 
 export function getRandomRoadCoordinate(): RoadPoint {
-  return SF_ROAD_COORDINATES[Math.floor(Math.random() * SF_ROAD_COORDINATES.length)];
+  return SF_ROAD_COORDINATES[Math.floor(Math.random() * SF_ROAD_COORDINATES.length)]!;
 }
 
 export function getNearbyRoadCoordinates(point: RoadPoint, radiusKm: number = 2): RoadPoint[] {
@@ -148,4 +160,140 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
     Math.sin(dLon/2) * Math.sin(dLon/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
+}
+
+// Road segments for realistic path following
+export const SF_ROAD_SEGMENTS: RoadSegment[] = [
+  // Market St segments
+  {
+    id: 0, 
+    start: { id: 0, latitude: 37.7949, longitude: -122.4094, roadName: 'Market St' },
+    end: { id: 1, latitude: 37.7956, longitude: -122.4058, roadName: 'Market St' },
+    length: 320,
+    roadName: 'Market St',
+    roadType: 'boulevard',
+    speedLimit: 40,
+    connectedSegments: [1, 4] // connects to next Market segment and Mission St
+  },
+  {
+    id: 1,
+    start: { id: 1, latitude: 37.7956, longitude: -122.4058, roadName: 'Market St' },
+    end: { id: 2, latitude: 37.7963, longitude: -122.4024, roadName: 'Market St' },
+    length: 300,
+    roadName: 'Market St',
+    roadType: 'boulevard', 
+    speedLimit: 40,
+    connectedSegments: [0, 2, 5] // previous Market, next Market, Mission
+  },
+  {
+    id: 2,
+    start: { id: 2, latitude: 37.7963, longitude: -122.4024, roadName: 'Market St' },
+    end: { id: 3, latitude: 37.7970, longitude: -122.3992, roadName: 'Market St' },
+    length: 290,
+    roadName: 'Market St',
+    roadType: 'boulevard',
+    speedLimit: 40,
+    connectedSegments: [1, 6] // previous Market, Mission
+  },
+  
+  // Mission St segments
+  {
+    id: 3,
+    start: { id: 4, latitude: 37.7879, longitude: -122.4074, roadName: 'Mission St' },
+    end: { id: 5, latitude: 37.7899, longitude: -122.4084, roadName: 'Mission St' },
+    length: 220,
+    roadName: 'Mission St',
+    roadType: 'street',
+    speedLimit: 35,
+    connectedSegments: [4, 8] // next Mission, Folsom
+  },
+  {
+    id: 4,
+    start: { id: 5, latitude: 37.7899, longitude: -122.4084, roadName: 'Mission St' },
+    end: { id: 6, latitude: 37.7919, longitude: -122.4094, roadName: 'Mission St' },
+    length: 225,
+    roadName: 'Mission St', 
+    roadType: 'street',
+    speedLimit: 35,
+    connectedSegments: [0, 3, 5, 9] // Market, prev Mission, next Mission, Folsom
+  },
+  {
+    id: 5,
+    start: { id: 6, latitude: 37.7919, longitude: -122.4094, roadName: 'Mission St' },
+    end: { id: 7, latitude: 37.7939, longitude: -122.4104, roadName: 'Mission St' },
+    length: 225,
+    roadName: 'Mission St',
+    roadType: 'street',
+    speedLimit: 35,
+    connectedSegments: [1, 4, 10] // Market, prev Mission, Folsom
+  },
+  
+  // Van Ness Ave segments (North-South)
+  {
+    id: 6,
+    start: { id: 12, latitude: 37.7749, longitude: -122.4194, roadName: 'Van Ness Ave' },
+    end: { id: 13, latitude: 37.7789, longitude: -122.4194, roadName: 'Van Ness Ave' },
+    length: 440,
+    roadName: 'Van Ness Ave',
+    roadType: 'avenue',
+    speedLimit: 45,
+    connectedSegments: [7]
+  },
+  {
+    id: 7,
+    start: { id: 13, latitude: 37.7789, longitude: -122.4194, roadName: 'Van Ness Ave' },
+    end: { id: 14, latitude: 37.7829, longitude: -122.4194, roadName: 'Van Ness Ave' },
+    length: 440,
+    roadName: 'Van Ness Ave',
+    roadType: 'avenue',
+    speedLimit: 45,
+    connectedSegments: [6, 8]
+  },
+  {
+    id: 8,
+    start: { id: 14, latitude: 37.7829, longitude: -122.4194, roadName: 'Van Ness Ave' },
+    end: { id: 15, latitude: 37.7869, longitude: -122.4194, roadName: 'Van Ness Ave' },
+    length: 440,
+    roadName: 'Van Ness Ave',
+    roadType: 'avenue', 
+    speedLimit: 45,
+    connectedSegments: [7, 3] // connects to Mission
+  },
+  
+  // Cross-connections between streets
+  {
+    id: 9,
+    start: { id: 9, latitude: 37.7889, longitude: -122.4099, roadName: 'Folsom St' },
+    end: { id: 5, latitude: 37.7899, longitude: -122.4084, roadName: 'Mission St' },
+    length: 180,
+    roadName: 'Cross St',
+    roadType: 'street',
+    speedLimit: 30,
+    connectedSegments: [4, 10]
+  },
+  {
+    id: 10,
+    start: { id: 10, latitude: 37.7909, longitude: -122.4109, roadName: 'Folsom St' },
+    end: { id: 6, latitude: 37.7919, longitude: -122.4094, roadName: 'Mission St' },
+    length: 180,
+    roadName: 'Cross St',
+    roadType: 'street',
+    speedLimit: 30,
+    connectedSegments: [5, 9]
+  }
+];
+
+// Helper function to get segment by ID
+export function getSegmentById(id: number): RoadSegment | undefined {
+  return SF_ROAD_SEGMENTS.find(segment => segment.id === id);
+}
+
+// Get all segments connected to a given segment
+export function getConnectedSegments(segmentId: number): RoadSegment[] {
+  const segment = getSegmentById(segmentId);
+  if (!segment) return [];
+  
+  return segment.connectedSegments
+    .map(id => getSegmentById(id))
+    .filter((s): s is RoadSegment => s !== undefined);
 }

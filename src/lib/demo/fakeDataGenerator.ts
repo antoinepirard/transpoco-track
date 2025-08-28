@@ -1,14 +1,18 @@
 import type { Vehicle, VehiclePosition } from '@/types/fleet';
 import { getRandomRoadCoordinate, getNearbyRoadCoordinates, type RoadPoint } from './roadCoordinates';
+import { 
+  snapToNearestRoad, 
+  moveAlongRoad, 
+  getRandomRoadSegment, 
+  getSpeedForRoadType,
+  type SegmentPosition 
+} from '../geo/roadNetwork';
 
 interface VehicleMovement {
-  baseLatitude: number;
-  baseLongitude: number;
-  angle: number;
+  segmentPosition: SegmentPosition;
   speed: number;
   lastUpdate: Date;
-  targetRoad?: RoadPoint;
-  nextRoadTargets: RoadPoint[];
+  baseSpeed: number; // Base speed for this vehicle type
 }
 
 class FakeDataGenerator {
@@ -37,15 +41,18 @@ class FakeDataGenerator {
     this.trails.clear();
 
     for (let i = 0; i < count; i++) {
-      const roadCoordinate = getRandomRoadCoordinate();
-      const latitude = roadCoordinate.latitude;
-      const longitude = roadCoordinate.longitude;
+      // Start vehicles on road segments
+      const segmentPosition = getRandomRoadSegment();
+      
+      const vehicleType = this.getRandomVehicleType();
+      const baseSpeed = this.getBaseSpeedForVehicleType(vehicleType);
+      const currentSpeed = baseSpeed + this.randomInRange(-10, 15);
       
       const vehicle: Vehicle = {
         id: `demo-vehicle-${i + 1}`,
         name: `Vehicle ${i + 1}`,
         registrationNumber: `DEMO${String(i + 1).padStart(3, '0')}`,
-        type: this.getRandomVehicleType(),
+        type: vehicleType,
         status: this.getRandomStatus(),
         driver: Math.random() > 0.3 ? {
           id: `driver-${i + 1}`,
@@ -54,10 +61,10 @@ class FakeDataGenerator {
         currentPosition: {
           id: `pos-${i + 1}`,
           vehicleId: `demo-vehicle-${i + 1}`,
-          latitude,
-          longitude,
-          speed: this.randomInRange(0, 80),
-          heading: this.randomInRange(0, 360),
+          latitude: segmentPosition.position.latitude,
+          longitude: segmentPosition.position.longitude,
+          speed: Math.max(0, currentSpeed),
+          heading: segmentPosition.heading,
           timestamp: new Date(),
           ignition: Math.random() > 0.1,
           accuracy: this.randomInRange(1, 5),
@@ -71,18 +78,12 @@ class FakeDataGenerator {
 
       this.vehicles.push(vehicle);
 
-      // Initialize movement pattern
-      const nearbyRoads = getNearbyRoadCoordinates(roadCoordinate, 3);
-      const targetRoad = nearbyRoads.length > 1 ? nearbyRoads[Math.floor(Math.random() * nearbyRoads.length)] : getRandomRoadCoordinate();
-      
+      // Initialize movement with road-based navigation
       this.movements.set(vehicle.id, {
-        baseLatitude: latitude,
-        baseLongitude: longitude,
-        angle: this.calculateAngleToTarget(latitude, longitude, targetRoad.latitude, targetRoad.longitude),
-        speed: this.randomInRange(20, 60),
+        segmentPosition,
+        speed: currentSpeed,
         lastUpdate: new Date(),
-        targetRoad,
-        nextRoadTargets: nearbyRoads.slice(0, 5),
+        baseSpeed,
       });
 
       // Initialize trail
@@ -100,14 +101,18 @@ class FakeDataGenerator {
     return statuses[Math.floor(Math.random() * statuses.length)];
   }
 
-  private randomInRange(min: number, max: number): number {
-    return Math.random() * (max - min) + min;
+  private getBaseSpeedForVehicleType(type: Vehicle['type']): number {
+    switch (type) {
+      case 'motorcycle': return 40;
+      case 'car': return 35;
+      case 'van': return 30;
+      case 'truck': return 25;
+      default: return 30;
+    }
   }
 
-  private calculateAngleToTarget(fromLat: number, fromLng: number, toLat: number, toLng: number): number {
-    const dLng = toLng - fromLng;
-    const dLat = toLat - fromLat;
-    return Math.atan2(dLng, dLat) * 180 / Math.PI;
+  private randomInRange(min: number, max: number): number {
+    return Math.random() * (max - min) + min;
   }
 
   private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -124,7 +129,7 @@ class FakeDataGenerator {
 
   private updateVehiclePositions(): void {
     const now = new Date();
-    const deltaTimeMinutes = 0.5; // Update every 30 seconds
+    const deltaTimeSeconds = 2; // Update every 2 seconds
 
     this.vehicles.forEach((vehicle) => {
       if (vehicle.status !== 'active') return;
@@ -132,87 +137,39 @@ class FakeDataGenerator {
       const movement = this.movements.get(vehicle.id);
       if (!movement) return;
 
-      // Check if we're close to target road, if so pick new target
-      if (movement.targetRoad) {
-        const distanceToTarget = this.calculateDistance(
-          vehicle.currentPosition.latitude,
-          vehicle.currentPosition.longitude,
-          movement.targetRoad.latitude,
-          movement.targetRoad.longitude
-        );
-
-        // If close to target (within 100m), pick new target
-        if (distanceToTarget < 100) {
-          const nearbyRoads = getNearbyRoadCoordinates(movement.targetRoad, 2);
-          if (nearbyRoads.length > 1) {
-            // Don't go back to same road, pick different one
-            const availableRoads = nearbyRoads.filter(road => 
-              road.latitude !== movement.baseLatitude || road.longitude !== movement.baseLongitude
-            );
-            movement.targetRoad = availableRoads.length > 0 ? 
-              availableRoads[Math.floor(Math.random() * availableRoads.length)] : 
-              getRandomRoadCoordinate();
-          } else {
-            movement.targetRoad = getRandomRoadCoordinate();
-          }
-
-          // Update angle to new target
-          movement.angle = this.calculateAngleToTarget(
-            vehicle.currentPosition.latitude,
-            vehicle.currentPosition.longitude,
-            movement.targetRoad.latitude,
-            movement.targetRoad.longitude
-          );
-          
-          // Update base position
-          movement.baseLatitude = vehicle.currentPosition.latitude;
-          movement.baseLongitude = vehicle.currentPosition.longitude;
-        }
+      // Occasionally adjust speed (simulate traffic conditions)
+      if (Math.random() < 0.1) {
+        const variation = this.randomInRange(-8, 12);
+        movement.speed = Math.max(5, Math.min(movement.baseSpeed + variation, movement.baseSpeed + 20));
       }
 
-      // Occasionally adjust speed and direction slightly (but stay road-oriented)
-      if (Math.random() < 0.05) {
-        movement.angle += this.randomInRange(-15, 15); // Smaller angle changes
-        movement.speed = this.randomInRange(15, 65);
-      }
-
-      // Calculate movement delta toward target
+      // Calculate distance to move in this update
       const speedKmh = movement.speed;
       const speedMs = speedKmh / 3.6; // Convert to m/s
-      const distanceM = speedMs * (deltaTimeMinutes * 60); // Distance in meters for this update
+      const distanceM = speedMs * deltaTimeSeconds; // Distance in meters for this update
 
-      // Convert to degrees (rough approximation)
-      const latDelta = (distanceM * Math.cos((movement.angle * Math.PI) / 180)) / 111000; // ~111km per degree lat
-      const lngDelta = (distanceM * Math.sin((movement.angle * Math.PI) / 180)) / (111000 * Math.cos((vehicle.currentPosition.latitude * Math.PI) / 180));
+      // Move along road network
+      const newSegmentPosition = moveAlongRoad(
+        movement.segmentPosition,
+        distanceM,
+        movement.segmentPosition.heading // Use current heading as preferred bearing
+      );
 
-      const newLat = vehicle.currentPosition.latitude + latDelta;
-      const newLng = vehicle.currentPosition.longitude + lngDelta;
+      // Update movement state
+      movement.segmentPosition = newSegmentPosition;
+      movement.lastUpdate = now;
 
-      // Keep within SF bounds (fallback)
-      if (newLat > this.SF_BOUNDS.north || newLat < this.SF_BOUNDS.south || 
-          newLng > this.SF_BOUNDS.east || newLng < this.SF_BOUNDS.west) {
-        // Find new nearby road target instead of bouncing
-        movement.targetRoad = getRandomRoadCoordinate();
-        movement.angle = this.calculateAngleToTarget(
-          vehicle.currentPosition.latitude,
-          vehicle.currentPosition.longitude,
-          movement.targetRoad.latitude,
-          movement.targetRoad.longitude
-        );
-        return; // Skip this update, recalculate next time
-      }
-
-      // Update vehicle position
+      // Create new vehicle position
       const newPosition: VehiclePosition = {
         ...vehicle.currentPosition,
         id: `pos-${vehicle.id}-${Date.now()}`,
-        latitude: newLat,
-        longitude: newLng,
-        speed: speedKmh + this.randomInRange(-5, 5), // Add some variation
-        heading: movement.angle,
+        latitude: newSegmentPosition.position.latitude,
+        longitude: newSegmentPosition.position.longitude,
+        speed: speedKmh + this.randomInRange(-2, 3), // Small speed variation for realism
+        heading: newSegmentPosition.heading,
         timestamp: now,
         ignition: vehicle.status === 'active',
-        fuelLevel: Math.max(0, (vehicle.currentPosition.fuelLevel || 50) - 0.1),
+        fuelLevel: Math.max(0, (vehicle.currentPosition.fuelLevel || 50) - 0.05),
         engineRpm: this.randomInRange(1000, 2500),
         temperature: this.randomInRange(85, 100),
       };

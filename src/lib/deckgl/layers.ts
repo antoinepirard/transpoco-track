@@ -69,13 +69,18 @@ export function createTrailLayer({
     })),
     pickable: true,
     widthScale: width,
+    widthMinPixels: 1,
+    widthMaxPixels: 8,
+    rounded: true,
+    capRounded: true,
+    jointRounded: true,
     getPath: (d) => d.path,
     getColor: (d) => {
       if (selectedVehicleId && d.vehicleId === selectedVehicleId) {
-        return [255, 107, 107, 255 * opacity];
+        return [255, 107, 107, Math.floor(255 * opacity)];
       }
       const color = hexToRgb(d.color);
-      return color ? [...color, 255 * opacity] : [255, 107, 107, 255 * opacity];
+      return color ? [...color, Math.floor(255 * opacity)] : [255, 107, 107, Math.floor(255 * opacity)];
     },
     getWidth: (d) => (d.vehicleId === selectedVehicleId ? width * 1.5 : width),
     updateTriggers: {
