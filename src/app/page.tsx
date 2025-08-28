@@ -16,6 +16,7 @@ export default function Home() {
         websocketUrl="ws://localhost:8080"
         showTrails={true}
         autoConnect={false}
+        demoMode={true}
       />
     </div>
   );

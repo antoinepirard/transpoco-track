@@ -5,6 +5,7 @@ import { MapView } from '@/components/map/MapView';
 import { useFleetStore } from '@/stores/fleet';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { createVehicleLayer, createTrailLayer } from '@/lib/deckgl/layers';
+import { fakeDataGenerator } from '@/lib/demo/fakeDataGenerator';
 import type { Vehicle } from '@/types/fleet';
 
 interface FleetMapProps {
@@ -14,6 +15,7 @@ interface FleetMapProps {
   mapStyle?: string;
   showTrails?: boolean;
   autoConnect?: boolean;
+  demoMode?: boolean;
 }
 
 export function FleetMap({
@@ -23,6 +25,7 @@ export function FleetMap({
   mapStyle,
   showTrails = false,
   autoConnect = true,
+  demoMode = false,
 }: FleetMapProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
@@ -34,14 +37,47 @@ export function FleetMap({
     isConnected,
     selectVehicle,
     setViewport,
+    setVehicles,
+    addTrail,
+    setConnectionStatus,
   } = useFleetStore();
 
   const { error: wsError } = useWebSocket({
     url: websocketUrl,
     organizationId,
     ...(apiKey ? { apiKey } : {}),
-    autoConnect,
+    autoConnect: !demoMode,
   });
+
+  // Demo mode setup
+  useEffect(() => {
+    if (!demoMode) return;
+
+    setConnectionStatus(true);
+
+    const unsubscribeVehicles = fakeDataGenerator.onVehicleUpdate((demoVehicles) => {
+      setVehicles(demoVehicles);
+    });
+
+    const unsubscribeTrails = fakeDataGenerator.onTrailUpdate((vehicleId, positions) => {
+      addTrail(vehicleId, positions);
+    });
+
+    fakeDataGenerator.start();
+
+    return () => {
+      fakeDataGenerator.stop();
+      unsubscribeVehicles();
+      unsubscribeTrails();
+    };
+  }, [demoMode, setVehicles, addTrail, setConnectionStatus]);
+
+  const handleVehicleClick = (vehicle: Vehicle) => {
+    selectVehicle(vehicle.id);
+    setSelectedVehicle(vehicle);
+  };
+
+  const handleVehicleHover = (vehicle: Vehicle | null) => {};
 
   const layers = useMemo(() => {
     const deckLayers: any[] = [];
@@ -67,14 +103,7 @@ export function FleetMap({
     }
 
     return deckLayers;
-  }, [vehicles, trails, showTrails, selectedVehicleId]);
-
-  const handleVehicleClick = (vehicle: Vehicle) => {
-    selectVehicle(vehicle.id);
-    setSelectedVehicle(vehicle);
-  };
-
-  const handleVehicleHover = (vehicle: Vehicle | null) => {};
+  }, [vehicles, trails, showTrails, selectedVehicleId, handleVehicleClick, handleVehicleHover]);
 
   useEffect(() => {
     if (selectedVehicleId) {
