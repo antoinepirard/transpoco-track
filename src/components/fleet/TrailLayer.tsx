@@ -24,7 +24,7 @@ export function TrailLayer({
 
     return createTrailLayer({
       trails,
-      selectedVehicleId,
+      ...(selectedVehicleId !== undefined ? { selectedVehicleId } : {}),
       colors,
       width,
       opacity,

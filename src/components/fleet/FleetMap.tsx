@@ -2,12 +2,10 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { MapView } from '@/components/map/MapView';
-import { VehicleLayer } from './VehicleLayer';
-import { TrailLayer } from './TrailLayer';
 import { useFleetStore } from '@/stores/fleet';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { createVehicleLayer, createTrailLayer } from '@/lib/deckgl/layers';
 import type { Vehicle } from '@/types/fleet';
-import type { DeckGLLayer } from '@/types/map';
 
 interface FleetMapProps {
   organizationId: string;
@@ -27,7 +25,7 @@ export function FleetMap({
   autoConnect = true,
 }: FleetMapProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  
+
   const {
     vehicles,
     selectedVehicleId,
@@ -41,35 +39,30 @@ export function FleetMap({
   const { error: wsError } = useWebSocket({
     url: websocketUrl,
     organizationId,
-    apiKey,
+    ...(apiKey ? { apiKey } : {}),
     autoConnect,
   });
 
   const layers = useMemo(() => {
-    const deckLayers: DeckGLLayer[] = [];
+    const deckLayers: any[] = [];
 
     if (showTrails && Object.keys(trails).length > 0) {
-      const trailData = Object.values(trails);
-      const trailLayer = {
-        id: 'trails',
-        type: 'TrailLayer',
-        data: trailData,
-        visible: true,
-        pickable: false,
-        updateTriggers: { data: trails },
-      } as DeckGLLayer;
+      const trailLayer = createTrailLayer({
+        trails: Object.values(trails),
+        selectedVehicleId: selectedVehicleId ?? undefined,
+        width: 3,
+        opacity: 0.8,
+      });
       deckLayers.push(trailLayer);
     }
 
     if (vehicles.length > 0) {
-      const vehicleLayer = {
-        id: 'vehicles',
-        type: 'VehicleLayer',
-        data: vehicles,
-        visible: true,
-        pickable: true,
-        updateTriggers: { data: vehicles, selectedVehicleId },
-      } as DeckGLLayer;
+      const vehicleLayer = createVehicleLayer({
+        vehicles,
+        selectedVehicleId: selectedVehicleId ?? undefined,
+        onVehicleClick: handleVehicleClick,
+        onVehicleHover: handleVehicleHover,
+      });
       deckLayers.push(vehicleLayer);
     }
 
@@ -81,8 +74,7 @@ export function FleetMap({
     setSelectedVehicle(vehicle);
   };
 
-  const handleVehicleHover = (vehicle: Vehicle | null) => {
-  };
+  const handleVehicleHover = (vehicle: Vehicle | null) => {};
 
   useEffect(() => {
     if (selectedVehicleId) {
@@ -99,25 +91,10 @@ export function FleetMap({
         viewport={viewport}
         onViewportChange={setViewport}
         layers={layers}
-        mapStyle={mapStyle}
-        apiKey={apiKey}
+        {...(mapStyle ? { mapStyle } : {})}
+        {...(apiKey ? { apiKey } : {})}
         className="w-full h-full"
-      >
-        <VehicleLayer
-          vehicles={vehicles}
-          selectedVehicleId={selectedVehicleId}
-          onVehicleClick={handleVehicleClick}
-          onVehicleHover={handleVehicleHover}
-          showTrails={showTrails}
-        />
-        
-        {showTrails && (
-          <TrailLayer
-            trails={Object.values(trails)}
-            selectedVehicleId={selectedVehicleId}
-          />
-        )}
-      </MapView>
+      />
 
       {/* Connection Status */}
       <div className="absolute top-4 right-4 z-10">
@@ -171,8 +148,8 @@ export function FleetMap({
                     selectedVehicle.status === 'active'
                       ? 'bg-green-100 text-green-800'
                       : selectedVehicle.status === 'offline'
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-yellow-100 text-yellow-800'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-yellow-100 text-yellow-800'
                   }`}
                 >
                   {selectedVehicle.status}

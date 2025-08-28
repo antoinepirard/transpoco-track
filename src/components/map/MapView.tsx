@@ -3,11 +3,17 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import { DeckGL } from '@deck.gl/react';
-import type { MapRef, ViewState } from '@deck.gl/core';
-import type { MapViewport, MapConfiguration, DeckGLLayer } from '@/types/map';
+import type { MapViewState, ViewStateChangeParameters } from '@deck.gl/core';
+import type { MapViewport } from '@/types/fleet';
+import type { MapConfiguration, DeckGLLayer } from '@/types/map';
 import { DEFAULT_MAP_CONFIG, INITIAL_VIEWPORT } from '@/lib/maplibre/config';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
+
+interface MapDataAbortEvent {
+  sourceId?: string;
+  type: string;
+}
 
 interface MapViewProps {
   viewport?: MapViewport;
@@ -28,33 +34,179 @@ export function MapView({
   className = 'w-full h-full',
   children,
 }: MapViewProps) {
-  const mapRef = useRef<MapRef>(null);
-  const [viewState, setViewState] = useState<ViewState>({
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<maplibregl.Map | null>(null);
+  const throttleRef = useRef<{ t: number } | null>(null);
+  const [viewState, setViewState] = useState<MapViewState>({
     ...viewport,
     transitionDuration: 0,
   });
+  const [mapError, setMapError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [retryTrigger, setRetryTrigger] = useState(0);
+  const retryCountRef = useRef(0);
 
   const handleViewStateChange = useCallback(
-    ({ viewState: newViewState }: { viewState: ViewState }) => {
+    (info: ViewStateChangeParameters<MapViewState>) => {
+      const newViewState = info.viewState;
       setViewState(newViewState);
-      onViewportChange?.({
-        latitude: newViewState.latitude,
-        longitude: newViewState.longitude,
-        zoom: newViewState.zoom,
-        bearing: newViewState.bearing,
-        pitch: newViewState.pitch,
-      });
+
+      // Throttle viewport writes to store (10Hz max, or on interaction end)
+      throttleRef.current ??= { t: 0 };
+      const now = performance.now();
+      const isDragging = info.interactionState?.isDragging;
+      if (now - throttleRef.current.t > 100 || isDragging === false) {
+        throttleRef.current.t = now;
+        onViewportChange?.({
+          latitude: newViewState.latitude,
+          longitude: newViewState.longitude,
+          zoom: newViewState.zoom,
+          bearing: newViewState.bearing || 0,
+          pitch: newViewState.pitch || 0,
+        });
+      }
     },
     [onViewportChange]
   );
 
   const getMapStyle = useCallback(() => {
     if (typeof mapStyle === 'string') {
-      return apiKey ? `${mapStyle}?key=${apiKey}` : mapStyle;
+      const envApiKey = process.env.NEXT_PUBLIC_MAPTILER_API_KEY;
+      const keyToUse = apiKey || envApiKey;
+      return keyToUse ? `${mapStyle}?key=${keyToUse}` : mapStyle;
     }
     return mapStyle;
   }, [mapStyle, apiKey]);
 
+  // Initialize MapLibre map (once only, no viewport deps)
+  useEffect(() => {
+    if (mapInstanceRef.current || !mapContainerRef.current) return;
+
+    setIsLoading(true);
+    setMapError(null);
+
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: getMapStyle() as string,
+      center: [viewport.longitude, viewport.latitude],
+      zoom: viewport.zoom,
+      bearing: viewport.bearing || 0,
+      pitch: viewport.pitch || 0,
+      attributionControl: DEFAULT_MAP_CONFIG.attributionControl ? {} : false,
+      interactive: false,
+    });
+
+    // Set a timeout for map loading
+    const loadTimeout = setTimeout(() => {
+      setMapError(
+        'Map failed to load within timeout. Please refresh the page.'
+      );
+      setIsLoading(false);
+    }, 10000);
+
+    map.on('load', () => {
+      clearTimeout(loadTimeout);
+      setIsLoading(false);
+      retryCountRef.current = 0;
+    });
+
+    map.on('error', (e) => {
+      clearTimeout(loadTimeout);
+
+      // Ignore abort errors as they're expected during cleanup
+      if (
+        e.error?.name === 'AbortError' ||
+        e.error?.message?.includes('aborted')
+      ) {
+        console.log('Map request aborted (expected during cleanup)');
+        return;
+      }
+
+      console.warn('MapLibre error:', e.error);
+
+      if (e.error?.message?.includes('sprite')) {
+        setMapError(
+          'Map sprites failed to load. The map may not display all icons properly.'
+        );
+      } else {
+        setMapError('Map failed to load properly. Please refresh the page.');
+      }
+      setIsLoading(false);
+    });
+
+    map.on('styleimagemissing', (e) => {
+      console.warn('Missing style image:', e.id);
+    });
+
+    map.on('sourcedataabort', (e) => {
+      console.warn('Source data loading aborted:', e.sourceId);
+    });
+
+    map.on('dataabort', (e) => {
+      const event = e as MapDataAbortEvent;
+      console.warn(
+        'Map data loading aborted:',
+        event.sourceId || 'unknown source'
+      );
+    });
+
+    mapInstanceRef.current = map;
+
+    return () => {
+      try {
+        map.remove();
+      } catch (error) {
+        console.warn('Error removing map:', error);
+      }
+      mapInstanceRef.current = null;
+      setIsLoading(false);
+      setMapError(null);
+      retryCountRef.current = 0;
+    };
+  }, [getMapStyle, retryTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle style changes without re-initializing map
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    const style = getMapStyle();
+    if (style) {
+      try {
+        map.setStyle(style as string);
+      } catch (error) {
+        // Ignore abort errors during style changes
+        if (
+          error instanceof Error &&
+          (error.name === 'AbortError' || error.message.includes('aborted'))
+        ) {
+          console.log('Style change aborted (expected during transitions)');
+        } else {
+          console.warn('Error setting map style:', error);
+        }
+      }
+    }
+  }, [getMapStyle]);
+
+  // Sync viewport changes with MapLibre
+  useEffect(() => {
+    if (!mapInstanceRef.current || isLoading) return;
+
+    const map = mapInstanceRef.current;
+    try {
+      map.jumpTo({
+        center: [viewState.longitude, viewState.latitude],
+        zoom: viewState.zoom,
+        bearing: viewState.bearing || 0,
+        pitch: viewState.pitch || 0,
+      });
+    } catch (error) {
+      // Ignore errors during viewport sync (map might not be ready)
+      console.log('Viewport sync skipped:', error);
+    }
+  }, [viewState, isLoading]);
+
+  // Update viewport state when prop changes
   useEffect(() => {
     setViewState((prev) => ({
       ...prev,
@@ -64,12 +216,57 @@ export function MapView({
   }, [viewport]);
 
   return (
-    <div className={className}>
+    <div className={className} style={{ position: 'relative' }}>
+      {/* MapLibre base map */}
+      <div
+        ref={mapContainerRef}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 0,
+        }}
+      />
+
+      {/* Loading overlay - non-blocking */}
+      {isLoading && (
+        <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
+          <div className="bg-white shadow rounded-md px-4 py-3 gap-3 flex items-center">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500" />
+            <span className="text-sm text-gray-700">Loading map…</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error overlay */}
+      {mapError && !isLoading && (
+        <div className="absolute top-4 left-4 right-4 z-10 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
+          <div className="text-red-600 mt-0.5">⚠</div>
+          <div className="flex-1 text-sm text-red-700">{mapError}</div>
+          <button
+            className="inline-flex items-center rounded bg-red-600 px-2 py-1 text-white text-xs hover:bg-red-700"
+            onClick={() => {
+              if (mapInstanceRef.current) {
+                mapInstanceRef.current.remove();
+                mapInstanceRef.current = null;
+              }
+              retryCountRef.current = 0;
+              setMapError(null);
+              setRetryTrigger((prev) => prev + 1);
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* DeckGL overlay - always mounted for smooth interaction */}
       <DeckGL
-        ref={mapRef}
         viewState={viewState}
-        onViewStateChange={handleViewStateChange}
-        layers={layers}
+        onViewStateChange={handleViewStateChange as any} // eslint-disable-line @typescript-eslint/no-explicit-any
+        layers={layers as any[]} // eslint-disable-line @typescript-eslint/no-explicit-any
         controller={{
           dragPan: true,
           dragRotate: true,
@@ -83,34 +280,15 @@ export function MapView({
           if (isHovering) return 'pointer';
           return 'grab';
         }}
+        style={{
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          width: '100%',
+          height: '100%',
+          zIndex: '1',
+        }}
       >
-        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          <div
-            ref={(ref) => {
-              if (ref && !ref.hasChildNodes()) {
-                const map = new maplibregl.Map({
-                  container: ref,
-                  style: getMapStyle(),
-                  interactive: false,
-                  attributionControl: DEFAULT_MAP_CONFIG.attributionControl,
-                });
-
-                map.on('load', () => {
-                  mapRef.current?.setProps({
-                    layers: layers,
-                  });
-                });
-              }
-            }}
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              width: '100%',
-              height: '100%',
-            }}
-          />
-        </div>
         {children}
       </DeckGL>
     </div>

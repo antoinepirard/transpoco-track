@@ -14,7 +14,6 @@ export default function Home() {
       <FleetMap
         organizationId="demo-org"
         websocketUrl="ws://localhost:8080"
-        apiKey={process.env.NEXT_PUBLIC_MAPTILER_API_KEY}
         showTrails={true}
         autoConnect={false}
       />

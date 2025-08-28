@@ -1,11 +1,18 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { WebSocketClient, type WebSocketClientOptions } from '@/lib/websocket/client';
+import {
+  WebSocketClient,
+  type WebSocketClientOptions,
+} from '@/lib/websocket/client';
 import { useFleetStore } from '@/stores/fleet';
 import type { WebSocketMessage, VehicleUpdate } from '@/types/fleet';
 
-interface UseWebSocketOptions extends Omit<WebSocketClientOptions, 'onMessage' | 'onConnect' | 'onDisconnect' | 'onError'> {
+interface UseWebSocketOptions
+  extends Omit<
+    WebSocketClientOptions,
+    'onMessage' | 'onConnect' | 'onDisconnect' | 'onError'
+  > {
   autoConnect?: boolean;
   onMessage?: (message: WebSocketMessage) => void;
   onError?: (error: Error) => void;
@@ -20,8 +27,9 @@ export function useWebSocket({
   const clientRef = useRef<WebSocketClient | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  
-  const { setConnectionStatus, updateVehicle } = useFleetStore();
+
+  const { setConnectionStatus, updateVehicle, applyVehicleUpdates } =
+    useFleetStore();
 
   useEffect(() => {
     if (!autoConnect) return;
@@ -33,7 +41,7 @@ export function useWebSocket({
         setConnectionStatus(true);
         setIsConnecting(false);
         setError(null);
-        
+
         client.subscribeToOrganization();
       },
       onDisconnect: () => {
@@ -63,7 +71,16 @@ export function useWebSocket({
       client.disconnect();
       clientRef.current = null;
     };
-  }, [autoConnect, options.url, options.organizationId, onMessage, onError, setConnectionStatus, updateVehicle]);
+  }, [
+    autoConnect,
+    options.url,
+    options.organizationId,
+    onMessage,
+    onError,
+    setConnectionStatus,
+    updateVehicle,
+    applyVehicleUpdates,
+  ]);
 
   const handleMessage = (message: WebSocketMessage) => {
     switch (message.type) {
@@ -73,9 +90,12 @@ export function useWebSocket({
         break;
       case 'bulk_update':
         const updates = message.data as VehicleUpdate[];
-        updates.forEach((update) => {
-          updateVehicle(update.vehicleId, update.data);
-        });
+        applyVehicleUpdates(
+          updates.map((update) => ({
+            vehicleId: update.vehicleId,
+            update: update.data,
+          }))
+        );
         break;
     }
   };

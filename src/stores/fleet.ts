@@ -9,9 +9,12 @@ interface FleetState {
   trails: Record<string, VehiclePosition[]>;
   isConnected: boolean;
   lastUpdate: Date | null;
-  
+
   setVehicles: (vehicles: Vehicle[]) => void;
   updateVehicle: (vehicleId: string, update: Partial<Vehicle>) => void;
+  applyVehicleUpdates: (
+    updates: Array<{ vehicleId: string; update: Partial<Vehicle> }>
+  ) => void;
   selectVehicle: (vehicleId: string | null) => void;
   setViewport: (viewport: MapViewport) => void;
   addTrail: (vehicleId: string, positions: VehiclePosition[]) => void;
@@ -50,9 +53,27 @@ export const useFleetStore = create<FleetState>()(
       }));
     },
 
+    applyVehicleUpdates: (updates) => {
+      set((state) => {
+        const vehicleMap = new Map(state.vehicles.map((v) => [v.id, v]));
+
+        for (const { vehicleId, update } of updates) {
+          const vehicle = vehicleMap.get(vehicleId);
+          if (vehicle) {
+            vehicleMap.set(vehicleId, { ...vehicle, ...update });
+          }
+        }
+
+        return {
+          vehicles: Array.from(vehicleMap.values()),
+          lastUpdate: new Date(),
+        };
+      });
+    },
+
     selectVehicle: (vehicleId) => {
       set({ selectedVehicleId: vehicleId });
-      
+
       if (vehicleId) {
         const vehicle = get().vehicles.find((v) => v.id === vehicleId);
         if (vehicle) {

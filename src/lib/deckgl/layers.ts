@@ -7,7 +7,14 @@ export function createVehicleLayer({
   selectedVehicleId,
   onVehicleClick,
   onVehicleHover,
-}: VehicleLayerProps) {
+}: {
+  vehicles: Vehicle[];
+  selectedVehicleId?: string;
+  onVehicleClick?: (vehicle: Vehicle) => void;
+  onVehicleHover?: (vehicle: Vehicle | null) => void;
+  showTrails?: boolean;
+  clusterVehicles?: boolean;
+}) {
   return new IconLayer({
     id: 'vehicles',
     data: vehicles,
@@ -36,7 +43,6 @@ export function createVehicleLayer({
     },
     updateTriggers: {
       getSize: selectedVehicleId,
-      getAngle: vehicles.map((v) => v.currentPosition.heading),
     },
   });
 }
@@ -47,7 +53,13 @@ export function createTrailLayer({
   colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'],
   width = 3,
   opacity = 0.8,
-}: TrailLayerProps) {
+}: {
+  trails: VehiclePosition[][];
+  selectedVehicleId?: string;
+  colors?: string[];
+  width?: number;
+  opacity?: number;
+}) {
   return new PathLayer({
     id: 'trails',
     data: trails.map((trail, index) => ({

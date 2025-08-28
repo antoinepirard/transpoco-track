@@ -26,9 +26,9 @@ export function VehicleLayer({
 
     return createVehicleLayer({
       vehicles,
-      selectedVehicleId,
-      onVehicleClick,
-      onVehicleHover,
+      ...(selectedVehicleId !== undefined ? { selectedVehicleId } : {}),
+      ...(onVehicleClick ? { onVehicleClick } : {}),
+      ...(onVehicleHover ? { onVehicleHover } : {}),
       showTrails,
       clusterVehicles,
     });
