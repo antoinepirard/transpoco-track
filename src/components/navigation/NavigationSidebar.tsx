@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import {
   BellIcon,
@@ -303,12 +303,12 @@ export function NavigationSidebar({
       {/* User Profile */}
       <div className="border-t border-gray-200 p-4">
         <div className="flex items-center space-x-3">
-          <img
+          <Image
             className="h-10 w-10 rounded-full object-cover"
             src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
             alt="Profile picture of Antoine Pirard"
-            width="40"
-            height="40"
+            width={40}
+            height={40}
           />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate">
