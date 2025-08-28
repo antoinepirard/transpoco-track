@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import { MapView } from '@/components/map/MapView';
 import { MapFeatureControls } from '@/components/map/MapFeatureControls';
+import { MapStyleSwitcher } from '@/components/map/MapStyleSwitcher';
 import { Sidebar } from '@/components/sidebar/Sidebar';
 import { useFleetStore } from '@/stores/fleet';
 import { useWebSocket } from '@/hooks/useWebSocket';
@@ -27,7 +28,7 @@ export function FleetMap({
   organizationId,
   websocketUrl = 'ws://localhost:8080',
   apiKey,
-  mapStyle,
+  mapStyle: initialMapStyle,
   showTrails = false,
   autoConnect = true,
   demoMode = false,
@@ -35,6 +36,7 @@ export function FleetMap({
 }: FleetMapProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [internalShowTrails, setInternalShowTrails] = useState(showTrails);
+  const [currentMapStyle, setCurrentMapStyle] = useState(initialMapStyle);
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
   const { toggleMapLayer } = useMapLayers();
 
@@ -104,7 +106,7 @@ export function FleetMap({
   const handleMapLoad = useCallback((map: MapLibreMap) => {
     mapInstanceRef.current = map;
     console.log('Map loaded and ready for layers');
-    
+
     // Wait a brief moment to ensure map is fully initialized
     setTimeout(() => {
       console.log('Map initialization complete, layer toggles enabled');
@@ -116,7 +118,9 @@ export function FleetMap({
       if (mapInstanceRef.current) {
         try {
           toggleMapLayer(mapInstanceRef.current, featureId, enabled);
-          console.log(`Feature ${featureId} ${enabled ? 'enabled' : 'disabled'}`);
+          console.log(
+            `Feature ${featureId} ${enabled ? 'enabled' : 'disabled'}`
+          );
         } catch (error) {
           console.error(`Failed to toggle ${featureId}:`, error);
         }
@@ -208,13 +212,17 @@ export function FleetMap({
           onViewportChange={setViewport}
           layers={layers}
           onMapLoad={handleMapLoad}
-          {...(mapStyle ? { mapStyle } : {})}
+          {...(currentMapStyle ? { mapStyle: currentMapStyle } : {})}
           {...(apiKey ? { apiKey } : {})}
           className="w-full h-full"
         />
 
-        {/* Map Feature Controls - positioned in top-right of map area */}
-        <div className="absolute top-4 right-4 z-10">
+        {/* Map Controls - positioned in top-right of map area */}
+        <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+          <MapStyleSwitcher
+            currentStyle={currentMapStyle || ''}
+            onStyleChange={setCurrentMapStyle}
+          />
           <MapFeatureControls onFeatureToggle={handleFeatureToggle} />
         </div>
 
