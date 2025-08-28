@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FleetMap } from '@/components/fleet/FleetMap';
 import { NavigationSidebar } from '@/components/navigation/NavigationSidebar';
+import { VehicleSearch } from '@/components/search/VehicleSearch';
 
 export default function Home() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -17,11 +18,12 @@ export default function Home() {
 
       {/* Main Content Area */}
       <div className="flex-1 relative">
-        {/* Header - positioned absolutely over the content */}
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 decorative">
-          <h1 className="text-2xl font-semibold text-white bg-black bg-opacity-50 px-4 py-2 rounded-md backdrop-blur-sm">
-            Transpoco Track
-          </h1>
+        {/* Vehicle Search - positioned on the left side of the map */}
+        <div className="absolute top-4 left-4 z-30 w-80">
+          <VehicleSearch
+            placeholder="Search vehicles by name, plate, or driver..."
+            className="w-full"
+          />
         </div>
 
         <FleetMap
