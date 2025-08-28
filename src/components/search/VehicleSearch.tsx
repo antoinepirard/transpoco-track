@@ -1,7 +1,12 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react';
+import {
+  MagnifyingGlassIcon,
+  XIcon,
+  CaretRightIcon,
+  CaretDownIcon,
+} from '@phosphor-icons/react';
 import { useFleetStore } from '@/stores/fleet';
 import type { Vehicle } from '@/types/fleet';
 
@@ -9,18 +14,28 @@ interface VehicleSearchProps {
   className?: string;
   placeholder?: string;
   onVehicleSelect?: (vehicle: Vehicle | null) => void;
+  onReportSelect?: (vehicle: Vehicle, reportType: string) => void;
+}
+
+interface ReportOption {
+  id: string;
+  label: string;
+  description?: string;
 }
 
 export function VehicleSearch({
   className = '',
   placeholder = 'Search vehicles...',
   onVehicleSelect,
+  onReportSelect,
 }: VehicleSearchProps) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [showReports, setShowReports] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const reportsRef = useRef<HTMLDivElement>(null);
 
   const { vehicles, selectedVehicleId, selectVehicle } = useFleetStore();
 
@@ -120,11 +135,13 @@ export function VehicleSearch({
     }
   }, [highlightedIndex]);
 
-  // Handle clicks outside to close dropdown
+  // Handle clicks outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      // Close search dropdown
       if (isOpen && inputRef.current && listRef.current) {
-        const target = event.target as Node;
         if (
           !inputRef.current.contains(target) &&
           !listRef.current.parentElement?.contains(target)
@@ -133,16 +150,23 @@ export function VehicleSearch({
           setHighlightedIndex(-1);
         }
       }
+
+      // Close reports dropdown
+      if (showReports && reportsRef.current) {
+        if (!reportsRef.current.contains(target)) {
+          setShowReports(false);
+        }
+      }
     };
 
-    if (isOpen) {
+    if (isOpen || showReports) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, showReports]);
 
   const handleClear = () => {
     setQuery('');
@@ -155,9 +179,33 @@ export function VehicleSearch({
 
   const handleClearSelection = () => {
     setQuery('');
+    setShowReports(false);
     selectVehicle(null);
     onVehicleSelect?.(null);
     inputRef.current?.focus();
+  };
+
+  // Available reports for selected vehicle
+  const availableReports: ReportOption[] = [
+    { id: 'last-location-map', label: 'Last Location (Map)' },
+    { id: 'last-location-report', label: 'Last Location (Report)' },
+    { id: 'summary', label: 'Summary' },
+    { id: 'journeys', label: 'Journeys' },
+    { id: 'stops', label: 'Stops' },
+    { id: 'idling', label: 'Idling' },
+    { id: 'stops-idling', label: 'Stops/Idling' },
+    { id: 'locations', label: 'Locations' },
+    { id: 'operating-summary', label: 'Operating Summary' },
+    { id: 'operating-activity', label: 'Operating Activity' },
+    { id: 'route-completion', label: 'Route Completion Detail' },
+    { id: 'alerts', label: 'Alerts' },
+  ];
+
+  const handleReportSelect = (reportType: string) => {
+    if (selectedVehicle && onReportSelect) {
+      onReportSelect(selectedVehicle, reportType);
+      setShowReports(false);
+    }
   };
 
   return (
@@ -284,6 +332,44 @@ export function VehicleSearch({
                   {new Date(selectedVehicle.lastUpdate).toLocaleTimeString()}
                 </p>
               </div>
+            </div>
+
+            {/* Reports Section - Full width outside of grid */}
+            <div
+              className="border-t border-gray-200 mt-4 pt-4 relative"
+              ref={reportsRef}
+            >
+              <button
+                onClick={() => setShowReports(!showReports)}
+                className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+              >
+                <span>View Reports</span>
+                <CaretDownIcon
+                  className={`h-4 w-4 text-gray-500 transition-transform ${
+                    showReports ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {/* Reports Dropdown */}
+              {showReports && (
+                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto min-w-full w-80">
+                  <div className="py-1">
+                    {availableReports.map((report) => (
+                      <button
+                        key={report.id}
+                        onClick={() => handleReportSelect(report.id)}
+                        className="w-full flex items-center justify-between px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors group"
+                      >
+                        <span className="text-gray-700 group-hover:text-gray-900">
+                          {report.label}
+                        </span>
+                        <CaretRightIcon className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
