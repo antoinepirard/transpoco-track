@@ -47,6 +47,8 @@ export function MapView({
   const [isLoading, setIsLoading] = useState(true);
   const [retryTrigger, setRetryTrigger] = useState(0);
   const retryCountRef = useRef(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isInitializingRef = useRef(false);
 
   const handleViewStateChange = useCallback(
     (info: ViewStateChangeParameters<MapViewState>) => {
@@ -101,10 +103,20 @@ export function MapView({
 
   // Initialize MapLibre map (once only, no viewport deps)
   useEffect(() => {
-    if (mapInstanceRef.current || !mapContainerRef.current) return;
+    if (mapInstanceRef.current || !mapContainerRef.current || isInitializingRef.current) return;
 
+    // Cancel any previous requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    isInitializingRef.current = true;
     setIsLoading(true);
     setMapError(null);
+
+    // Create new abort controller for this initialization
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
@@ -126,13 +138,16 @@ export function MapView({
     }, 10000);
 
     map.on('load', () => {
+      if (abortController.signal.aborted) return;
       clearTimeout(loadTimeout);
       setIsLoading(false);
       retryCountRef.current = 0;
+      isInitializingRef.current = false;
       onMapLoad?.(map);
     });
 
     map.on('error', (e) => {
+      if (abortController.signal.aborted) return;
       clearTimeout(loadTimeout);
 
       // Ignore abort errors as they're expected during cleanup
@@ -145,15 +160,31 @@ export function MapView({
       }
 
       console.warn('MapLibre error:', e.error);
+      isInitializingRef.current = false;
 
-      if (e.error?.message?.includes('sprite')) {
-        setMapError(
-          'Map sprites failed to load. The map may not display all icons properly.'
-        );
+      // Implement exponential backoff retry
+      const maxRetries = 3;
+      if (retryCountRef.current < maxRetries) {
+        retryCountRef.current += 1;
+        const delay = Math.pow(2, retryCountRef.current - 1) * 1000; // 1s, 2s, 4s
+        
+        setMapError(`Map loading failed. Retrying in ${delay/1000}s... (${retryCountRef.current}/${maxRetries})`);
+        
+        setTimeout(() => {
+          if (!abortController.signal.aborted) {
+            setRetryTrigger(prev => prev + 1);
+          }
+        }, delay);
       } else {
-        setMapError('Map failed to load properly. Please refresh the page.');
+        if (e.error?.message?.includes('sprite')) {
+          setMapError(
+            'Map sprites failed to load. The map may not display all icons properly.'
+          );
+        } else {
+          setMapError('Map failed to load after multiple attempts. Please refresh the page.');
+        }
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     map.on('styleimagemissing', (e) => {
@@ -161,24 +192,38 @@ export function MapView({
     });
 
     map.on('sourcedataabort', (e) => {
-      console.warn('Source data loading aborted:', e.sourceId);
+      // Only log if not an intentional abort
+      if (!abortController.signal.aborted) {
+        console.log('Source data loading aborted:', e.sourceId, '(likely due to style change)');
+      }
     });
 
     map.on('dataabort', (e) => {
       const event = e as MapDataAbortEvent;
-      console.warn(
-        'Map data loading aborted:',
-        event.sourceId || 'unknown source'
-      );
+      // Only log if not an intentional abort
+      if (!abortController.signal.aborted) {
+        console.log(
+          'Map data loading aborted:',
+          event.sourceId || 'unknown source',
+          '(likely due to style change)'
+        );
+      }
     });
 
     mapInstanceRef.current = map;
 
     return () => {
+      // Signal abort to prevent state updates after cleanup
+      abortController.abort();
+      isInitializingRef.current = false;
+      
       try {
         map.remove();
       } catch (error) {
-        console.warn('Error removing map:', error);
+        // Only warn if it's not an abort-related error
+        if (!error?.message?.includes('aborted')) {
+          console.warn('Error removing map:', error);
+        }
       }
       mapInstanceRef.current = null;
       setIsLoading(false);
@@ -190,12 +235,19 @@ export function MapView({
   // Handle style changes without re-initializing map
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map) return;
+    if (!map || isInitializingRef.current) return;
 
     const style = getMapStyle();
     if (style) {
       try {
-        map.setStyle(style as string);
+        // Add a small delay to prevent rapid style changes
+        const timeoutId = setTimeout(() => {
+          if (mapInstanceRef.current && !isInitializingRef.current) {
+            map.setStyle(style as string);
+          }
+        }, 100);
+
+        return () => clearTimeout(timeoutId);
       } catch (error) {
         // Ignore abort errors during style changes
         if (

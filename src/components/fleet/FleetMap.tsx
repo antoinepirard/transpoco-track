@@ -5,6 +5,7 @@ import type { Map as MapLibreMap } from 'maplibre-gl';
 import { MapView } from '@/components/map/MapView';
 import { MapFeatureControls } from '@/components/map/MapFeatureControls';
 import { MapStyleSwitcher } from '@/components/map/MapStyleSwitcher';
+import { MapErrorBoundary } from '@/components/map/MapErrorBoundary';
 import { Sidebar } from '@/components/sidebar/Sidebar';
 import { useFleetStore } from '@/stores/fleet';
 import { useWebSocket } from '@/hooks/useWebSocket';
@@ -273,15 +274,17 @@ export function FleetMap({
 
       {/* Map Container */}
       <div className="w-full h-full">
-        <MapView
-          viewport={viewport}
-          onViewportChange={setViewport}
-          layers={layers}
-          onMapLoad={handleMapLoad}
-          {...(currentMapStyle ? { mapStyle: currentMapStyle } : {})}
-          {...(apiKey ? { apiKey } : {})}
-          className="w-full h-full"
-        />
+        <MapErrorBoundary>
+          <MapView
+            viewport={viewport}
+            onViewportChange={setViewport}
+            layers={layers}
+            onMapLoad={handleMapLoad}
+            {...(currentMapStyle ? { mapStyle: currentMapStyle } : {})}
+            {...(apiKey ? { apiKey } : {})}
+            className="w-full h-full"
+          />
+        </MapErrorBoundary>
 
         {/* Map Controls - positioned in top-right of map area */}
         <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
