@@ -153,7 +153,7 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
       </div>
 
       <div ref={parentRef} className="relative w-full flex-1 overflow-auto rounded-lg border border-gray-200">
-        <table className="w-full text-sm table-fixed bg-white" style={{ minWidth: '1610px' }}>
+        <table className="w-full text-sm bg-white" style={{ minWidth: '1610px', tableLayout: 'fixed' }}>
           <thead className="sticky top-0 z-10 bg-gray-50 text-left text-gray-600">
             {table.getHeaderGroups().map(hg => (
               <tr key={hg.id} className="border-b border-gray-200">
@@ -161,7 +161,11 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
                   <th 
                     key={h.id} 
                     className="px-3 py-2 font-medium"
-                    style={{ width: h.getSize(), maxWidth: h.getSize() }}
+                    style={{ 
+                      width: `${h.getSize()}px`, 
+                      maxWidth: `${h.getSize()}px`,
+                      minWidth: `${h.getSize()}px`
+                    }}
                   >
                     <div className="truncate">
                       {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
@@ -176,7 +180,7 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
             {virtualRows.map(vRow => {
               const row = table.getRowModel().rows[vRow.index]!;
               const grouped = row.getIsGrouped();
-              const padding = grouped ? 0 : row.depth * 16;
+              const isSubRow = row.depth > 0;
 
               return (
                 <tr
@@ -195,11 +199,15 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
                       <td 
                         key={cell.id} 
                         className="px-3 py-2 align-middle bg-white"
-                        style={{ width: cell.column.getSize(), maxWidth: cell.column.getSize() }}
+                        style={{ 
+                          width: `${cell.column.getSize()}px`, 
+                          maxWidth: `${cell.column.getSize()}px`,
+                          minWidth: `${cell.column.getSize()}px`
+                        }}
                       >
                         <div 
                           className="flex items-center" 
-                          style={{ paddingLeft: isFirst ? row.depth * 16 : padding }}
+                          style={{ paddingLeft: isFirst && isSubRow ? 24 : 0 }}
                         >
                           {isFirst && row.getCanExpand() ? (
                             <button
