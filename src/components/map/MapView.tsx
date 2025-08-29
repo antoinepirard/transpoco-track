@@ -260,6 +260,7 @@ export function MapView({
 
       return () => clearTimeout(timeoutId);
     }
+    return;
   }, [getMapStyle]);
 
   // Update viewport state when prop changes
