@@ -38,6 +38,7 @@ export function FleetMap({
   const [internalShowTrails, setInternalShowTrails] = useState(showTrails);
   const [currentMapStyle, setCurrentMapStyle] = useState(initialMapStyle);
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
+  const hasAutocenteredRef = useRef(false);
   const { toggleMapLayer } = useMapLayers();
 
   const {
@@ -235,13 +236,19 @@ export function FleetMap({
     }
   }, [selectedVehicleId, vehicles]);
 
-  // Auto-center on fleet when vehicles are first loaded
+  // Auto-center on fleet when vehicles are first loaded (only once)
   useEffect(() => {
-    if (vehicles.length > 0 && !selectedVehicleId) {
+    if (vehicles.length > 0 && !selectedVehicleId && !hasAutocenteredRef.current) {
       const fleetBounds = calculateFleetBounds();
       if (fleetBounds) {
         setViewport(fleetBounds);
+        hasAutocenteredRef.current = true;
       }
+    }
+    
+    // Reset flag when vehicles become empty (e.g., connection lost)
+    if (vehicles.length === 0) {
+      hasAutocenteredRef.current = false;
     }
   }, [vehicles.length, selectedVehicleId, calculateFleetBounds, setViewport]);
 

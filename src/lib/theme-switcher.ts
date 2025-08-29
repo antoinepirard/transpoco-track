@@ -83,3 +83,4 @@ export function optimizeScrollAnimation(element: HTMLElement) {
     clearTimeout(scrollTimeout);
   };
 }
+
