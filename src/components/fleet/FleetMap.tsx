@@ -38,6 +38,7 @@ export function FleetMap({
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [internalShowTrails, setInternalShowTrails] = useState(showTrails);
   const [currentMapStyle, setCurrentMapStyle] = useState(initialMapStyle);
+  const [isFleetLoaded, setIsFleetLoaded] = useState(false);
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
   const hasAutocenteredRef = useRef(false);
   const { toggleMapLayer } = useMapLayers();
@@ -237,6 +238,20 @@ export function FleetMap({
     }
   }, [selectedVehicleId, vehicles]);
 
+  // Track fleet loading state - wait for both vehicles AND layers to be ready
+  useEffect(() => {
+    if (vehicles.length > 0 && layers.length > 0) {
+      // Add a small delay to ensure DeckGL has time to render the layers
+      const renderTimeout = setTimeout(() => {
+        setIsFleetLoaded(true);
+      }, 250); // 250ms should be enough for DeckGL to render
+      
+      return () => clearTimeout(renderTimeout);
+    } else {
+      setIsFleetLoaded(false);
+    }
+  }, [vehicles.length, layers.length]);
+
   // Auto-center on fleet when vehicles are first loaded (only once)
   useEffect(() => {
     if (vehicles.length > 0 && !selectedVehicleId && !hasAutocenteredRef.current) {
@@ -280,6 +295,7 @@ export function FleetMap({
             onViewportChange={setViewport}
             layers={layers}
             onMapLoad={handleMapLoad}
+            isFleetLoaded={isFleetLoaded}
             {...(currentMapStyle ? { mapStyle: currentMapStyle } : {})}
             {...(apiKey ? { apiKey } : {})}
             className="w-full h-full"

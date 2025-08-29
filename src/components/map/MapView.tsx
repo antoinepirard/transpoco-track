@@ -23,6 +23,7 @@ interface MapViewProps {
   className?: string;
   children?: React.ReactNode;
   onMapLoad?: (map: maplibregl.Map) => void;
+  isFleetLoaded?: boolean;
 }
 
 export function MapView({
@@ -34,6 +35,7 @@ export function MapView({
   className = 'w-full h-full',
   children,
   onMapLoad,
+  isFleetLoaded = true,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
@@ -324,11 +326,13 @@ export function MapView({
       />
 
       {/* Loading overlay - non-blocking */}
-      {isLoading && (
+      {(isLoading || !isFleetLoaded) && (
         <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center decorative">
           <div className="bg-white shadow rounded-md px-4 py-3 gap-3 flex items-center">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500 gpu-accelerate" />
-            <span className="text-sm text-gray-700">Loading map…</span>
+            <span className="text-sm text-gray-700">
+              {isLoading ? 'Loading map…' : 'Loading fleet…'}
+            </span>
           </div>
         </div>
       )}
