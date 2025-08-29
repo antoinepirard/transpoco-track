@@ -43,13 +43,19 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
       id: 'driver',
       header: 'Driver',
       accessorKey: 'driver',
+      size: 150,
     },
     {
       header: 'Start Time (HH:MM)',
       accessorKey: 'startTime',
       cell: info => fmtTime(info.getValue() as string),
+      size: 120,
     },
-    { header: 'Start Location', accessorKey: 'startLocation' },
+    { 
+      header: 'Start Location', 
+      accessorKey: 'startLocation',
+      size: 280,
+    },
     {
       header: 'Stop Time (HH:MM)',
       accessorKey: 'stopTime',
@@ -58,32 +64,42 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
         const st = info.row.original.status;
         return val ? fmtTime(val) : st === 'in-progress' ? 'In progress' : '';
       },
+      size: 120,
     },
-    { header: 'Stop Location', accessorKey: 'stopLocation' },
+    { 
+      header: 'Stop Location', 
+      accessorKey: 'stopLocation',
+      size: 280,
+    },
     {
       header: 'Journey Time (HH:MM)',
       accessorKey: 'journeyTimeSec',
       cell: info => fmtHMM(info.getValue() as number),
+      size: 120,
     },
     {
       header: 'Idling Time (HH:MM)',
       accessorKey: 'idleTimeSec',
       cell: info => fmtHMM(info.getValue() as number),
+      size: 120,
     },
     {
       header: 'Distance (KM)',
       accessorKey: 'distanceKm',
       cell: info => (info.getValue<number>() ?? 0).toFixed(2),
+      size: 100,
     },
     {
       header: 'Private Distance (KM)',
       accessorKey: 'privateDistanceKm',
       cell: info => (info.getValue<number>() ?? 0).toFixed(2),
+      size: 120,
     },
     { 
       header: 'Route Playback', 
       accessorKey: 'journeyType',
       cell: () => '🗄',
+      size: 100,
     },
   ], []);
 
@@ -137,13 +153,19 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
       </div>
 
       <div ref={parentRef} className="relative w-full flex-1 overflow-auto rounded-lg border border-gray-200">
-        <table className="min-w-full text-sm">
+        <table className="w-full text-sm table-fixed" style={{ minWidth: '1610px' }}>
           <thead className="sticky top-0 z-10 bg-gray-50 text-left text-gray-600">
             {table.getHeaderGroups().map(hg => (
               <tr key={hg.id} className="border-b border-gray-200">
                 {hg.headers.map(h => (
-                  <th key={h.id} className="px-3 py-2 font-medium">
-                    {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+                  <th 
+                    key={h.id} 
+                    className="px-3 py-2 font-medium"
+                    style={{ width: h.getSize(), maxWidth: h.getSize() }}
+                  >
+                    <div className="truncate">
+                      {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -164,9 +186,19 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
                 >
                   {row.getVisibleCells().map(cell => {
                     const isFirst = cell.column.id === 'driver';
+                    const isLocation = cell.column.id === 'startLocation' || cell.column.id === 'stopLocation';
+                    const cellValue = cell.getValue() as string;
+                    
                     return (
-                      <td key={cell.id} className="px-3 py-2 align-middle">
-                        <div className="flex items-center" style={{ paddingLeft: isFirst ? row.depth * 16 : padding }}>
+                      <td 
+                        key={cell.id} 
+                        className="px-3 py-2 align-middle"
+                        style={{ width: cell.column.getSize(), maxWidth: cell.column.getSize() }}
+                      >
+                        <div 
+                          className="flex items-center" 
+                          style={{ paddingLeft: isFirst ? row.depth * 16 : padding }}
+                        >
                           {isFirst && row.getCanExpand() ? (
                             <button
                               onClick={row.getToggleExpandedHandler()}
@@ -176,7 +208,12 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
                               {row.getIsExpanded() ? <CaretDown size={14} /> : <CaretRight size={14} />}
                             </button>
                           ) : null}
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          <div 
+                            className={`${isLocation ? 'truncate' : ''} min-w-0 flex-1`}
+                            title={isLocation && cellValue ? cellValue : undefined}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </div>
                         </div>
                       </td>
                     );
