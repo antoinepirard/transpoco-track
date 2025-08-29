@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import Image from 'next/image';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   BellIcon,
   ChatCircleIcon,
@@ -70,11 +71,13 @@ const navigationData: NavigationSection[] = [
         id: 'live-map',
         label: 'Live map',
         icon: GlobeIcon,
+        href: '/',
       },
       {
         id: 'live-reports',
         label: 'Live Reports',
         icon: ChartBarIcon,
+        href: '/reports',
       },
       {
         id: 'locations',
@@ -167,8 +170,23 @@ export function NavigationSidebar({
   isCollapsed = false,
   onToggleCollapse,
 }: NavigationSidebarProps) {
-  const [activeItem, setActiveItem] = useState<string>('live-map');
   const navRef = useRef<HTMLElement>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Map pathname to navigation item ID
+  const getActiveItemFromPath = (path: string): string => {
+    switch (path) {
+      case '/':
+        return 'live-map';
+      case '/reports':
+        return 'live-reports';
+      default:
+        return 'live-map';
+    }
+  };
+
+  const activeItem = getActiveItemFromPath(pathname);
 
   // Keyboard navigation for sequential list items
   const handleKeyDown = useCallback(
@@ -257,7 +275,11 @@ export function NavigationSidebar({
                   <button
                     key={item.id}
                     data-nav-item={item.id}
-                    onClick={() => setActiveItem(item.id)}
+                    onClick={() => {
+                      if (item.href) {
+                        router.push(item.href);
+                      }
+                    }}
                     onKeyDown={(e) => handleKeyDown(e, item.id)}
                     className={`w-full flex items-center px-2 py-1.5 text-sm font-medium rounded-md transition-immediate group focus-ring ${
                       isActive

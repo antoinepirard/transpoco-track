@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   MagnifyingGlassIcon,
   XIcon,
@@ -36,6 +37,7 @@ export function VehicleSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const reportsRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const { vehicles, selectedVehicleId, selectVehicle } = useFleetStore();
 
@@ -202,9 +204,18 @@ export function VehicleSearch({
   ];
 
   const handleReportSelect = (reportType: string) => {
-    if (selectedVehicle && onReportSelect) {
-      onReportSelect(selectedVehicle, reportType);
+    if (selectedVehicle) {
+      if (onReportSelect) {
+        onReportSelect(selectedVehicle, reportType);
+      }
       setShowReports(false);
+      // Navigate to reports page with vehicle pre-selected
+      const params = new URLSearchParams({
+        driver: selectedVehicle.driver?.name || 'Unknown driver',
+        startDate: new Date().toISOString().slice(0, 10),
+        endDate: new Date().toISOString().slice(0, 10),
+      });
+      router.push(`/reports?${params.toString()}`);
     }
   };
 
