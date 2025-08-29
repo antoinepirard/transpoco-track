@@ -50,7 +50,6 @@ export function FleetMap({
     isConnected,
     selectVehicle,
     setViewport,
-    setVehicles,
     updateVehiclesIfChanged,
     addTrail,
     setConnectionStatus,

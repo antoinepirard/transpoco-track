@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { subscribeWithSelector } from 'zustand/middleware';
 import type { Vehicle, VehiclePosition, MapViewport } from '@/types/fleet';
 
 interface FleetState {
@@ -23,8 +22,7 @@ interface FleetState {
   setConnectionStatus: (connected: boolean) => void;
 }
 
-export const useFleetStore = create<FleetState, [["zustand/subscribeWithSelector", never]]>()(
-  subscribeWithSelector((set, get) => ({
+export const useFleetStore = create<FleetState>()((set, get) => ({
     vehicles: [],
     selectedVehicleId: null,
     viewport: {
@@ -38,7 +36,7 @@ export const useFleetStore = create<FleetState, [["zustand/subscribeWithSelector
     isConnected: false,
     lastUpdate: null,
 
-    setVehicles: (vehicles) => {
+    setVehicles: (vehicles: Vehicle[]) => {
       set({
         vehicles,
         lastUpdate: new Date(),
@@ -47,7 +45,7 @@ export const useFleetStore = create<FleetState, [["zustand/subscribeWithSelector
 
     // Smart update that only changes vehicles if their data actually changed
     updateVehiclesIfChanged: (newVehicles: Vehicle[]) => {
-      set((state) => {
+      set((state: FleetState) => {
         // Quick reference check first
         if (state.vehicles === newVehicles) return state;
         
@@ -90,18 +88,18 @@ export const useFleetStore = create<FleetState, [["zustand/subscribeWithSelector
       });
     },
 
-    updateVehicle: (vehicleId, update) => {
-      set((state) => ({
-        vehicles: state.vehicles.map((vehicle) =>
+    updateVehicle: (vehicleId: string, update: Partial<Vehicle>) => {
+      set((state: FleetState) => ({
+        vehicles: state.vehicles.map((vehicle: Vehicle) =>
           vehicle.id === vehicleId ? { ...vehicle, ...update } : vehicle
         ),
         lastUpdate: new Date(),
       }));
     },
 
-    applyVehicleUpdates: (updates) => {
-      set((state) => {
-        const vehicleMap = new Map(state.vehicles.map((v) => [v.id, v]));
+    applyVehicleUpdates: (updates: Array<{ vehicleId: string; update: Partial<Vehicle> }>) => {
+      set((state: FleetState) => {
+        const vehicleMap = new Map(state.vehicles.map((v: Vehicle) => [v.id, v]));
 
         for (const { vehicleId, update } of updates) {
           const vehicle = vehicleMap.get(vehicleId);
@@ -117,11 +115,11 @@ export const useFleetStore = create<FleetState, [["zustand/subscribeWithSelector
       });
     },
 
-    selectVehicle: (vehicleId) => {
+    selectVehicle: (vehicleId: string | null) => {
       set({ selectedVehicleId: vehicleId });
 
       if (vehicleId) {
-        const vehicle = get().vehicles.find((v) => v.id === vehicleId);
+        const vehicle = get().vehicles.find((v: Vehicle) => v.id === vehicleId);
         if (vehicle) {
           set({
             viewport: {
@@ -135,12 +133,12 @@ export const useFleetStore = create<FleetState, [["zustand/subscribeWithSelector
       }
     },
 
-    setViewport: (viewport) => {
+    setViewport: (viewport: MapViewport) => {
       set({ viewport });
     },
 
-    addTrail: (vehicleId, positions) => {
-      set((state) => ({
+    addTrail: (vehicleId: string, positions: VehiclePosition[]) => {
+      set((state: FleetState) => ({
         trails: {
           ...state.trails,
           [vehicleId]: [...(state.trails[vehicleId] || []), ...positions],
@@ -152,8 +150,7 @@ export const useFleetStore = create<FleetState, [["zustand/subscribeWithSelector
       set({ trails: {} });
     },
 
-    setConnectionStatus: (connected) => {
+    setConnectionStatus: (connected: boolean) => {
       set({ isConnected: connected });
     },
-  }))
-);
+  }));

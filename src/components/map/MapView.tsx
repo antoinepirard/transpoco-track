@@ -38,7 +38,6 @@ export function MapView({
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
-  const throttleRef = useRef<{ t: number } | null>(null);
   const [viewState, setViewState] = useState<MapViewState>({
     ...viewport,
     transitionDuration: 0,
