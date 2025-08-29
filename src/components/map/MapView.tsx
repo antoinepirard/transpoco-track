@@ -219,9 +219,9 @@ export function MapView({
       
       try {
         map.remove();
-      } catch (error) {
+      } catch (error: unknown) {
         // Only warn if it's not an abort-related error
-        if (!error?.message?.includes('aborted')) {
+        if (error instanceof Error && !error.message.includes('aborted')) {
           console.warn('Error removing map:', error);
         }
       }
@@ -239,26 +239,26 @@ export function MapView({
 
     const style = getMapStyle();
     if (style) {
-      try {
-        // Add a small delay to prevent rapid style changes
-        const timeoutId = setTimeout(() => {
-          if (mapInstanceRef.current && !isInitializingRef.current) {
+      // Add a small delay to prevent rapid style changes
+      const timeoutId = setTimeout(() => {
+        if (mapInstanceRef.current && !isInitializingRef.current) {
+          try {
             map.setStyle(style as string);
+          } catch (error) {
+            // Ignore abort errors during style changes
+            if (
+              error instanceof Error &&
+              (error.name === 'AbortError' || error.message.includes('aborted'))
+            ) {
+              console.log('Style change aborted (expected during transitions)');
+            } else {
+              console.warn('Error setting map style:', error);
+            }
           }
-        }, 100);
-
-        return () => clearTimeout(timeoutId);
-      } catch (error) {
-        // Ignore abort errors during style changes
-        if (
-          error instanceof Error &&
-          (error.name === 'AbortError' || error.message.includes('aborted'))
-        ) {
-          console.log('Style change aborted (expected during transitions)');
-        } else {
-          console.warn('Error setting map style:', error);
         }
-      }
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
     }
   }, [getMapStyle]);
 

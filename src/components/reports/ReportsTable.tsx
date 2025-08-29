@@ -179,7 +179,6 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
           <tbody style={{ height: `${totalSize}px`, position: 'relative' }}>
             {virtualRows.map(vRow => {
               const row = table.getRowModel().rows[vRow.index]!;
-              const grouped = row.getIsGrouped();
               const isSubRow = row.depth > 0;
 
               return (
