@@ -192,8 +192,16 @@ export function FleetMap({
         selectedVehicleId: selectedVehicleId ?? undefined,
         onVehicleClick: handleVehicleClick,
         onVehicleHover: handleVehicleHover,
+        clusterVehicles: true, // Enable clustering
+        zoom: viewport.zoom,
       });
-      deckLayers.push(vehicleLayer);
+      
+      // Handle both single layer and array of layers from clustering
+      if (Array.isArray(vehicleLayer)) {
+        deckLayers.push(...vehicleLayer.flat());
+      } else {
+        deckLayers.push(vehicleLayer);
+      }
     }
 
     return deckLayers;
@@ -204,6 +212,7 @@ export function FleetMap({
     selectedVehicleId,
     handleVehicleClick,
     handleVehicleHover,
+    viewport.zoom, // Re-cluster when zoom changes
   ]);
 
   // Calculate fleet bounds and auto-center map

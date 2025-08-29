@@ -11,6 +11,7 @@ interface VehicleLayerProps {
   onVehicleHover?: (vehicle: Vehicle | null) => void;
   showTrails?: boolean;
   clusterVehicles?: boolean;
+  zoom?: number;
 }
 
 export function VehicleLayer({
@@ -20,6 +21,7 @@ export function VehicleLayer({
   onVehicleHover,
   showTrails = false,
   clusterVehicles = false,
+  zoom,
 }: VehicleLayerProps) {
   const layer = useMemo(() => {
     if (!vehicles.length) return null;
@@ -31,6 +33,7 @@ export function VehicleLayer({
       ...(onVehicleHover ? { onVehicleHover } : {}),
       showTrails,
       clusterVehicles,
+      zoom,
     });
   }, [
     vehicles,
@@ -39,6 +42,7 @@ export function VehicleLayer({
     onVehicleHover,
     showTrails,
     clusterVehicles,
+    zoom,
   ]);
 
   return layer;

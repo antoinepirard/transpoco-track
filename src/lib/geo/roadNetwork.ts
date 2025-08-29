@@ -276,13 +276,11 @@ export function getSpeedForRoadType(roadType: string): number {
 }
 
 /**
- * Get a random road segment for initialization
+ * Get a random road segment for initialization with regional distribution
  */
 export function getRandomRoadSegment(): SegmentPosition {
-  const segment =
-    IRELAND_ROAD_SEGMENTS[
-      Math.floor(Math.random() * IRELAND_ROAD_SEGMENTS.length)
-    ];
+  // Use weighted distribution to spread vehicles across Ireland
+  const segment = getRegionallyDistributedSegment();
   const offset = Math.random();
   const position = interpolateOnSegment(segment, offset);
   const heading = getSegmentBearing(segment);
@@ -293,4 +291,49 @@ export function getRandomRoadSegment(): SegmentPosition {
     position,
     heading,
   };
+}
+
+/**
+ * Get a road segment with regional distribution weighting
+ * 40% Dublin region, 60% rest of Ireland
+ */
+function getRegionallyDistributedSegment(): RoadSegment {
+  const random = Math.random();
+  
+  // Define regional bounds
+  const dublinBounds = {
+    north: 53.9,
+    south: 53.0,
+    east: -6.0,
+    west: -6.8,
+  };
+  
+  if (random < 0.4) {
+    // 40% chance for Dublin region
+    const dublinSegments = IRELAND_ROAD_SEGMENTS.filter(segment => {
+      const lat = segment.start.latitude;
+      const lng = segment.start.longitude;
+      return lat >= dublinBounds.south && lat <= dublinBounds.north &&
+             lng >= dublinBounds.west && lng <= dublinBounds.east;
+    });
+    
+    if (dublinSegments.length > 0) {
+      return dublinSegments[Math.floor(Math.random() * dublinSegments.length)];
+    }
+  }
+  
+  // 60% chance for rest of Ireland (or fallback if no Dublin segments)
+  const nonDublinSegments = IRELAND_ROAD_SEGMENTS.filter(segment => {
+    const lat = segment.start.latitude;
+    const lng = segment.start.longitude;
+    return !(lat >= dublinBounds.south && lat <= dublinBounds.north &&
+             lng >= dublinBounds.west && lng <= dublinBounds.east);
+  });
+  
+  if (nonDublinSegments.length > 0) {
+    return nonDublinSegments[Math.floor(Math.random() * nonDublinSegments.length)];
+  }
+  
+  // Fallback to any segment
+  return IRELAND_ROAD_SEGMENTS[Math.floor(Math.random() * IRELAND_ROAD_SEGMENTS.length)];
 }
