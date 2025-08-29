@@ -273,7 +273,7 @@ export function VehicleSearch({
 
       {/* Vehicle Details Card - shown when vehicle is selected */}
       {selectedVehicle && !isOpen && (
-        <div className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg">
+        <div className="absolute z-50 mt-2 w-full bg-white ring-1 ring-gray-300/50 rounded-xl shadow-lg">
           <div className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
@@ -388,7 +388,7 @@ export function VehicleSearch({
 
       {/* Dropdown Results - only shown when searching and no vehicle selected */}
       {isOpen && !selectedVehicle && filteredVehicles.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-auto">
+        <div className="absolute z-50 mt-1 w-full bg-white ring-1 ring-gray-300/50 rounded-lg shadow-lg max-h-64 overflow-auto">
           <ul
             ref={listRef}
             role="listbox"
