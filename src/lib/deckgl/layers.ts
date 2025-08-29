@@ -43,6 +43,10 @@ export function createVehicleLayer({
     updateTriggers: {
       getSize: selectedVehicleId,
     },
+    parameters: {
+      depthTest: false,
+      depthMask: false,
+    },
   });
 }
 

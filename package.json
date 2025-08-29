@@ -13,6 +13,7 @@
     "@deck.gl/core": "^9.1.14",
     "@deck.gl/geo-layers": "^9.1.14",
     "@deck.gl/layers": "^9.1.14",
+    "@deck.gl/mapbox": "^9.1.14",
     "@deck.gl/react": "^9.1.14",
     "@heroicons/react": "^2.2.0",
     "@phosphor-icons/react": "^2.1.10",

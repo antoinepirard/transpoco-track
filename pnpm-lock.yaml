@@ -20,6 +20,9 @@ importers:
       '@deck.gl/layers':
         specifier: ^9.1.14
         version: 9.1.14(@deck.gl/core@9.1.14)(@loaders.gl/core@4.3.4)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9)))
+      '@deck.gl/mapbox':
+        specifier: ^9.1.14
+        version: 9.1.14(@deck.gl/core@9.1.14)(@luma.gl/core@9.1.9)
       '@deck.gl/react':
         specifier: ^9.1.14
         version: 9.1.14(@deck.gl/core@9.1.14)(@deck.gl/widgets@9.1.14(@deck.gl/core@9.1.14))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -162,6 +165,12 @@ packages:
       '@loaders.gl/core': ^4.2.0
       '@luma.gl/core': ~9.1.9
       '@luma.gl/engine': ~9.1.9
+
+  '@deck.gl/mapbox@9.1.14':
+    resolution: {integrity: sha512-l3c5NFwKjIOeVWMtqK5LR8MA4grRe7tpLctkovNIo+owPBoW+q7gAWBJ1hGFmE1sxVFhoqZx70FqBAT9Mqn1ow==}
+    peerDependencies:
+      '@deck.gl/core': ^9.1.0
+      '@luma.gl/core': ~9.1.9
 
   '@deck.gl/mesh-layers@9.1.14':
     resolution: {integrity: sha512-NVUw0yG4stJfrklWCGP9j8bNlf9YQc4PccMeNNIHNrU/Je6/Va6dJZg0RGtVkeaTY1Lk3A7wRzq8/M5Urfvuiw==}
@@ -3138,6 +3147,13 @@ snapshots:
       '@math.gl/polygon': 4.1.0
       '@math.gl/web-mercator': 4.1.0
       earcut: 2.2.4
+
+  '@deck.gl/mapbox@9.1.14(@deck.gl/core@9.1.14)(@luma.gl/core@9.1.9)':
+    dependencies:
+      '@deck.gl/core': 9.1.14
+      '@luma.gl/constants': 9.1.9
+      '@luma.gl/core': 9.1.9
+      '@math.gl/web-mercator': 4.1.0
 
   '@deck.gl/mesh-layers@9.1.14(@deck.gl/core@9.1.14)(@loaders.gl/core@4.3.4)(@luma.gl/core@9.1.9)(@luma.gl/engine@9.1.9(@luma.gl/core@9.1.9)(@luma.gl/shadertools@9.1.9(@luma.gl/core@9.1.9)))':
     dependencies:

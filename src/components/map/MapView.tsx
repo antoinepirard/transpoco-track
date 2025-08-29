@@ -2,8 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
-import { DeckGL } from '@deck.gl/react';
-import type { MapViewState, ViewStateChangeParameters } from '@deck.gl/core';
+import { MapboxOverlay } from '@deck.gl/mapbox';
 import type { MapViewport } from '@/types/fleet';
 import type { MapConfiguration, DeckGLLayer } from '@/types/map';
 import { DEFAULT_MAP_CONFIG, INITIAL_VIEWPORT } from '@/lib/maplibre/config';
@@ -38,11 +37,7 @@ export function MapView({
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
-  const throttleRef = useRef<{ t: number } | null>(null);
-  const [viewState, setViewState] = useState<MapViewState>({
-    ...viewport,
-    transitionDuration: 0,
-  });
+  const overlayRef = useRef<MapboxOverlay | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [retryTrigger, setRetryTrigger] = useState(0);
@@ -50,52 +45,24 @@ export function MapView({
   const abortControllerRef = useRef<AbortController | null>(null);
   const isInitializingRef = useRef(false);
 
-  const handleViewStateChange = useCallback(
-    (info: ViewStateChangeParameters<MapViewState>) => {
-      const vs = info.viewState;
+  // Handle viewport changes from MapLibre events
+  const handleMapMove = useCallback(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
 
-      // 1) Update DeckGL local view state immediately
-      setViewState((prev) => ({
-        ...prev,
-        ...vs,
-        transitionDuration: 0,
-      }));
+    const center = map.getCenter();
+    const zoom = map.getZoom();
+    const bearing = map.getBearing();
+    const pitch = map.getPitch();
 
-      // 2) Keep MapLibre in lockstep (same frame via rAF to avoid tearing)
-      const map = mapInstanceRef.current;
-      if (map) {
-        try {
-          if (throttleRef.current?.t) {
-            cancelAnimationFrame(throttleRef.current.t);
-          }
-          const t = requestAnimationFrame(() => {
-            try {
-              map.jumpTo({
-                center: [vs.longitude, vs.latitude],
-                zoom: vs.zoom,
-                bearing: vs.bearing || 0,
-                pitch: vs.pitch || 0,
-              });
-            } catch {}
-          });
-          throttleRef.current = { t };
-        } catch {}
-      }
-
-      // 3) Persist to store only when drag ends to prevent layer recreation during interaction
-      const isDragging = info.interactionState?.isDragging;
-      if (isDragging === false) {
-        onViewportChange?.({
-          latitude: vs.latitude,
-          longitude: vs.longitude,
-          zoom: vs.zoom,
-          bearing: vs.bearing || 0,
-          pitch: vs.pitch || 0,
-        });
-      }
-    },
-    [onViewportChange]
-  );
+    onViewportChange?.({
+      latitude: center.lat,
+      longitude: center.lng,
+      zoom,
+      bearing,
+      pitch,
+    });
+  }, [onViewportChange]);
 
   const getMapStyle = useCallback(() => {
     if (typeof mapStyle === 'string') {
@@ -136,7 +103,7 @@ export function MapView({
       bearing: viewport.bearing || 0,
       pitch: viewport.pitch || 0,
       attributionControl: DEFAULT_MAP_CONFIG.attributionControl ? {} : false,
-      interactive: false,
+      interactive: true, // Enable interaction since MapLibre now handles it
     });
 
     // Set a timeout for map loading
@@ -153,6 +120,18 @@ export function MapView({
       setIsLoading(false);
       retryCountRef.current = 0;
       isInitializingRef.current = false;
+
+      // Create and add DeckGL overlay
+      const overlay = new MapboxOverlay({
+        layers: layers as any[], // eslint-disable-line @typescript-eslint/no-explicit-any
+      });
+      map.addControl(overlay as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      overlayRef.current = overlay;
+
+      // Set up viewport change listeners
+      map.on('moveend', handleMapMove);
+      map.on('zoomend', handleMapMove);
+
       onMapLoad?.(map);
     });
 
@@ -235,9 +214,12 @@ export function MapView({
       abortController.abort();
       isInitializingRef.current = false;
 
-      if (throttleRef.current?.t) {
-        cancelAnimationFrame(throttleRef.current.t);
-        throttleRef.current = null;
+      // Clean up overlay
+      if (overlayRef.current && mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.removeControl(overlayRef.current as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+        } catch {}
+        overlayRef.current = null;
       }
 
       try {
@@ -253,7 +235,7 @@ export function MapView({
       setMapError(null);
       retryCountRef.current = 0;
     };
-  }, [getMapStyle, retryTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [getMapStyle, retryTrigger, layers, handleMapMove]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle style changes without re-initializing map
   useEffect(() => {
@@ -286,13 +268,25 @@ export function MapView({
     return;
   }, [getMapStyle]);
 
-  // Update viewport state when prop changes
+  // Update overlay layers when they change
   useEffect(() => {
-    setViewState((prev) => ({
-      ...prev,
-      ...viewport,
-      transitionDuration: 0,
-    }));
+    const overlay = overlayRef.current;
+    if (overlay) {
+      overlay.setProps({ layers: layers as any[] }); // eslint-disable-line @typescript-eslint/no-explicit-any
+    }
+  }, [layers]);
+
+  // Update map viewport when prop changes
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (map && !isInitializingRef.current) {
+      map.jumpTo({
+        center: [viewport.longitude, viewport.latitude],
+        zoom: viewport.zoom,
+        bearing: viewport.bearing || 0,
+        pitch: viewport.pitch || 0,
+      });
+    }
   }, [viewport]);
 
   return (
@@ -343,38 +337,8 @@ export function MapView({
         </div>
       )}
 
-      {/* DeckGL overlay - always mounted for smooth interaction */}
-      <DeckGL
-        viewState={viewState}
-        onViewStateChange={handleViewStateChange as any} // eslint-disable-line @typescript-eslint/no-explicit-any
-        layers={layers as any[]} // eslint-disable-line @typescript-eslint/no-explicit-any
-        useDevicePixels={
-          typeof window !== 'undefined' ? window.devicePixelRatio : 1
-        }
-        controller={{
-          dragPan: true,
-          dragRotate: true,
-          doubleClickZoom: true,
-          touchZoom: true,
-          touchRotate: true,
-          keyboard: true,
-        }}
-        getCursor={({ isDragging, isHovering }) => {
-          if (isDragging) return 'grabbing';
-          if (isHovering) return 'pointer';
-          return 'grab';
-        }}
-        style={{
-          position: 'absolute',
-          top: '0',
-          left: '0',
-          width: '100%',
-          height: '100%',
-          zIndex: '1',
-        }}
-      >
-        {children}
-      </DeckGL>
+      {/* Children rendered on top of the map */}
+      {children}
     </div>
   );
 }
