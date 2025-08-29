@@ -109,10 +109,9 @@ export function createHeatmapLayer(positions: VehiclePosition[]) {
 
 function getVehicleIconUrl(vehicle: Vehicle): string {
   const baseUrl = '/icons/vehicles';
-  const status = vehicle.status;
-  const type = vehicle.type;
-
-  return `${baseUrl}/${type}-${status}.svg`;
+  // Simplified: only use active or inactive based on status
+  const isActive = vehicle.status === 'active';
+  return `${baseUrl}/${isActive ? 'active' : 'inactive'}.svg`;
 }
 
 function hexToRgb(hex: string): [number, number, number] | null {
