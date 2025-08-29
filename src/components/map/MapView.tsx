@@ -44,11 +44,12 @@ export function MapView({
   const retryCountRef = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
   const isInitializingRef = useRef(false);
+  const isProgrammaticUpdateRef = useRef(false);
 
   // Handle viewport changes from MapLibre events
   const handleMapMove = useCallback(() => {
     const map = mapInstanceRef.current;
-    if (!map) return;
+    if (!map || isProgrammaticUpdateRef.current) return;
 
     const center = map.getCenter();
     const zoom = map.getZoom();
@@ -121,16 +122,12 @@ export function MapView({
       retryCountRef.current = 0;
       isInitializingRef.current = false;
 
-      // Create and add DeckGL overlay
+      // Create and add DeckGL overlay (initially empty; updated via separate effect)
       const overlay = new MapboxOverlay({
-        layers: layers as any[], // eslint-disable-line @typescript-eslint/no-explicit-any
+        layers: [] as any[], // eslint-disable-line @typescript-eslint/no-explicit-any
       });
       map.addControl(overlay as any); // eslint-disable-line @typescript-eslint/no-explicit-any
       overlayRef.current = overlay;
-
-      // Set up viewport change listeners
-      map.on('moveend', handleMapMove);
-      map.on('zoomend', handleMapMove);
 
       onMapLoad?.(map);
     });
@@ -235,7 +232,21 @@ export function MapView({
       setMapError(null);
       retryCountRef.current = 0;
     };
-  }, [getMapStyle, retryTrigger, layers, handleMapMove]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [getMapStyle, retryTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Bind/unbind viewport change listeners separately so init effect doesn't bounce
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || isInitializingRef.current) return;
+
+    map.on('moveend', handleMapMove);
+    map.on('zoomend', handleMapMove);
+
+    return () => {
+      map.off('moveend', handleMapMove);
+      map.off('zoomend', handleMapMove);
+    };
+  }, [handleMapMove]);
 
   // Handle style changes without re-initializing map
   useEffect(() => {
@@ -280,12 +291,20 @@ export function MapView({
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (map && !isInitializingRef.current) {
+      // Set flag to prevent handleMapMove from firing during programmatic update
+      isProgrammaticUpdateRef.current = true;
+
       map.jumpTo({
         center: [viewport.longitude, viewport.latitude],
         zoom: viewport.zoom,
         bearing: viewport.bearing || 0,
         pitch: viewport.pitch || 0,
       });
+
+      // Reset flag after a brief delay to allow MapLibre events to settle
+      setTimeout(() => {
+        isProgrammaticUpdateRef.current = false;
+      }, 100);
     }
   }, [viewport]);
 
