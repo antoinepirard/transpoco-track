@@ -137,16 +137,24 @@ function chooseNextSegment(
     return connectedSegments[0]!.id; // Only one choice
   }
 
+  // Bearing helpers
+  const normalize = (deg: number) => {
+    const b = deg % 360;
+    return b < 0 ? b + 360 : b;
+  };
+  const angleDiff = (a: number, b: number) => {
+    const d = Math.abs(normalize(a) - normalize(b));
+    return d > 180 ? 360 - d : d;
+  };
+
   // If we have a preferred bearing, choose the segment that best matches it
   if (preferredBearing !== undefined) {
     let bestSegment = connectedSegments[0]!;
-    let bestBearingDiff = Math.abs(
-      getSegmentBearing(bestSegment) - preferredBearing
-    );
+    let bestBearingDiff = angleDiff(getSegmentBearing(bestSegment), preferredBearing);
 
     connectedSegments.forEach((segment) => {
       const segmentBearing = getSegmentBearing(segment);
-      const bearingDiff = Math.abs(segmentBearing - preferredBearing);
+      const bearingDiff = angleDiff(segmentBearing, preferredBearing);
       if (bearingDiff < bestBearingDiff) {
         bestBearingDiff = bearingDiff;
         bestSegment = segment;
@@ -254,7 +262,8 @@ function getSegmentBearing(segment: RoadSegment): number {
     segment.start.latitude,
   ];
   const end: [number, number] = [segment.end.longitude, segment.end.latitude];
-  return bearing(start, end);
+  const b = bearing(start, end); // turf returns -180..180
+  return ((b % 360) + 360) % 360; // normalize to 0..360
 }
 
 /**

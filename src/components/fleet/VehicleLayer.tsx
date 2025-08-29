@@ -9,7 +9,6 @@ interface VehicleLayerProps {
   selectedVehicleId?: string;
   onVehicleClick?: (vehicle: Vehicle) => void;
   onVehicleHover?: (vehicle: Vehicle | null) => void;
-  showTrails?: boolean;
   clusterVehicles?: boolean;
   zoom?: number;
 }
@@ -19,7 +18,6 @@ export function VehicleLayer({
   selectedVehicleId,
   onVehicleClick,
   onVehicleHover,
-  showTrails = false,
   clusterVehicles = false,
   zoom,
 }: VehicleLayerProps) {
@@ -31,7 +29,6 @@ export function VehicleLayer({
       ...(selectedVehicleId !== undefined ? { selectedVehicleId } : {}),
       ...(onVehicleClick ? { onVehicleClick } : {}),
       ...(onVehicleHover ? { onVehicleHover } : {}),
-      showTrails,
       clusterVehicles,
       zoom,
     });
@@ -40,7 +37,6 @@ export function VehicleLayer({
     selectedVehicleId,
     onVehicleClick,
     onVehicleHover,
-    showTrails,
     clusterVehicles,
     zoom,
   ]);

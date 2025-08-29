@@ -16,6 +16,11 @@ let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 10;
 const RECONNECT_DELAY = 1000;
 
+// Frame batching for performance
+const pendingUpdates = new Map<string, VehicleUpdate>();
+let batchTimeout: NodeJS.Timeout | null = null;
+const BATCH_INTERVAL_MS = 16; // ~60fps
+
 self.onmessage = (event: MessageEvent<WorkerMessage>) => {
   const { type, data } = event.data;
 
@@ -53,10 +58,21 @@ function connect(url: string) {
   ws.onmessage = (event) => {
     try {
       const message: WebSocketMessage = JSON.parse(event.data);
-      postMessage({
-        type: 'message',
-        data: message,
-      } satisfies WorkerResponse);
+
+      // Handle batching for vehicle updates
+      if (message.type === 'vehicle_update') {
+        const update = message.data as VehicleUpdate;
+        batchVehicleUpdate(update);
+      } else if (message.type === 'bulk_update') {
+        const updates = message.data as VehicleUpdate[];
+        updates.forEach((update) => batchVehicleUpdate(update));
+      } else {
+        // Non-vehicle updates pass through immediately
+        postMessage({
+          type: 'message',
+          data: message,
+        } satisfies WorkerResponse);
+      }
     } catch (error) {
       postMessage({
         type: 'error',
@@ -110,7 +126,9 @@ function send(data: unknown) {
 function processData(rawData: unknown) {
   try {
     if (Array.isArray(rawData)) {
-      const processedUpdates = rawData.map(processVehicleUpdate).filter(Boolean);
+      const processedUpdates = rawData
+        .map(processVehicleUpdate)
+        .filter(Boolean);
       postMessage({
         type: 'processed',
         data: processedUpdates,
@@ -142,16 +160,53 @@ function processVehicleUpdate(data: unknown): VehicleUpdate | null {
   return {
     type: (update.type as VehicleUpdate['type']) || 'position',
     vehicleId: String(update.vehicleId || ''),
-    timestamp: new Date(update.timestamp as string | number),
+    timestamp:
+      typeof update.timestamp === 'number'
+        ? update.timestamp
+        : new Date(update.timestamp as string).getTime(),
     data: update.data as VehicleUpdate['data'],
   };
 }
 
 function scheduleReconnect(url: string) {
-  reconnectTimeout = setTimeout(() => {
-    reconnectAttempts++;
-    connect(url);
-  }, RECONNECT_DELAY * Math.pow(2, reconnectAttempts));
+  reconnectTimeout = setTimeout(
+    () => {
+      reconnectAttempts++;
+      connect(url);
+    },
+    RECONNECT_DELAY * Math.pow(2, reconnectAttempts)
+  );
+}
+
+function batchVehicleUpdate(update: VehicleUpdate) {
+  // Store only the latest update per vehicle (deduping)
+  pendingUpdates.set(update.vehicleId, update);
+
+  // Schedule batch processing if not already scheduled
+  if (!batchTimeout) {
+    batchTimeout = setTimeout(flushBatch, BATCH_INTERVAL_MS);
+  }
+}
+
+function flushBatch() {
+  if (pendingUpdates.size === 0) {
+    batchTimeout = null;
+    return;
+  }
+
+  const updates = Array.from(pendingUpdates.values());
+  pendingUpdates.clear();
+  batchTimeout = null;
+
+  // Send as a batched message
+  postMessage({
+    type: 'message',
+    data: {
+      type: 'bulk_update',
+      organizationId: 'batched',
+      data: updates,
+    } as WebSocketMessage,
+  } satisfies WorkerResponse);
 }
 
 export {};

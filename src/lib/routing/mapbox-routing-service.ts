@@ -101,7 +101,7 @@ export class MapboxRoutingService implements RoutingService {
     if (this.config.enableCaching) {
       const cached = this.cache.get(cacheKey);
       if (cached && cached.expires > Date.now()) {
-        return cached.data;
+        return cached.data as RoadSnapResult;
       }
     }
 
@@ -123,13 +123,16 @@ export class MapboxRoutingService implements RoutingService {
         originalCoords: [longitude, latitude],
         syntheticCoords: coords,
         offsetMeters,
-        radiusMeters: options?.radiusMeters || 100
+        radiusMeters: options?.radiusMeters || 100,
       });
 
       // Use appropriate radius for better matching - increased for Dublin area
       const matchOptions = {
         ...options,
-        radiusMeters: Math.min(500, Math.max(300, options?.radiusMeters || 400)), // Increased radius for urban areas
+        radiusMeters: Math.min(
+          500,
+          Math.max(300, options?.radiusMeters || 400)
+        ), // Increased radius for urban areas
       };
 
       const matchResult = await this.matchToRoads(coords, matchOptions);
@@ -141,32 +144,39 @@ export class MapboxRoutingService implements RoutingService {
           radiusMeters: 600,
         };
         const fallbackResult = await this.matchToRoads(coords, fallbackOptions);
-        
+
         if (fallbackResult.matchedCoordinates.length === 0) {
           throw this.createError(
             'INVALID_COORDINATES',
             'No road found near coordinates'
           );
         }
-        
+
         // Use fallback result
-        const snappedCoord = fallbackResult.matchedCoordinates[1] || fallbackResult.matchedCoordinates[0];
+        const snappedCoord =
+          fallbackResult.matchedCoordinates[1] ||
+          fallbackResult.matchedCoordinates[0];
         return {
           location: snappedCoord,
           distance: this.calculateDistance([longitude, latitude], snappedCoord),
           confidence: Math.max(0.3, fallbackResult.confidence - 0.2), // Lower confidence for fallback
-          heading: this.calculateHeadingFromSegment(fallbackResult.matchedCoordinates),
+          heading: this.calculateHeadingFromSegment(
+            fallbackResult.matchedCoordinates
+          ),
         };
       }
 
       // Use the center point (index 1) if available, otherwise the first point
-      const snappedCoord = matchResult.matchedCoordinates[1] || matchResult.matchedCoordinates[0];
+      const snappedCoord =
+        matchResult.matchedCoordinates[1] || matchResult.matchedCoordinates[0];
 
       const result: RoadSnapResult = {
         location: snappedCoord,
         distance: this.calculateDistance([longitude, latitude], snappedCoord),
         confidence: matchResult.confidence,
-        heading: this.calculateHeadingFromSegment(matchResult.matchedCoordinates),
+        heading: this.calculateHeadingFromSegment(
+          matchResult.matchedCoordinates
+        ),
       };
 
       // Cache result
@@ -195,7 +205,7 @@ export class MapboxRoutingService implements RoutingService {
     if (this.config.enableCaching) {
       const cached = this.cache.get(cacheKey);
       if (cached && cached.expires > Date.now()) {
-        return cached.data;
+        return cached.data as Route;
       }
     }
 
@@ -246,7 +256,7 @@ export class MapboxRoutingService implements RoutingService {
     // Round coordinates for better cache hits
     const roundedCoords = coordinates.map(([lng, lat]) => [
       Math.round(lng * 10000) / 10000,
-      Math.round(lat * 10000) / 10000
+      Math.round(lat * 10000) / 10000,
     ]);
     const cacheKey = `match:${roundedCoords.map((c) => c.join(',')).join(';')}:${mergedOptions.radiusMeters || 400}`;
 
@@ -254,7 +264,7 @@ export class MapboxRoutingService implements RoutingService {
     if (this.config.enableCaching) {
       const cached = this.cache.get(cacheKey);
       if (cached && cached.expires > Date.now()) {
-        return cached.data;
+        return cached.data as { matchedCoordinates: Array<[number, number]>; confidence: number; route?: Route };
       }
     }
 
@@ -270,7 +280,7 @@ export class MapboxRoutingService implements RoutingService {
       }
 
       const matching = response.matchings[0];
-      
+
       console.log('📊 Mapbox Map Matching response details:', {
         matchingsCount: response.matchings.length,
         confidence: matching.confidence,
@@ -278,7 +288,7 @@ export class MapboxRoutingService implements RoutingService {
         distance: matching.distance,
         duration: matching.duration,
         tracepointsCount: response.tracepoints?.length,
-        originalInputCount: coordinates.length
+        originalInputCount: coordinates.length,
       });
 
       const result = {
@@ -342,7 +352,7 @@ export class MapboxRoutingService implements RoutingService {
         speedReduction,
         averageSpeed,
       };
-    } catch (error) {
+    } catch {
       // Fallback traffic info
       return {
         congestionLevel: 'moderate',
@@ -354,13 +364,17 @@ export class MapboxRoutingService implements RoutingService {
 
   async isAvailable(): Promise<boolean> {
     try {
-      console.log('🩺 Testing Mapbox service availability with Dublin coordinates...');
+      console.log(
+        '🩺 Testing Mapbox service availability with Dublin coordinates...'
+      );
       // Test with a simple request to Dublin city center
-      const result = await this.snapToRoad(53.3498, -6.2603, { radiusMeters: 100 });
+      const result = await this.snapToRoad(53.3498, -6.2603, {
+        radiusMeters: 100,
+      });
       console.log('✅ Mapbox availability test succeeded:', {
         location: result.location,
         distance: result.distance,
-        confidence: result.confidence
+        confidence: result.confidence,
       });
       return true;
     } catch (err) {
@@ -395,33 +409,33 @@ export class MapboxRoutingService implements RoutingService {
     const params = new URLSearchParams();
 
     params.set('access_token', this.config.apiKey!);
-    
+
     // Essential parameters for better map matching
     params.set('geometries', options.geometries || 'geojson');
     params.set('overview', 'full'); // Get full geometry
     params.set('steps', 'false'); // We don't need turn-by-turn
     params.set('tidy', 'true'); // Clean up the trace
-    
+
     if (options.radiusMeters) {
       params.set(
         'radiuses',
         coordinates.map(() => options.radiusMeters).join(';')
       );
     }
-    
+
     if (options.annotations) {
       params.set('annotations', options.annotations.join(','));
     }
 
     const url = `${this.config.baseUrl}/matching/v5/mapbox/${options.profile || 'driving'}/${coords}?${params}`;
-    
+
     console.log('🌐 Mapbox Map Matching URL:', {
       coordCount: coordinates.length,
       coordinates: coordinates,
       radiusMeters: options.radiusMeters,
-      profile: options.profile || 'driving'
+      profile: options.profile || 'driving',
     });
-    
+
     return url;
   }
 
@@ -432,7 +446,7 @@ export class MapboxRoutingService implements RoutingService {
           console.log('📡 Mapbox API request:', {
             url: url.length > 200 ? url.substring(0, 200) + '...' : url,
             queueLength: this.rateLimitQueue.length,
-            requestsInProgress: this.requestsInProgress
+            requestsInProgress: this.requestsInProgress,
           });
 
           // Rate limiting
@@ -441,13 +455,14 @@ export class MapboxRoutingService implements RoutingService {
           this.lastRequestTime = Date.now();
 
           const controller = new AbortController();
-          const timeoutId = setTimeout(
-            () => {
-              console.warn('⏰ Mapbox request timeout after', this.config.timeout, 'ms');
-              controller.abort();
-            },
-            this.config.timeout
-          );
+          const timeoutId = setTimeout(() => {
+            console.warn(
+              '⏰ Mapbox request timeout after',
+              this.config.timeout,
+              'ms'
+            );
+            controller.abort();
+          }, this.config.timeout);
 
           const startTime = Date.now();
           const response = await fetch(url, {
@@ -468,10 +483,12 @@ export class MapboxRoutingService implements RoutingService {
             duration: `${duration}ms`,
             headers: {
               'content-type': response.headers.get('content-type'),
-              'x-rate-limit-interval': response.headers.get('x-rate-limit-interval'),
+              'x-rate-limit-interval': response.headers.get(
+                'x-rate-limit-interval'
+              ),
               'x-rate-limit-limit': response.headers.get('x-rate-limit-limit'),
-              'x-rate-limit-reset': response.headers.get('x-rate-limit-reset')
-            }
+              'x-rate-limit-reset': response.headers.get('x-rate-limit-reset'),
+            },
           });
 
           if (!response.ok) {
@@ -479,16 +496,19 @@ export class MapboxRoutingService implements RoutingService {
             console.error('❌ Mapbox API error response:', {
               status: response.status,
               statusText: response.statusText,
-              body: errorText.substring(0, 500)
+              body: errorText.substring(0, 500),
             });
-            
+
             if (response.status === 429) {
               // Parse rate limit reset time from headers
               const resetTime = response.headers.get('x-rate-limit-reset');
               if (resetTime) {
                 this.rateLimitResetTime = parseInt(resetTime) * 1000; // Convert to milliseconds
                 this.isRateLimited = true;
-                console.warn('🚦 Rate limit hit, reset at:', new Date(this.rateLimitResetTime).toISOString());
+                console.warn(
+                  '🚦 Rate limit hit, reset at:',
+                  new Date(this.rateLimitResetTime).toISOString()
+                );
               }
               // Increase backoff multiplier for subsequent requests
               this.backoffMultiplier = Math.min(this.backoffMultiplier * 2, 8);
@@ -503,21 +523,24 @@ export class MapboxRoutingService implements RoutingService {
           const data = await response.json();
           console.log('✅ Mapbox API success:', {
             dataKeys: Object.keys(data),
-            dataSize: JSON.stringify(data).length
+            dataSize: JSON.stringify(data).length,
           });
-          
+
           // Reset rate limiting on successful request
           if (this.isRateLimited && Date.now() > this.rateLimitResetTime) {
             this.isRateLimited = false;
             this.backoffMultiplier = 1;
             console.log('🟢 Rate limit cleared, backoff reset');
           }
-          
+
           resolve(data);
         } catch (error) {
           this.requestsInProgress--;
           console.error('💥 Mapbox API request failed:', error);
           reject(error);
+        } finally {
+          // Process next item in queue after this request completes
+          setTimeout(() => this.processQueue(), 0);
         }
       };
 
@@ -529,17 +552,20 @@ export class MapboxRoutingService implements RoutingService {
   private async waitForRateLimit(): Promise<void> {
     const maxRequestsPerMinute = this.config.rateLimitRpm || 600;
     const baseInterval = 60000 / maxRequestsPerMinute; // milliseconds between requests
-    
+
     // Apply exponential backoff if rate limited
-    const minInterval = this.isRateLimited ? 
-      baseInterval * this.backoffMultiplier : 
-      baseInterval;
+    const minInterval = this.isRateLimited
+      ? baseInterval * this.backoffMultiplier
+      : baseInterval;
 
     // If rate limited and reset time is known, wait until reset time
     if (this.isRateLimited && this.rateLimitResetTime > 0) {
       const waitUntilReset = this.rateLimitResetTime - Date.now();
-      if (waitUntilReset > 0 && waitUntilReset < 60000) { // Don't wait more than 1 minute
-        console.log(`⏳ Waiting ${Math.ceil(waitUntilReset / 1000)}s for rate limit reset`);
+      if (waitUntilReset > 0 && waitUntilReset < 60000) {
+        // Don't wait more than 1 minute
+        console.log(
+          `⏳ Waiting ${Math.ceil(waitUntilReset / 1000)}s for rate limit reset`
+        );
         await new Promise((resolve) => setTimeout(resolve, waitUntilReset));
         this.isRateLimited = false;
         this.backoffMultiplier = 1;
@@ -551,14 +577,17 @@ export class MapboxRoutingService implements RoutingService {
     if (timeSinceLastRequest < minInterval) {
       const waitTime = minInterval - timeSinceLastRequest;
       if (this.isRateLimited) {
-        console.log(`⏳ Rate limited: waiting ${Math.ceil(waitTime / 1000)}s (backoff: ${this.backoffMultiplier}x)`);
+        console.log(
+          `⏳ Rate limited: waiting ${Math.ceil(waitTime / 1000)}s (backoff: ${this.backoffMultiplier}x)`
+        );
       }
       await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
   }
 
   private processQueue(): void {
-    if (this.rateLimitQueue.length > 0 && this.requestsInProgress < 5) {
+    // Process multiple requests up to concurrency limit
+    while (this.rateLimitQueue.length > 0 && this.requestsInProgress < 5) {
       const nextRequest = this.rateLimitQueue.shift();
       if (nextRequest) {
         nextRequest();
@@ -617,7 +646,8 @@ export class MapboxRoutingService implements RoutingService {
       const p2 = coordinates[i + 1];
       const distance = this.calculateDistance(p1, p2);
 
-      if (distance > bestDistance && distance > 5) { // At least 5 meters apart
+      if (distance > bestDistance && distance > 5) {
+        // At least 5 meters apart
         bestDistance = distance;
         bestHeading = this.calculateBearing(p1[1], p1[0], p2[1], p2[0]);
       }

@@ -9,7 +9,7 @@ export interface Vehicle {
   };
   status: 'active' | 'inactive' | 'maintenance' | 'offline';
   currentPosition: VehiclePosition;
-  lastUpdate: Date;
+  lastUpdate: number;
   metadata?: Record<string, unknown>;
 }
 
@@ -22,7 +22,7 @@ export interface VehiclePosition {
   speed: number;
   heading: number;
   accuracy?: number;
-  timestamp: Date;
+  timestamp: number;
   ignition: boolean;
   odometer?: number;
   fuelLevel?: number;
@@ -33,8 +33,8 @@ export interface VehiclePosition {
 export interface VehicleTrail {
   vehicleId: string;
   positions: VehiclePosition[];
-  startTime: Date;
-  endTime: Date;
+  startTime: number;
+  endTime: number;
   distance: number;
   duration: number;
 }
@@ -64,7 +64,7 @@ export interface MapViewport {
 export interface VehicleUpdate {
   type: 'position' | 'status' | 'metadata';
   vehicleId: string;
-  timestamp: Date;
+  timestamp: number;
   data: Partial<Vehicle>;
 }
 
@@ -79,7 +79,7 @@ export interface GeofenceAlert {
   vehicleId: string;
   geofenceId: string;
   type: 'entry' | 'exit';
-  timestamp: Date;
+  timestamp: number;
   position: VehiclePosition;
 }
 

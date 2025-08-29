@@ -9,7 +9,7 @@ import {
   CaretRightIcon,
   CaretDownIcon,
 } from '@phosphor-icons/react';
-import { useFleetStore } from '@/stores/fleet';
+import { useFleetStore } from '@/stores/fleetStore';
 import type { Vehicle } from '@/types/fleet';
 
 interface VehicleSearchProps {
@@ -40,12 +40,14 @@ export function VehicleSearch({
   const reportsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const { vehicles, selectedVehicleId, selectVehicle } = useFleetStore();
+  const { getVehicles, getVehicle, selectedVehicleId, selectVehicle } =
+    useFleetStore();
+  const vehicles = getVehicles();
 
   // Get the currently selected vehicle
   const selectedVehicle = useMemo(
-    () => vehicles.find((v: Vehicle) => v.id === selectedVehicleId),
-    [vehicles, selectedVehicleId]
+    () => (selectedVehicleId ? getVehicle(selectedVehicleId) : undefined),
+    [selectedVehicleId, getVehicle]
   );
 
   // Handle vehicle selection

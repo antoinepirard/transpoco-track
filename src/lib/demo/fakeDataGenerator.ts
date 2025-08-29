@@ -1,97 +1,41 @@
 import type { Vehicle, VehiclePosition } from '@/types/fleet';
-import {
-  moveAlongRoad,
-  getRandomRoadSegment,
-  type SegmentPosition,
-} from '../geo/roadNetwork';
-import { getRoutingService } from '../routing';
 
-interface VehicleMovement {
-  segmentPosition: SegmentPosition;
-  speed: number;
-  lastUpdate: Date;
-  baseSpeed: number; // Base speed for this vehicle type
-}
 
 class FakeDataGenerator {
   private vehicles: Vehicle[] = [];
-  private movements: Map<string, VehicleMovement> = new Map();
   private trails: Map<string, VehiclePosition[]> = new Map();
-  private updateInterval: NodeJS.Timeout | null = null;
   private callbacks: Set<(vehicles: Vehicle[]) => void> = new Set();
   private trailCallbacks: Set<
     (vehicleId: string, positions: VehiclePosition[]) => void
   > = new Set();
-  private positionUpdateCallbacks: Set<
-    (
-      vehicleId: string,
-      latitude: number,
-      longitude: number,
-      heading: number
-    ) => Promise<void>
-  > = new Set();
-  private routingService = getRoutingService();
-  private useRoadSnapping = true; // Enable Mapbox road snapping for demo vehicles
 
   // Ireland area bounds (covering entire island)
   private readonly IRELAND_BOUNDS = {
-    north: 55.5,  // Malin Head, Donegal
-    south: 51.4,  // Mizen Head, Cork  
-    east: -5.4,   // Wicklow Head
-    west: -10.7,  // Dingle Peninsula, Kerry
+    north: 55.5, // Malin Head, Donegal
+    south: 51.4, // Mizen Head, Cork
+    east: -5.4, // Wicklow Head
+    west: -10.7, // Dingle Peninsula, Kerry
   };
 
   constructor() {
     this.generateVehicles(200);
-    // Initialize road snapping after construction (async, non-blocking)
-    setTimeout(() => {
-      this.initializeRoadSnapping().catch((error) => {
-        console.debug('Demo road snapping initialization failed:', error);
-      });
-    }, 100);
   }
 
-  private async initializeRoadSnapping(): Promise<void> {
-    if (!this.useRoadSnapping) return;
-
-    try {
-      // Snap all existing vehicles to Mapbox roads
-      for (const vehicle of this.vehicles) {
-        const snapResult = await this.routingService.snapToRoad(
-          vehicle.currentPosition.latitude,
-          vehicle.currentPosition.longitude,
-          { radiusMeters: 100 }
-        );
-
-        if (snapResult.confidence && snapResult.confidence > 0.25 && snapResult.distance < 200) {
-          // snapResult.location is [longitude, latitude] from Mapbox format
-          vehicle.currentPosition.latitude = snapResult.location[1]; // latitude is at index 1
-          vehicle.currentPosition.longitude = snapResult.location[0]; // longitude is at index 0
-          vehicle.currentPosition.heading =
-            snapResult.heading || vehicle.currentPosition.heading;
-        }
-      }
-
-      // Notify callbacks with road-snapped vehicles
-      this.callbacks.forEach((callback) => {
-        callback([...this.vehicles]);
-      });
-    } catch (error) {
-      console.debug(
-        'Failed to initialize road snapping for demo vehicles, using local network:',
-        error
-      );
-    }
-  }
 
   private generateVehicles(count: number): void {
     this.vehicles = [];
-    this.movements.clear();
     this.trails.clear();
 
     for (let i = 0; i < count; i++) {
-      // Start vehicles on road segments
-      const segmentPosition = getRandomRoadSegment();
+      // Generate random coordinates within Ireland bounds
+      const latitude = this.randomInRange(
+        this.IRELAND_BOUNDS.south,
+        this.IRELAND_BOUNDS.north
+      );
+      const longitude = this.randomInRange(
+        this.IRELAND_BOUNDS.west,
+        this.IRELAND_BOUNDS.east
+      );
 
       const vehicleType = this.getRandomVehicleType();
       const baseSpeed = this.getBaseSpeedForVehicleType(vehicleType);
@@ -113,11 +57,11 @@ class FakeDataGenerator {
         currentPosition: {
           id: `pos-${i + 1}`,
           vehicleId: `transpoco-${i + 1}`,
-          latitude: segmentPosition.position.latitude,
-          longitude: segmentPosition.position.longitude,
+          latitude,
+          longitude,
           speed: Math.max(0, currentSpeed),
-          heading: segmentPosition.heading,
-          timestamp: new Date(),
+          heading: this.randomInRange(0, 360),
+          timestamp: Date.now(),
           ignition: Math.random() > 0.1,
           accuracy: this.randomInRange(1, 5),
           odometer: this.randomInRange(10000, 200000),
@@ -125,18 +69,10 @@ class FakeDataGenerator {
           engineRpm: this.randomInRange(800, 3000),
           temperature: this.randomInRange(80, 105),
         },
-        lastUpdate: new Date(),
+        lastUpdate: Date.now(),
       };
 
       this.vehicles.push(vehicle);
-
-      // Initialize movement with road-based navigation
-      this.movements.set(vehicle.id, {
-        segmentPosition,
-        speed: currentSpeed,
-        lastUpdate: new Date(),
-        baseSpeed,
-      });
 
       // Initialize trail
       this.trails.set(vehicle.id, [vehicle.currentPosition]);
@@ -281,218 +217,17 @@ class FakeDataGenerator {
     return Math.random() * (max - min) + min;
   }
 
-  private calculateDistance(
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number {
-    const R = 6371000; // Earth's radius in meters
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
 
-  private calculateBearing(
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number {
-    const φ1 = (lat1 * Math.PI) / 180;
-    const φ2 = (lat2 * Math.PI) / 180;
-    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
-    const x = Math.sin(Δλ) * Math.cos(φ2);
-    const y =
-      Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-
-    const θ = Math.atan2(x, y);
-    return ((θ * 180) / Math.PI + 360) % 360; // Convert to degrees and normalize
-  }
-
-  private async updateVehiclePositions(): Promise<void> {
-    const now = new Date();
-    const deltaTimeSeconds = 2; // Update every 2 seconds
-
-    // Process all vehicles but avoid overwhelming API with concurrent requests
-    const activeVehicles = this.vehicles.filter((v) => v.status === 'active');
-
-    if (activeVehicles.length === 0) {
-      console.debug('No active vehicles to update');
-      return;
-    }
-
-    // Process vehicles in smaller batches to avoid rate limiting
-    const batchSize = this.useRoadSnapping ? 5 : 15; // Smaller batches when using API
-    let updatedCount = 0;
-
-    for (let i = 0; i < activeVehicles.length; i += batchSize) {
-      const batch = activeVehicles.slice(i, i + batchSize);
-
-      const results = await Promise.allSettled(
-        batch.map(async (vehicle) => {
-          const movement = this.movements.get(vehicle.id);
-          if (!movement) return;
-
-          try {
-            // Occasionally adjust speed (simulate traffic conditions)
-            if (Math.random() < 0.1) {
-              const variation = this.randomInRange(-8, 12);
-              movement.speed = Math.max(
-                5,
-                Math.min(movement.baseSpeed + variation, movement.baseSpeed + 20)
-              );
-            }
-
-            // Calculate distance to move in this update
-            const speedKmh = movement.speed;
-            const speedMs = speedKmh / 3.6; // Convert to m/s
-            const distanceM = speedMs * deltaTimeSeconds; // Distance in meters for this update
-
-            // Move along road network
-            const newSegmentPosition = moveAlongRoad(
-              movement.segmentPosition,
-              distanceM,
-              movement.segmentPosition.heading // Use current heading as preferred bearing
-            );
-
-            // Update movement state
-            movement.segmentPosition = newSegmentPosition;
-            movement.lastUpdate = now;
-
-            // Calculate base position using local road network for realistic movement
-            const finalLatitude = newSegmentPosition.position.latitude;
-            const finalLongitude = newSegmentPosition.position.longitude;
-            const finalHeading = newSegmentPosition.heading;
-
-            // Validate coordinates before proceeding
-            if (
-              !this.isValidCoordinates(finalLatitude, finalLongitude)
-            ) {
-              console.warn(`Generated invalid coordinates for vehicle ${vehicle.id}:`, {
-                latitude: finalLatitude,
-                longitude: finalLongitude,
-              });
-              return;
-            }
-
-            // Use the store's road snapping pipeline instead of direct assignment
-            if (this.positionUpdateCallbacks.size > 0) {
-              // Emit position update through road snapping pipeline
-              for (const callback of this.positionUpdateCallbacks) {
-                try {
-                  await callback(
-                    vehicle.id,
-                    finalLatitude,
-                    finalLongitude,
-                    finalHeading
-                  );
-                  updatedCount++;
-                } catch (error) {
-                  console.warn(`Road snapping failed for vehicle ${vehicle.id}:`, error);
-                  // Continue with fallback below
-                }
-              }
-            } else {
-              // Fallback to direct assignment if no position update callbacks
-              const newPosition: VehiclePosition = {
-                ...vehicle.currentPosition,
-                id: `pos-${vehicle.id}-${Date.now()}`,
-                latitude: finalLatitude,
-                longitude: finalLongitude,
-                speed: speedKmh + this.randomInRange(-2, 3), // Small speed variation for realism
-                heading: finalHeading,
-                timestamp: now,
-                ignition: vehicle.status === 'active',
-                fuelLevel: Math.max(
-                  0,
-                  (vehicle.currentPosition.fuelLevel || 50) - 0.05
-                ),
-                engineRpm: this.randomInRange(1000, 2500),
-                temperature: this.randomInRange(85, 100),
-              };
-
-              vehicle.currentPosition = newPosition;
-              vehicle.lastUpdate = now;
-              updatedCount++;
-
-              // Add to trail
-              const trail = this.trails.get(vehicle.id) || [];
-              trail.push(newPosition);
-
-              // Keep only last 100 positions for performance
-              if (trail.length > 100) {
-                trail.shift();
-              }
-              this.trails.set(vehicle.id, trail);
-
-              // Notify trail callbacks
-              this.trailCallbacks.forEach((callback) => {
-                callback(vehicle.id, [newPosition]);
-              });
-            }
-          } catch (error) {
-            console.warn(`Failed to update vehicle ${vehicle.id}:`, error);
-          }
-        })
-      );
-
-      // Log batch processing results in development
-      if (process.env.NODE_ENV === 'development') {
-        const successful = results.filter((r) => r.status === 'fulfilled').length;
-        const failed = results.filter((r) => r.status === 'rejected').length;
-        if (failed > 0) {
-          console.debug(`Batch ${Math.floor(i / batchSize) + 1}: ${successful} successful, ${failed} failed`);
-        }
-      }
-
-      // Add delay between batches to prevent overwhelming the API
-      if (this.useRoadSnapping && i + batchSize < activeVehicles.length) {
-        await new Promise((resolve) => setTimeout(resolve, 200)); // 200ms delay between batches
-      }
-    }
-
-    // Only notify bulk callbacks if we're not using position update pipeline
-    if (this.positionUpdateCallbacks.size === 0) {
-      this.callbacks.forEach((callback) => {
-        callback([...this.vehicles]);
-      });
-    }
-
-    if (process.env.NODE_ENV === 'development' && updatedCount > 0) {
-      console.debug(`Updated ${updatedCount}/${activeVehicles.length} vehicles`);
-    }
-  }
 
   public start(): void {
-    if (this.updateInterval) return;
-
-    // Initial callback
+    // Just provide initial callback with static vehicles
     this.callbacks.forEach((callback) => {
       callback([...this.vehicles]);
     });
-
-    // Start regular updates
-    this.updateInterval = setInterval(() => {
-      this.updateVehiclePositions().catch((error) => {
-        console.warn('Demo vehicle update failed:', error);
-      });
-    }, 2000); // Update every 2 seconds
   }
 
   public stop(): void {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-      this.updateInterval = null;
-    }
+    // No-op since vehicles are static
   }
 
   public onVehicleUpdate(callback: (vehicles: Vehicle[]) => void): () => void {
@@ -511,19 +246,6 @@ class FakeDataGenerator {
     };
   }
 
-  public onPositionUpdate(
-    callback: (
-      vehicleId: string,
-      latitude: number,
-      longitude: number,
-      heading: number
-    ) => Promise<void>
-  ): () => void {
-    this.positionUpdateCallbacks.add(callback);
-    return () => {
-      this.positionUpdateCallbacks.delete(callback);
-    };
-  }
 
   public getVehicles(): Vehicle[] {
     return [...this.vehicles];
@@ -537,20 +259,6 @@ class FakeDataGenerator {
     return trails;
   }
 
-  /**
-   * Enable or disable road snapping for demo vehicles
-   */
-  public setRoadSnapping(enabled: boolean): void {
-    this.useRoadSnapping = enabled;
-    console.log(`Demo road snapping ${enabled ? 'enabled' : 'disabled'}`);
-  }
-
-  /**
-   * Check if road snapping is enabled
-   */
-  public isRoadSnappingEnabled(): boolean {
-    return this.useRoadSnapping;
-  }
 
   /**
    * Validate coordinates
@@ -570,37 +278,6 @@ class FakeDataGenerator {
     );
   }
 
-  /**
-   * Manually snap all current vehicles to roads (useful for testing)
-   */
-  public async snapAllVehiclesToRoads(): Promise<void> {
-    if (!this.useRoadSnapping) return;
-
-    try {
-      for (const vehicle of this.vehicles) {
-        const snapResult = await this.routingService.snapToRoad(
-          vehicle.currentPosition.latitude,
-          vehicle.currentPosition.longitude,
-          { radiusMeters: 100 }
-        );
-
-        if (snapResult.confidence && snapResult.confidence > 0.25 && snapResult.distance < 200) {
-          // snapResult.location is [longitude, latitude] from Mapbox format
-          vehicle.currentPosition.latitude = snapResult.location[1]; // latitude is at index 1
-          vehicle.currentPosition.longitude = snapResult.location[0]; // longitude is at index 0
-          vehicle.currentPosition.heading =
-            snapResult.heading || vehicle.currentPosition.heading;
-        }
-      }
-
-      // Notify callbacks
-      this.callbacks.forEach((callback) => {
-        callback([...this.vehicles]);
-      });
-    } catch (error) {
-      console.warn('Failed to snap vehicles to roads:', error);
-    }
-  }
 }
 
 export const fakeDataGenerator = new FakeDataGenerator();

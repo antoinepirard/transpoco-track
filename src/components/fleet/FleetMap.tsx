@@ -7,7 +7,7 @@ import { MapFeatureControls } from '@/components/map/MapFeatureControls';
 import { MapStyleSwitcher } from '@/components/map/MapStyleSwitcher';
 import { MapErrorBoundary } from '@/components/map/MapErrorBoundary';
 import { Sidebar } from '@/components/sidebar/Sidebar';
-import { useFleetStore } from '@/stores/fleet';
+import { useFleetStore } from '@/stores/fleetStore';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useMapLayers } from '@/hooks/useMapLayers';
 import { createVehicleLayer, createTrailLayer } from '@/lib/deckgl/layers';
@@ -40,12 +40,15 @@ export function FleetMap({
   const [currentMapStyle, setCurrentMapStyle] = useState(initialMapStyle);
   const [isFleetLoaded, setIsFleetLoaded] = useState(false);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  // Removed hoveredCluster state - clusters are now purely visual
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
   const hasAutocenteredRef = useRef(false);
+  const previousZoomRef = useRef<number | undefined>(undefined);
+  const zoomDebounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toggleMapLayer } = useMapLayers();
 
   const {
-    vehicles,
+    getVehicles,
     selectedVehicleId,
     viewport,
     trails,
@@ -54,9 +57,12 @@ export function FleetMap({
     setViewport,
     updateVehiclesIfChanged,
     updateVehicleWithRoadSnapping,
-    addTrail,
     setConnectionStatus,
   } = useFleetStore();
+
+  const [debouncedZoom, setDebouncedZoom] = useState(viewport.zoom);
+
+  const vehicles = getVehicles();
 
   const { error: wsError } = useWebSocket({
     url: websocketUrl,
@@ -71,47 +77,20 @@ export function FleetMap({
 
     setConnectionStatus(true);
 
-    // Use individual position updates through road snapping pipeline
-    const unsubscribePositions = fakeDataGenerator.onPositionUpdate(
-      async (vehicleId, latitude, longitude, heading) => {
-        await updateVehicleWithRoadSnapping(
-          vehicleId,
-          latitude,
-          longitude,
-          heading
-        );
-      }
-    );
-
-    const unsubscribeTrails = fakeDataGenerator.onTrailUpdate(
-      (vehicleId, positions) => {
-        addTrail(vehicleId, positions);
-      }
-    );
-
-    // Initialize with current vehicles (one-time bulk load)
+    // Initialize with current static vehicles (one-time load)
     const initialVehicles = fakeDataGenerator.getVehicles();
     if (initialVehicles.length > 0) {
       updateVehiclesIfChanged(initialVehicles);
-
-      // Snap initial vehicles to roads
-      fakeDataGenerator.snapAllVehiclesToRoads().catch((error) => {
-        console.warn('Failed to initialize demo vehicle road snapping:', error);
-      });
     }
 
     fakeDataGenerator.start();
 
     return () => {
       fakeDataGenerator.stop();
-      unsubscribePositions();
-      unsubscribeTrails();
     };
   }, [
     demoMode,
     updateVehiclesIfChanged,
-    updateVehicleWithRoadSnapping,
-    addTrail,
     setConnectionStatus,
   ]);
 
@@ -130,6 +109,10 @@ export function FleetMap({
   );
 
   const handleVehicleHover = useCallback(() => {}, []);
+
+  // Removed cluster click - clusters expand automatically on zoom
+
+  // Removed cluster hover handler - clusters are now non-interactive
 
   const handleMapLoad = useCallback((map: MapLibreMap) => {
     mapInstanceRef.current = map;
@@ -193,9 +176,12 @@ export function FleetMap({
         onVehicleClick: handleVehicleClick,
         onVehicleHover: handleVehicleHover,
         clusterVehicles: true, // Enable clustering
-        zoom: viewport.zoom,
+        zoom: debouncedZoom,
+        centerLatitude: viewport.latitude,
+        // No cluster hover - clusters are purely visual
+        previousZoom: previousZoomRef.current,
       });
-      
+
       // Handle both single layer and array of layers from clustering
       if (Array.isArray(vehicleLayer)) {
         deckLayers.push(...vehicleLayer.flat());
@@ -212,7 +198,9 @@ export function FleetMap({
     selectedVehicleId,
     handleVehicleClick,
     handleVehicleHover,
-    viewport.zoom, // Re-cluster when zoom changes
+    // Removed handleClusterHover dependency
+    debouncedZoom, // Re-cluster when debounced zoom changes
+    viewport.latitude, // Re-cluster when latitude changes (for radius calculation)
   ]);
 
   // Calculate fleet bounds and auto-center map
@@ -267,14 +255,38 @@ export function FleetMap({
     };
   }, [vehicles]);
 
+  const getVehicle = useFleetStore((state) => state.getVehicle);
+
   useEffect(() => {
     if (selectedVehicleId) {
-      const vehicle = vehicles.find((v: Vehicle) => v.id === selectedVehicleId);
+      const vehicle = getVehicle(selectedVehicleId);
       setSelectedVehicle(vehicle || null);
     } else {
       setSelectedVehicle(null);
     }
-  }, [selectedVehicleId, vehicles]);
+  }, [selectedVehicleId, getVehicle]);
+
+  // Debounce zoom changes to prevent excessive layer re-creation
+  useEffect(() => {
+    if (zoomDebounceTimeoutRef.current) {
+      clearTimeout(zoomDebounceTimeoutRef.current);
+    }
+
+    zoomDebounceTimeoutRef.current = setTimeout(() => {
+      setDebouncedZoom(viewport.zoom);
+    }, 150); // 150ms debounce delay
+
+    return () => {
+      if (zoomDebounceTimeoutRef.current) {
+        clearTimeout(zoomDebounceTimeoutRef.current);
+      }
+    };
+  }, [viewport.zoom]);
+
+  // Track previous zoom for hysteresis
+  useEffect(() => {
+    previousZoomRef.current = debouncedZoom;
+  }, [debouncedZoom]);
 
   // Track fleet loading state - wait for map to be loaded, vehicles AND layers to be ready
   useEffect(() => {
@@ -367,6 +379,8 @@ export function FleetMap({
           />
           <MapFeatureControls onFeatureToggle={handleFeatureToggle} />
         </div>
+
+        {/* Removed cluster tooltip - clusters are now purely visual */}
 
         {/* WebSocket Error */}
         {wsError && (

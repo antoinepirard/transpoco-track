@@ -5,7 +5,7 @@ import {
   WebSocketClient,
   type WebSocketClientOptions,
 } from '@/lib/websocket/client';
-import { useFleetStore } from '@/stores/fleet';
+import { useFleetStore } from '@/stores/fleetStore';
 import type { WebSocketMessage, VehicleUpdate } from '@/types/fleet';
 
 interface UseWebSocketOptions

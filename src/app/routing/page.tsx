@@ -1,21 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import { useFleetStore } from '@/stores/fleet';
+import { useFleetStore } from '@/stores/fleetStore';
 import RoutingStatus from '@/components/routing/RoutingStatus';
 import RoutingConfigGuide from '@/components/routing/RoutingConfigGuide';
 import { getRoutingService, RoutingUtils } from '@/lib/routing';
 import { fakeDataGenerator } from '@/lib/demo/fakeDataGenerator';
+import type { Vehicle } from '@/types/fleet';
 
 export default function RoutingPage() {
   const {
-    vehicles,
+    getVehicles,
     routingEnabled,
     enableRouting,
     snapVehicleToRoad,
     updateVehicleWithRoadSnapping,
     getRoutingServiceHealth,
   } = useFleetStore();
+
+  const vehicles = getVehicles();
 
   const [testCoords, setTestCoords] = useState({
     latitude: 53.3498,
@@ -112,12 +115,12 @@ export default function RoutingPage() {
     alert('Vehicle position updated with road snapping!');
   };
 
-  // Snap all demo vehicles to Mapbox roads
+  // Snap all demo vehicles to Mapbox roads (disabled for static vehicles)
   const snapAllDemoVehicles = async () => {
     setIsDemoSnapping(true);
     try {
-      await fakeDataGenerator.snapAllVehiclesToRoads();
-      alert('All demo vehicles snapped to Mapbox roads!');
+      // Static vehicles don't need road snapping
+      alert('Demo vehicles are now static and don\'t require road snapping!');
     } catch (error) {
       alert(
         'Failed to snap demo vehicles: ' +
@@ -330,7 +333,7 @@ export default function RoutingPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Choose a vehicle...</option>
-                  {vehicles.slice(0, 5).map((vehicle) => (
+                  {vehicles.slice(0, 5).map((vehicle: Vehicle) => (
                     <option key={vehicle.id} value={vehicle.id}>
                       {vehicle.name} ({vehicle.registrationNumber})
                     </option>

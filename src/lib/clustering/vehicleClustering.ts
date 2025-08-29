@@ -1,10 +1,16 @@
 import type { Vehicle } from '@/types/fleet';
 
+// Global cluster cache for position stability
+let clusterCache = new Map<string, VehicleCluster>();
+let cacheTimestamp = 0;
+
 export interface VehicleCluster {
   id: string;
   position: [number, number]; // [longitude, latitude]
   vehicles: Vehicle[];
   count: number;
+  hash?: string; // For cluster stability across zoom levels
+  previousPosition?: [number, number]; // For smooth transitions
 }
 
 export interface ClusteringResult {
@@ -17,6 +23,76 @@ export interface ClusteringOptions {
   clusterRadius: number; // in pixels at current zoom
   zoom: number;
   pixelsPerMeter: number;
+  centerLatitude: number;
+  previousZoom?: number; // For hysteresis
+}
+
+/**
+ * Create a stable hash for a group of vehicles to maintain cluster identity
+ */
+function createClusterHash(vehicles: Vehicle[]): string {
+  // Sort vehicles by ID to ensure consistent hash regardless of order
+  const sortedIds = vehicles.map(v => v.id).sort();
+  
+  // Create a simple hash from the sorted vehicle IDs
+  const idsString = sortedIds.join(',');
+  let hash = 0;
+  for (let i = 0; i < idsString.length; i++) {
+    const char = idsString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return hash.toString(16);
+}
+
+/**
+ * Find the most similar existing cluster based on vehicle membership overlap
+ */
+function findSimilarCluster(vehicles: Vehicle[], existingClusters: VehicleCluster[]): VehicleCluster | null {
+  let bestMatch: VehicleCluster | null = null;
+  let bestSimilarity = 0;
+  const vehicleIds = new Set(vehicles.map(v => v.id));
+
+  for (const cluster of existingClusters) {
+    const clusterIds = new Set(cluster.vehicles.map(v => v.id));
+    
+    // Calculate Jaccard similarity (intersection / union)
+    const intersection = new Set([...vehicleIds].filter(id => clusterIds.has(id)));
+    const union = new Set([...vehicleIds, ...clusterIds]);
+    const similarity = intersection.size / union.size;
+
+    // Require at least 50% similarity to consider it the same cluster
+    if (similarity >= 0.5 && similarity > bestSimilarity) {
+      bestSimilarity = similarity;
+      bestMatch = cluster;
+    }
+  }
+
+  return bestMatch;
+}
+
+/**
+ * Calculate stable position for a cluster, considering previous position
+ */
+function calculateStablePosition(
+  vehicles: Vehicle[], 
+  previousPosition?: [number, number],
+  stabilityFactor: number = 0.3
+): [number, number] {
+  const centroid = calculateCentroid(vehicles);
+  
+  if (!previousPosition) {
+    return centroid;
+  }
+
+  // Weighted average between new centroid and previous position for stability
+  const [prevLng, prevLat] = previousPosition;
+  const [newLng, newLat] = centroid;
+  
+  return [
+    prevLng * stabilityFactor + newLng * (1 - stabilityFactor),
+    prevLat * stabilityFactor + newLat * (1 - stabilityFactor)
+  ];
 }
 
 /**
@@ -53,35 +129,109 @@ function pixelsToMeters(pixels: number, zoom: number, latitude: number): number 
 }
 
 /**
- * Get clustering pixel radius based on zoom level for smart clustering
+ * Get clustering pixel radius based on zoom level for visual overlap detection
+ * Very restrictive - only clusters when vehicle icons would actually overlap
  */
 function getClusteringPixelRadius(zoom: number): number {
-  // More aggressive clustering at low zoom, less at high zoom
-  if (zoom <= 6) return 80;   // Country level: large clusters (80px)
-  if (zoom <= 9) return 60;   // Region level: medium clusters (60px)
-  if (zoom <= 12) return 40;  // City level: small clusters (40px)
-  if (zoom <= 15) return 25;  // Street level: minimal clusters (25px)
-  return 15;                  // Building level: very minimal (15px)
+  // Base on vehicle icon size (32-48px) + small padding for visual overlap
+  const vehicleIconSize = 32; // Base vehicle icon size in pixels
+  const padding = 8; // Small padding to detect near-overlaps
+  
+  // At very low zoom, allow slightly more generous clustering
+  if (zoom <= 6) return vehicleIconSize + padding + 8;  // ~48px - very rare clustering
+  if (zoom <= 9) return vehicleIconSize + padding + 4;  // ~44px - rare clustering  
+  if (zoom <= 11) return vehicleIconSize + padding;     // ~40px - minimal clustering
+  
+  // At higher zooms, be very restrictive - only true visual overlaps
+  return vehicleIconSize * 0.75; // ~24px - only when icons actually overlap
 }
 
 /**
- * Get minimum cluster size based on zoom level
+ * Get minimum cluster size based on zoom level with enhanced hysteresis
  */
-function getMinClusterSize(zoom: number): number {
-  if (zoom <= 8) return 2;   // Low zoom: cluster any 2+ vehicles
-  if (zoom <= 12) return 3;  // Medium zoom: need 3+ vehicles
-  if (zoom <= 15) return 4;  // High zoom: need 4+ vehicles  
-  return 5;                  // Very high zoom: need 5+ vehicles
+function getMinClusterSize(zoom: number, previousZoom?: number): number {
+  const hysteresis = 0.5; // Increased buffer zone to prevent flickering
+  
+  // Base thresholds - more restrictive to make clusters rare and stable
+  const thresholds = [
+    { zoom: 6, size: 3 },   // Very low zoom: need 3+ vehicles to cluster
+    { zoom: 9, size: 4 },   // Low zoom: need 4+ vehicles  
+    { zoom: 11, size: 5 },  // Medium zoom: need 5+ vehicles
+    { zoom: 13, size: 6 },  // High zoom: need 6+ vehicles
+  ];
+  
+  let targetSize = 7; // Default for very high zoom - rare clustering
+  
+  for (const threshold of thresholds) {
+    if (zoom <= threshold.zoom) {
+      targetSize = threshold.size;
+      break;
+    }
+  }
+  
+  // Apply enhanced hysteresis if we have a previous zoom
+  if (previousZoom !== undefined) {
+    const previousSize = getMinClusterSizeNoHysteresis(previousZoom);
+    const zoomDirection = zoom > previousZoom ? 1 : -1;
+    
+    // Enhanced hysteresis with directional bias
+    for (const threshold of thresholds) {
+      const distance = Math.abs(zoom - threshold.zoom);
+      const directionAdjustedHysteresis = zoomDirection > 0 ? hysteresis * 1.5 : hysteresis;
+      
+      if (distance < directionAdjustedHysteresis) {
+        // Stay with previous size if we're in the buffer zone
+        if (previousSize !== targetSize) {
+          // Bias towards maintaining existing clusters when zooming in
+          if (zoomDirection > 0 && previousSize < targetSize) {
+            return previousSize;
+          }
+          // Bias towards breaking clusters when zooming out
+          if (zoomDirection < 0 && previousSize > targetSize) {
+            return previousSize;
+          }
+        }
+      }
+    }
+    
+    // Additional stability: if the change is small, keep previous size
+    if (Math.abs(targetSize - previousSize) === 1 && Math.abs(zoom - (previousZoom || zoom)) < 1.0) {
+      return previousSize;
+    }
+  }
+  
+  return targetSize;
 }
 
 /**
- * Get clustering radius in meters based on zoom level
+ * Helper function to get min cluster size without hysteresis
  */
-function getClusteringRadius(zoom: number): number {
-  // Use a representative latitude (Dublin area)
-  const representativeLat = 53.35;
-  const pixelRadius = getClusteringPixelRadius(zoom);
-  return pixelsToMeters(pixelRadius, zoom, representativeLat);
+function getMinClusterSizeNoHysteresis(zoom: number): number {
+  if (zoom <= 6) return 3;
+  if (zoom <= 9) return 4;
+  if (zoom <= 11) return 5;
+  if (zoom <= 13) return 6;
+  return 7;
+}
+
+/**
+ * Get clustering radius in meters based on zoom level and latitude with stability
+ */
+function getClusteringRadius(zoom: number, centerLatitude: number = 53.35, previousZoom?: number): number {
+  let pixelRadius = getClusteringPixelRadius(zoom);
+  
+  // Apply radius hysteresis to prevent rapid cluster boundary changes
+  if (previousZoom !== undefined) {
+    const previousPixelRadius = getClusteringPixelRadius(previousZoom);
+    const radiusDiff = Math.abs(pixelRadius - previousPixelRadius);
+    
+    // If the radius change is small, use interpolation for stability
+    if (radiusDiff < 10 && Math.abs(zoom - previousZoom) < 0.5) {
+      pixelRadius = (pixelRadius + previousPixelRadius) / 2;
+    }
+  }
+  
+  return pixelsToMeters(pixelRadius, zoom, centerLatitude);
 }
 
 /**
@@ -105,7 +255,75 @@ function calculateCentroid(vehicles: Vehicle[]): [number, number] {
 }
 
 /**
- * Group vehicles into clusters based on distance
+ * Simple spatial grid index for performance optimization
+ */
+class SpatialGrid {
+  private grid: Map<string, Vehicle[]> = new Map();
+  private cellSize: number;
+  
+  constructor(cellSize: number) {
+    this.cellSize = cellSize;
+  }
+  
+  private getKey(lat: number, lng: number): string {
+    const cellLat = Math.floor(lat / this.cellSize);
+    const cellLng = Math.floor(lng / this.cellSize);
+    return `${cellLat},${cellLng}`;
+  }
+  
+  insert(vehicle: Vehicle): void {
+    const key = this.getKey(
+      vehicle.currentPosition.latitude,
+      vehicle.currentPosition.longitude
+    );
+    if (!this.grid.has(key)) {
+      this.grid.set(key, []);
+    }
+    this.grid.get(key)!.push(vehicle);
+  }
+  
+  getNearbyVehicles(vehicle: Vehicle, radiusMeters: number): Vehicle[] {
+    const { latitude, longitude } = vehicle.currentPosition;
+    
+    // Convert radius to degrees (approximate)
+    const radiusDegrees = radiusMeters / 111320; // meters per degree at equator
+    
+    // Get all cells that might contain vehicles within the radius
+    const cellRadius = Math.ceil(radiusDegrees / this.cellSize);
+    const centerKey = this.getKey(latitude, longitude);
+    const [centerLat, centerLng] = centerKey.split(',').map(Number);
+    
+    const nearbyVehicles: Vehicle[] = [];
+    
+    for (let latOffset = -cellRadius; latOffset <= cellRadius; latOffset++) {
+      for (let lngOffset = -cellRadius; lngOffset <= cellRadius; lngOffset++) {
+        const cellKey = `${centerLat + latOffset},${centerLng + lngOffset}`;
+        const cellVehicles = this.grid.get(cellKey) || [];
+        
+        // Filter by actual distance within the cell
+        for (const otherVehicle of cellVehicles) {
+          if (otherVehicle.id !== vehicle.id) {
+            const distance = calculateDistance(
+              latitude,
+              longitude,
+              otherVehicle.currentPosition.latitude,
+              otherVehicle.currentPosition.longitude
+            );
+            
+            if (distance <= radiusMeters) {
+              nearbyVehicles.push(otherVehicle);
+            }
+          }
+        }
+      }
+    }
+    
+    return nearbyVehicles;
+  }
+}
+
+/**
+ * Group vehicles into clusters using transitive BFS-based clustering (DBSCAN-style)
  */
 export function clusterVehicles(
   vehicles: Vehicle[],
@@ -113,58 +331,128 @@ export function clusterVehicles(
 ): ClusteringResult {
   const {
     zoom = 10,
+    centerLatitude = 53.35,
+    previousZoom,
   } = options;
 
-  // Use dynamic parameters based on zoom level
-  const minClusterSize = getMinClusterSize(zoom);
-  const radiusMeters = getClusteringRadius(zoom);
+  // Clean old cache entries (older than 5 seconds)
+  const now = Date.now();
+  if (now - cacheTimestamp > 5000) {
+    clusterCache.clear();
+    cacheTimestamp = now;
+  }
+
+  // Use dynamic parameters based on zoom level and location
+  const minClusterSize = getMinClusterSize(zoom, previousZoom);
+  const radiusMeters = getClusteringRadius(zoom, centerLatitude, previousZoom);
   
   const clusters: VehicleCluster[] = [];
-  const processed = new Set<string>();
+  const visited = new Set<string>();
   const individualVehicles: Vehicle[] = [];
+  const existingClusters = Array.from(clusterCache.values());
 
-  vehicles.forEach((vehicle, index) => {
-    if (processed.has(vehicle.id)) return;
+  // Use spatial indexing for performance with large fleets
+  const useSpacialIndex = vehicles.length > 50;
+  const neighbors = new Map<string, Vehicle[]>();
+  
+  if (useSpacialIndex) {
+    // Use spatial grid for efficient neighbor lookup
+    const cellSize = radiusMeters / 111320; // Convert meters to degrees
+    const spatialGrid = new SpatialGrid(cellSize);
+    
+    // Insert all vehicles into the spatial grid
+    for (const vehicle of vehicles) {
+      spatialGrid.insert(vehicle);
+      neighbors.set(vehicle.id, []);
+    }
+    
+    // Find neighbors using spatial indexing
+    for (const vehicle of vehicles) {
+      const nearbyVehicles = spatialGrid.getNearbyVehicles(vehicle, radiusMeters);
+      neighbors.set(vehicle.id, nearbyVehicles);
+    }
+  } else {
+    // Use naive O(n²) approach for small fleets
+    for (const vehicle of vehicles) {
+      neighbors.set(vehicle.id, []);
+    }
 
-    // Find all vehicles within clustering radius
-    const nearbyVehicles = vehicles.filter((otherVehicle, otherIndex) => {
-      if (otherIndex === index || processed.has(otherVehicle.id)) return false;
-      
-      const distance = calculateDistance(
-        vehicle.currentPosition.latitude,
-        vehicle.currentPosition.longitude,
-        otherVehicle.currentPosition.latitude,
-        otherVehicle.currentPosition.longitude
-      );
-      
-      return distance <= radiusMeters;
-    });
-
-    // Include the current vehicle in the group
-    const vehicleGroup = [vehicle, ...nearbyVehicles];
-
-    if (vehicleGroup.length >= minClusterSize) {
-      // Create cluster
-      const clusterId = `cluster-${clusters.length}`;
-      const centroid = calculateCentroid(vehicleGroup);
-      
-      clusters.push({
-        id: clusterId,
-        position: centroid,
-        vehicles: vehicleGroup,
-        count: vehicleGroup.length,
-      });
-
-      // Mark all vehicles in this cluster as processed
-      vehicleGroup.forEach(v => processed.add(v.id));
-    } else {
-      // Add to individual vehicles if not already processed
-      if (!processed.has(vehicle.id)) {
-        individualVehicles.push(vehicle);
-        processed.add(vehicle.id);
+    // Pre-compute all neighboring relationships (symmetric)
+    for (let i = 0; i < vehicles.length; i++) {
+      const vehicle1 = vehicles[i];
+      for (let j = i + 1; j < vehicles.length; j++) {
+        const vehicle2 = vehicles[j];
+        
+        const distance = calculateDistance(
+          vehicle1.currentPosition.latitude,
+          vehicle1.currentPosition.longitude,
+          vehicle2.currentPosition.latitude,
+          vehicle2.currentPosition.longitude
+        );
+        
+        if (distance <= radiusMeters) {
+          neighbors.get(vehicle1.id)?.push(vehicle2);
+          neighbors.get(vehicle2.id)?.push(vehicle1);
+        }
       }
     }
-  });
+  }
+
+  // Perform BFS to find connected components (transitive clustering)
+  for (const vehicle of vehicles) {
+    if (visited.has(vehicle.id)) continue;
+
+    // Start BFS from this unvisited vehicle
+    const queue = [vehicle];
+    const component: Vehicle[] = [];
+    visited.add(vehicle.id);
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      component.push(current);
+
+      // Add all unvisited neighbors to the queue
+      const vehicleNeighbors = neighbors.get(current.id) || [];
+      for (const neighbor of vehicleNeighbors) {
+        if (!visited.has(neighbor.id)) {
+          visited.add(neighbor.id);
+          queue.push(neighbor);
+        }
+      }
+    }
+
+    // Create cluster if component is large enough
+    if (component.length >= minClusterSize) {
+      const hash = createClusterHash(component);
+      const similarCluster = findSimilarCluster(component, existingClusters);
+      
+      // Use stable position calculation
+      const stablePosition = calculateStablePosition(
+        component,
+        similarCluster?.position,
+        0.3 // 30% weight for previous position
+      );
+      
+      const clusterId = similarCluster?.id || `cluster-${hash}`;
+      
+      const cluster: VehicleCluster = {
+        id: clusterId,
+        position: stablePosition,
+        vehicles: component,
+        count: component.length,
+        hash,
+        previousPosition: similarCluster?.position,
+      };
+      
+      clusters.push(cluster);
+      
+      // Update cache
+      clusterCache.set(hash, cluster);
+    } else {
+      // Add all vehicles in the small component to individual vehicles
+      individualVehicles.push(...component);
+    }
+  }
 
   return {
     clusters,
@@ -230,3 +518,5 @@ export function getClusterSize(count: number, zoom?: number): number {
   
   return baseSize;
 }
+
+// Removed getClusterViewport function - clusters now expand automatically on zoom
