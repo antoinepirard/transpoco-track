@@ -38,6 +38,7 @@ export function MapView({
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
+  const throttleRef = useRef<{ t: number } | null>(null);
   const [viewState, setViewState] = useState<MapViewState>({
     ...viewport,
     transitionDuration: 0,
@@ -60,16 +61,24 @@ export function MapView({
         transitionDuration: 0,
       }));
 
-      // 2) Keep MapLibre in lockstep (same frame if possible)
+      // 2) Keep MapLibre in lockstep (same frame via rAF to avoid tearing)
       const map = mapInstanceRef.current;
       if (map) {
         try {
-          map.jumpTo({
-            center: [vs.longitude, vs.latitude],
-            zoom: vs.zoom,
-            bearing: vs.bearing || 0,
-            pitch: vs.pitch || 0,
+          if (throttleRef.current?.t) {
+            cancelAnimationFrame(throttleRef.current.t);
+          }
+          const t = requestAnimationFrame(() => {
+            try {
+              map.jumpTo({
+                center: [vs.longitude, vs.latitude],
+                zoom: vs.zoom,
+                bearing: vs.bearing || 0,
+                pitch: vs.pitch || 0,
+              });
+            } catch {}
           });
+          throttleRef.current = { t };
         } catch {}
       }
 
@@ -226,6 +235,11 @@ export function MapView({
       abortController.abort();
       isInitializingRef.current = false;
 
+      if (throttleRef.current?.t) {
+        cancelAnimationFrame(throttleRef.current.t);
+        throttleRef.current = null;
+      }
+
       try {
         map.remove();
       } catch (error: unknown) {
@@ -334,10 +348,9 @@ export function MapView({
         viewState={viewState}
         onViewStateChange={handleViewStateChange as any} // eslint-disable-line @typescript-eslint/no-explicit-any
         layers={layers as any[]} // eslint-disable-line @typescript-eslint/no-explicit-any
-        useDevicePixels={Math.min(
-          2,
+        useDevicePixels={
           typeof window !== 'undefined' ? window.devicePixelRatio : 1
-        )}
+        }
         controller={{
           dragPan: true,
           dragRotate: true,
