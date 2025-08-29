@@ -39,6 +39,7 @@ export function FleetMap({
   const [internalShowTrails, setInternalShowTrails] = useState(showTrails);
   const [currentMapStyle, setCurrentMapStyle] = useState(initialMapStyle);
   const [isFleetLoaded, setIsFleetLoaded] = useState(false);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
   const hasAutocenteredRef = useRef(false);
   const { toggleMapLayer } = useMapLayers();
@@ -52,6 +53,7 @@ export function FleetMap({
     selectVehicle,
     setViewport,
     updateVehiclesIfChanged,
+    updateVehicleWithRoadSnapping,
     addTrail,
     setConnectionStatus,
   } = useFleetStore();
@@ -69,9 +71,15 @@ export function FleetMap({
 
     setConnectionStatus(true);
 
-    const unsubscribeVehicles = fakeDataGenerator.onVehicleUpdate(
-      (demoVehicles) => {
-        updateVehiclesIfChanged(demoVehicles);
+    // Use individual position updates through road snapping pipeline
+    const unsubscribePositions = fakeDataGenerator.onPositionUpdate(
+      async (vehicleId, latitude, longitude, heading) => {
+        await updateVehicleWithRoadSnapping(
+          vehicleId,
+          latitude,
+          longitude,
+          heading
+        );
       }
     );
 
@@ -81,14 +89,31 @@ export function FleetMap({
       }
     );
 
+    // Initialize with current vehicles (one-time bulk load)
+    const initialVehicles = fakeDataGenerator.getVehicles();
+    if (initialVehicles.length > 0) {
+      updateVehiclesIfChanged(initialVehicles);
+
+      // Snap initial vehicles to roads
+      fakeDataGenerator.snapAllVehiclesToRoads().catch((error) => {
+        console.warn('Failed to initialize demo vehicle road snapping:', error);
+      });
+    }
+
     fakeDataGenerator.start();
 
     return () => {
       fakeDataGenerator.stop();
-      unsubscribeVehicles();
+      unsubscribePositions();
       unsubscribeTrails();
     };
-  }, [demoMode, updateVehiclesIfChanged, addTrail, setConnectionStatus]);
+  }, [
+    demoMode,
+    updateVehiclesIfChanged,
+    updateVehicleWithRoadSnapping,
+    addTrail,
+    setConnectionStatus,
+  ]);
 
   const handleVehicleClick = useCallback(
     (vehicle: Vehicle) => {
@@ -108,11 +133,12 @@ export function FleetMap({
 
   const handleMapLoad = useCallback((map: MapLibreMap) => {
     mapInstanceRef.current = map;
-    console.log('Map loaded and ready for layers');
+    console.log('🗺️ Map loaded and ready for layers');
 
     // Wait a brief moment to ensure map is fully initialized
     setTimeout(() => {
-      console.log('Map initialization complete, layer toggles enabled');
+      console.log('🗺️ Map initialization complete, setting isMapLoaded=true');
+      setIsMapLoaded(true);
     }, 100);
   }, []);
 
@@ -185,7 +211,10 @@ export function FleetMap({
     if (vehicles.length === 0) return null;
 
     const bounds = vehicles.reduce(
-      (acc: { north: number; south: number; east: number; west: number }, vehicle: Vehicle) => {
+      (
+        acc: { north: number; south: number; east: number; west: number },
+        vehicle: Vehicle
+      ) => {
         const lat = vehicle.currentPosition.latitude;
         const lng = vehicle.currentPosition.longitude;
 
@@ -238,30 +267,49 @@ export function FleetMap({
     }
   }, [selectedVehicleId, vehicles]);
 
-  // Track fleet loading state - wait for both vehicles AND layers to be ready
+  // Track fleet loading state - wait for map to be loaded, vehicles AND layers to be ready
   useEffect(() => {
-    if (vehicles.length > 0 && layers.length > 0) {
-      // Add a small delay to ensure DeckGL has time to render the layers
+    console.log('🚛 Fleet loading check:', {
+      isMapLoaded,
+      vehiclesCount: vehicles.length,
+      layersCount: layers.length,
+    });
+
+    if (isMapLoaded && vehicles.length > 0 && layers.length > 0) {
+      console.log('🚛 All conditions met, starting fleet render timer...');
+      // Increase delay to ensure DeckGL has time to fully render the layers
       const renderTimeout = setTimeout(() => {
+        console.log(
+          '🚛 Setting isFleetLoaded=true, fleet should now be visible!'
+        );
         setIsFleetLoaded(true);
-      }, 250); // 250ms should be enough for DeckGL to render
-      
-      return () => clearTimeout(renderTimeout);
+      }, 1000); // Increased to 1000ms for better visual rendering coordination
+
+      return () => {
+        console.log('🚛 Cleaning up fleet render timer');
+        clearTimeout(renderTimeout);
+      };
     } else {
+      console.log('🚛 Setting isFleetLoaded=false, conditions not met');
       setIsFleetLoaded(false);
+      return undefined;
     }
-  }, [vehicles.length, layers.length]);
+  }, [isMapLoaded, vehicles.length, layers.length]);
 
   // Auto-center on fleet when vehicles are first loaded (only once)
   useEffect(() => {
-    if (vehicles.length > 0 && !selectedVehicleId && !hasAutocenteredRef.current) {
+    if (
+      vehicles.length > 0 &&
+      !selectedVehicleId &&
+      !hasAutocenteredRef.current
+    ) {
       const fleetBounds = calculateFleetBounds();
       if (fleetBounds) {
         setViewport(fleetBounds);
         hasAutocenteredRef.current = true;
       }
     }
-    
+
     // Reset flag when vehicles become empty (e.g., connection lost)
     if (vehicles.length === 0) {
       hasAutocenteredRef.current = false;

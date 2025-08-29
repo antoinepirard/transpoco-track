@@ -28,8 +28,12 @@ export function useWebSocket({
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const { setConnectionStatus, updateVehicle, applyVehicleUpdates } =
-    useFleetStore();
+  const {
+    setConnectionStatus,
+    updateVehicle,
+    applyVehicleUpdates,
+    updateVehicleWithRoadSnapping,
+  } = useFleetStore();
 
   useEffect(() => {
     if (!autoConnect) return;
@@ -38,16 +42,44 @@ export function useWebSocket({
       switch (message.type) {
         case 'vehicle_update':
           const update = message.data as VehicleUpdate;
-          updateVehicle(update.vehicleId, update.data);
+          const pos = update.data?.currentPosition;
+          if (
+            pos &&
+            typeof pos.latitude === 'number' &&
+            typeof pos.longitude === 'number'
+          ) {
+            // Use road snapping for position updates
+            updateVehicleWithRoadSnapping(
+              update.vehicleId,
+              pos.latitude,
+              pos.longitude,
+              pos.heading
+            );
+          } else {
+            // Fall back to normal update for non-position data
+            updateVehicle(update.vehicleId, update.data);
+          }
           break;
         case 'bulk_update':
           const updates = message.data as VehicleUpdate[];
-          applyVehicleUpdates(
-            updates.map((update) => ({
-              vehicleId: update.vehicleId,
-              update: update.data,
-            }))
-          );
+          // Process each update individually for road snapping
+          for (const u of updates) {
+            const p = u.data?.currentPosition;
+            if (
+              p &&
+              typeof p.latitude === 'number' &&
+              typeof p.longitude === 'number'
+            ) {
+              updateVehicleWithRoadSnapping(
+                u.vehicleId,
+                p.latitude,
+                p.longitude,
+                p.heading
+              );
+            } else {
+              updateVehicle(u.vehicleId, u.data);
+            }
+          }
           break;
       }
     };
@@ -97,8 +129,8 @@ export function useWebSocket({
     setConnectionStatus,
     updateVehicle,
     applyVehicleUpdates,
+    updateVehicleWithRoadSnapping,
   ]);
-
 
   const connect = () => {
     if (!clientRef.current) return;
