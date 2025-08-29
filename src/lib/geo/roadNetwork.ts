@@ -1,12 +1,10 @@
 import {
   IRELAND_ROAD_SEGMENTS,
-  IRELAND_ROAD_COORDINATES,
   getSegmentById,
   getConnectedSegments,
   RoadSegment,
-  RoadPoint,
 } from '../demo/roadCoordinates';
-import { distance, bearing, destination } from '@turf/turf';
+import { distance, bearing } from '@turf/turf';
 
 export interface VehiclePosition {
   latitude: number;
@@ -190,9 +188,9 @@ function closestPointOnSegment(
   offset: number;
   dist: number;
 } {
-  const start = [segment.start.longitude, segment.start.latitude];
-  const end = [segment.end.longitude, segment.end.latitude];
-  const target = [point.longitude, point.latitude];
+  const start: [number, number] = [segment.start.longitude, segment.start.latitude];
+  const end: [number, number] = [segment.end.longitude, segment.end.latitude];
+  const target: [number, number] = [point.longitude, point.latitude];
 
   // Calculate the closest point on the line segment
   const A = target[0] - start[0];

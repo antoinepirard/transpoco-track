@@ -1,14 +1,7 @@
 import type { Vehicle, VehiclePosition } from '@/types/fleet';
 import {
-  getRandomRoadCoordinate,
-  getNearbyRoadCoordinates,
-  type RoadPoint,
-} from './roadCoordinates';
-import {
-  snapToNearestRoad,
   moveAlongRoad,
   getRandomRoadSegment,
-  getSpeedForRoadType,
   type SegmentPosition,
 } from '../geo/roadNetwork';
 

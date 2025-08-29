@@ -116,7 +116,7 @@ export function MapStyleSwitcher({
   const [isOpen, setIsOpen] = useState(false);
 
   const getCurrentStyleOption = () => {
-    const currentKey = Object.entries(MAP_STYLES).find(([_, url]) =>
+    const currentKey = Object.entries(MAP_STYLES).find(([, url]) =>
       currentStyle.includes(url.split('/').slice(-2, -1)[0])
     )?.[0] as StyleKey;
 

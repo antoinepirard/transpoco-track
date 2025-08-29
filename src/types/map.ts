@@ -1,5 +1,4 @@
-import type { Feature, Point, LineString } from 'geojson';
-import type { Layer } from '@deck.gl/core';
+import type { Feature } from 'geojson';
 import type { Vehicle, VehiclePosition } from './fleet';
 
 export interface MapStyle {

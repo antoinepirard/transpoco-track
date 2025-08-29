@@ -58,7 +58,7 @@ export function FleetMap({
     url: websocketUrl,
     organizationId,
     ...(apiKey ? { apiKey } : {}),
-    autoConnect: !demoMode,
+    autoConnect: autoConnect && !demoMode,
   });
 
   // Demo mode setup
@@ -102,7 +102,7 @@ export function FleetMap({
     [selectVehicle, selectedVehicleId]
   );
 
-  const handleVehicleHover = useCallback((_vehicle: Vehicle | null) => {}, []);
+  const handleVehicleHover = useCallback(() => {}, []);
 
   const handleMapLoad = useCallback((map: MapLibreMap) => {
     mapInstanceRef.current = map;
@@ -133,7 +133,7 @@ export function FleetMap({
   );
 
   const layers = useMemo(() => {
-    const deckLayers: unknown[] = [];
+    const deckLayers: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     // Show trails only for selected vehicle, or all trails if showTrails is enabled
     if (
@@ -150,7 +150,7 @@ export function FleetMap({
       if (selectedTrails.length > 0) {
         const trailLayer = createTrailLayer({
           trails: selectedTrails,
-          selectedVehicleId: selectedVehicleId || undefined,
+          selectedVehicleId: selectedVehicleId ?? undefined,
           width: 3,
           opacity: 0.8,
         });
@@ -161,7 +161,7 @@ export function FleetMap({
     if (vehicles.length > 0) {
       const vehicleLayer = createVehicleLayer({
         vehicles,
-        selectedVehicleId: selectedVehicleId || undefined,
+        selectedVehicleId: selectedVehicleId ?? undefined,
         onVehicleClick: handleVehicleClick,
         onVehicleHover: handleVehicleHover,
       });

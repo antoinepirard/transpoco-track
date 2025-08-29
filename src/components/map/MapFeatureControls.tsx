@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Gear, Car, MapPin, Path, Fire } from '@phosphor-icons/react';
+import { Gear, Car, MapPin, Path, Fire, type IconWeight } from '@phosphor-icons/react';
 
 interface MapFeature {
   id: string;
   label: string;
-  icon: React.ComponentType<{ size?: number; weight?: string }>;
+  icon: React.ComponentType<{ size?: number; weight?: IconWeight }>;
   enabled: boolean;
 }
 
@@ -128,15 +128,16 @@ export function MapFeatureControls({
                       }
                     `}
                   >
-                    <IconComponent
-                      size={16}
-                      weight="regular"
-                      className={`mr-3 transition-colors ${
-                        feature.enabled
-                          ? 'text-white'
-                          : 'text-gray-400 group-hover:text-gray-600'
-                      }`}
-                    />
+                    <span className={`mr-3 transition-colors ${
+                      feature.enabled
+                        ? 'text-white'
+                        : 'text-gray-400 group-hover:text-gray-600'
+                    }`}>
+                      <IconComponent
+                        size={16}
+                        weight="regular"
+                      />
+                    </span>
                     <span className="flex-1 text-left">{feature.label}</span>
                     {feature.enabled && (
                       <div className="w-2 h-2 bg-white rounded-full ml-2 opacity-80" />

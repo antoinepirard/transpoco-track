@@ -1,6 +1,5 @@
 import { IconLayer, PathLayer, ScatterplotLayer } from '@deck.gl/layers';
 import type { Vehicle, VehiclePosition } from '@/types/fleet';
-import type { VehicleLayerProps, TrailLayerProps } from '@/types/map';
 
 export function createVehicleLayer({
   vehicles,

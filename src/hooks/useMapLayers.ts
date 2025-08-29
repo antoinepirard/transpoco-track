@@ -374,7 +374,7 @@ export function useMapLayers() {
         // Create sample heatmap data based on vehicle activity
         const sampleHeatmapData = {
           type: 'FeatureCollection' as const,
-          features: Array.from({ length: 50 }, (_, i) => ({
+          features: Array.from({ length: 50 }, () => ({
             type: 'Feature' as const,
             properties: {
               activity: Math.floor(Math.random() * 100) + 1, // Activity intensity

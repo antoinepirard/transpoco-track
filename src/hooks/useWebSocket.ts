@@ -34,6 +34,24 @@ export function useWebSocket({
   useEffect(() => {
     if (!autoConnect) return;
 
+    const handleMessage = (message: WebSocketMessage) => {
+      switch (message.type) {
+        case 'vehicle_update':
+          const update = message.data as VehicleUpdate;
+          updateVehicle(update.vehicleId, update.data);
+          break;
+        case 'bulk_update':
+          const updates = message.data as VehicleUpdate[];
+          applyVehicleUpdates(
+            updates.map((update) => ({
+              vehicleId: update.vehicleId,
+              update: update.data,
+            }))
+          );
+          break;
+      }
+    };
+
     const client = new WebSocketClient({
       ...options,
       useWorker: true,
@@ -73,8 +91,7 @@ export function useWebSocket({
     };
   }, [
     autoConnect,
-    options.url,
-    options.organizationId,
+    options,
     onMessage,
     onError,
     setConnectionStatus,
@@ -82,23 +99,6 @@ export function useWebSocket({
     applyVehicleUpdates,
   ]);
 
-  const handleMessage = (message: WebSocketMessage) => {
-    switch (message.type) {
-      case 'vehicle_update':
-        const update = message.data as VehicleUpdate;
-        updateVehicle(update.vehicleId, update.data);
-        break;
-      case 'bulk_update':
-        const updates = message.data as VehicleUpdate[];
-        applyVehicleUpdates(
-          updates.map((update) => ({
-            vehicleId: update.vehicleId,
-            update: update.data,
-          }))
-        );
-        break;
-    }
-  };
 
   const connect = () => {
     if (!clientRef.current) return;

@@ -1,4 +1,4 @@
-import type { WebSocketMessage, VehicleUpdate } from '@/types/fleet';
+import type { WebSocketMessage } from '@/types/fleet';
 
 export interface WebSocketClientOptions {
   url: string;
@@ -61,7 +61,7 @@ export class WebSocketClient {
         }
       };
 
-      this.worker.onerror = (error) => {
+      this.worker.onerror = () => {
         this.options.onError?.(new Error('Worker error'));
         reject(new Error('Worker error'));
       };

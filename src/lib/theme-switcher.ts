@@ -19,7 +19,7 @@ export function disableTransitionsTemporarily() {
   document.head.appendChild(css);
 
   // Force a repaint
-  const _ = window.getComputedStyle(css).opacity;
+  void window.getComputedStyle(css).opacity;
 
   return () => {
     document.head.removeChild(css);
