@@ -125,7 +125,7 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
   const parentRef = useRef<HTMLDivElement | null>(null);
   const rowVirtualizer = useVirtualizer({
     count: table.getRowModel().rows.length,
-    estimateSize: () => 40,
+    estimateSize: () => 44,
     getScrollElement: () => parentRef.current,
     overscan: 10,
   });
@@ -153,7 +153,7 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
       </div>
 
       <div ref={parentRef} className="relative w-full flex-1 overflow-auto rounded-lg border border-gray-200">
-        <table className="w-full text-sm table-fixed" style={{ minWidth: '1610px' }}>
+        <table className="w-full text-sm table-fixed bg-white" style={{ minWidth: '1610px' }}>
           <thead className="sticky top-0 z-10 bg-gray-50 text-left text-gray-600">
             {table.getHeaderGroups().map(hg => (
               <tr key={hg.id} className="border-b border-gray-200">
@@ -181,18 +181,20 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
               return (
                 <tr
                   key={row.id}
-                  className="absolute left-0 right-0 border-b border-gray-100"
-                  style={{ transform: `translateY(${vRow.start}px)` }}
+                  className="absolute left-0 right-0 border-b border-gray-100 bg-white"
+                  style={{ 
+                    transform: `translateY(${vRow.start}px)`,
+                    height: '44px'
+                  }}
                 >
                   {row.getVisibleCells().map(cell => {
                     const isFirst = cell.column.id === 'driver';
-                    const isLocation = cell.column.id === 'startLocation' || cell.column.id === 'stopLocation';
                     const cellValue = cell.getValue() as string;
                     
                     return (
                       <td 
                         key={cell.id} 
-                        className="px-3 py-2 align-middle"
+                        className="px-3 py-2 align-middle bg-white"
                         style={{ width: cell.column.getSize(), maxWidth: cell.column.getSize() }}
                       >
                         <div 
@@ -209,8 +211,8 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
                             </button>
                           ) : null}
                           <div 
-                            className={`${isLocation ? 'truncate' : ''} min-w-0 flex-1`}
-                            title={isLocation && cellValue ? cellValue : undefined}
+                            className="truncate min-w-0 flex-1 whitespace-nowrap"
+                            title={cellValue && typeof cellValue === 'string' && cellValue.length > 20 ? cellValue : undefined}
                           >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </div>
