@@ -11,6 +11,7 @@ interface FleetState {
   lastUpdate: Date | null;
 
   setVehicles: (vehicles: Vehicle[]) => void;
+  updateVehiclesIfChanged: (vehicles: Vehicle[]) => void;
   updateVehicle: (vehicleId: string, update: Partial<Vehicle>) => void;
   applyVehicleUpdates: (
     updates: Array<{ vehicleId: string; update: Partial<Vehicle> }>
@@ -22,7 +23,7 @@ interface FleetState {
   setConnectionStatus: (connected: boolean) => void;
 }
 
-export const useFleetStore = create<FleetState>()(
+export const useFleetStore = create<FleetState, [["zustand/subscribeWithSelector", never]]>()(
   subscribeWithSelector((set, get) => ({
     vehicles: [],
     selectedVehicleId: null,
@@ -41,6 +42,51 @@ export const useFleetStore = create<FleetState>()(
       set({
         vehicles,
         lastUpdate: new Date(),
+      });
+    },
+
+    // Smart update that only changes vehicles if their data actually changed
+    updateVehiclesIfChanged: (newVehicles: Vehicle[]) => {
+      set((state) => {
+        // Quick reference check first
+        if (state.vehicles === newVehicles) return state;
+        
+        // If different lengths, definitely changed
+        if (state.vehicles.length !== newVehicles.length) {
+          return {
+            vehicles: newVehicles,
+            lastUpdate: new Date(),
+          };
+        }
+
+        // Check if any vehicle actually changed by comparing position data
+        let hasChanges = false;
+        for (let i = 0; i < newVehicles.length; i++) {
+          const oldVehicle = state.vehicles[i];
+          const newVehicle = newVehicles[i];
+          
+          if (
+            !oldVehicle ||
+            oldVehicle.id !== newVehicle.id ||
+            oldVehicle.currentPosition.latitude !== newVehicle.currentPosition.latitude ||
+            oldVehicle.currentPosition.longitude !== newVehicle.currentPosition.longitude ||
+            oldVehicle.currentPosition.heading !== newVehicle.currentPosition.heading ||
+            oldVehicle.status !== newVehicle.status
+          ) {
+            hasChanges = true;
+            break;
+          }
+        }
+
+        // Only update if there are actual changes
+        if (hasChanges) {
+          return {
+            vehicles: newVehicles,
+            lastUpdate: new Date(),
+          };
+        }
+
+        return state; // No changes, return current state
       });
     },
 

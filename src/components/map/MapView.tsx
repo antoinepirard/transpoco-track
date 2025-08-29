@@ -74,12 +74,9 @@ export function MapView({
         } catch {}
       }
 
-      // 3) Persist to store with light throttling or when drag ends
-      throttleRef.current ??= { t: 0 };
-      const now = performance.now();
+      // 3) Persist to store only when drag ends to prevent layer recreation during interaction
       const isDragging = info.interactionState?.isDragging;
-      if (now - throttleRef.current.t > 66 || isDragging === false) {
-        throttleRef.current.t = now;
+      if (isDragging === false) {
         onViewportChange?.({
           latitude: vs.latitude,
           longitude: vs.longitude,
@@ -103,7 +100,12 @@ export function MapView({
 
   // Initialize MapLibre map (once only, no viewport deps)
   useEffect(() => {
-    if (mapInstanceRef.current || !mapContainerRef.current || isInitializingRef.current) return;
+    if (
+      mapInstanceRef.current ||
+      !mapContainerRef.current ||
+      isInitializingRef.current
+    )
+      return;
 
     // Cancel any previous requests
     if (abortControllerRef.current) {
@@ -167,12 +169,14 @@ export function MapView({
       if (retryCountRef.current < maxRetries) {
         retryCountRef.current += 1;
         const delay = Math.pow(2, retryCountRef.current - 1) * 1000; // 1s, 2s, 4s
-        
-        setMapError(`Map loading failed. Retrying in ${delay/1000}s... (${retryCountRef.current}/${maxRetries})`);
-        
+
+        setMapError(
+          `Map loading failed. Retrying in ${delay / 1000}s... (${retryCountRef.current}/${maxRetries})`
+        );
+
         setTimeout(() => {
           if (!abortController.signal.aborted) {
-            setRetryTrigger(prev => prev + 1);
+            setRetryTrigger((prev) => prev + 1);
           }
         }, delay);
       } else {
@@ -181,7 +185,9 @@ export function MapView({
             'Map sprites failed to load. The map may not display all icons properly.'
           );
         } else {
-          setMapError('Map failed to load after multiple attempts. Please refresh the page.');
+          setMapError(
+            'Map failed to load after multiple attempts. Please refresh the page.'
+          );
         }
         setIsLoading(false);
       }
@@ -194,7 +200,11 @@ export function MapView({
     map.on('sourcedataabort', (e) => {
       // Only log if not an intentional abort
       if (!abortController.signal.aborted) {
-        console.log('Source data loading aborted:', e.sourceId, '(likely due to style change)');
+        console.log(
+          'Source data loading aborted:',
+          e.sourceId,
+          '(likely due to style change)'
+        );
       }
     });
 
@@ -216,7 +226,7 @@ export function MapView({
       // Signal abort to prevent state updates after cleanup
       abortController.abort();
       isInitializingRef.current = false;
-      
+
       try {
         map.remove();
       } catch (error: unknown) {
@@ -268,7 +278,7 @@ export function MapView({
     setViewState((prev) => ({
       ...prev,
       ...viewport,
-      transitionDuration: 300,
+      transitionDuration: 0,
     }));
   }, [viewport]);
 
@@ -325,6 +335,10 @@ export function MapView({
         viewState={viewState}
         onViewStateChange={handleViewStateChange as any} // eslint-disable-line @typescript-eslint/no-explicit-any
         layers={layers as any[]} // eslint-disable-line @typescript-eslint/no-explicit-any
+        useDevicePixels={Math.min(
+          2,
+          typeof window !== 'undefined' ? window.devicePixelRatio : 1
+        )}
         controller={{
           dragPan: true,
           dragRotate: true,

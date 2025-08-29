@@ -51,6 +51,7 @@ export function FleetMap({
     selectVehicle,
     setViewport,
     setVehicles,
+    updateVehiclesIfChanged,
     addTrail,
     setConnectionStatus,
   } = useFleetStore();
@@ -70,7 +71,7 @@ export function FleetMap({
 
     const unsubscribeVehicles = fakeDataGenerator.onVehicleUpdate(
       (demoVehicles) => {
-        setVehicles(demoVehicles);
+        updateVehiclesIfChanged(demoVehicles);
       }
     );
 
@@ -87,7 +88,7 @@ export function FleetMap({
       unsubscribeVehicles();
       unsubscribeTrails();
     };
-  }, [demoMode, setVehicles, addTrail, setConnectionStatus]);
+  }, [demoMode, updateVehiclesIfChanged, addTrail, setConnectionStatus]);
 
   const handleVehicleClick = useCallback(
     (vehicle: Vehicle) => {
@@ -171,7 +172,7 @@ export function FleetMap({
 
     return deckLayers;
   }, [
-    vehicles,
+    vehicles, // Now will only change when vehicles actually change (thanks to updateVehiclesIfChanged)
     trails,
     internalShowTrails,
     selectedVehicleId,
@@ -184,7 +185,7 @@ export function FleetMap({
     if (vehicles.length === 0) return null;
 
     const bounds = vehicles.reduce(
-      (acc, vehicle) => {
+      (acc: { north: number; south: number; east: number; west: number }, vehicle: Vehicle) => {
         const lat = vehicle.currentPosition.latitude;
         const lng = vehicle.currentPosition.longitude;
 
@@ -230,7 +231,7 @@ export function FleetMap({
 
   useEffect(() => {
     if (selectedVehicleId) {
-      const vehicle = vehicles.find((v) => v.id === selectedVehicleId);
+      const vehicle = vehicles.find((v: Vehicle) => v.id === selectedVehicleId);
       setSelectedVehicle(vehicle || null);
     } else {
       setSelectedVehicle(null);

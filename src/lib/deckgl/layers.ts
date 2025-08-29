@@ -20,9 +20,9 @@ export function createVehicleLayer({
     pickable: true,
     getIcon: (vehicle: Vehicle) => ({
       url: getVehicleIconUrl(vehicle),
-      width: 32,
-      height: 32,
-      anchorY: 32,
+      width: 128,
+      height: 128,
+      anchorY: 128,
     }),
     getPosition: (vehicle: Vehicle) => [
       vehicle.currentPosition.longitude,
@@ -79,7 +79,9 @@ export function createTrailLayer({
         return [255, 107, 107, Math.floor(255 * opacity)];
       }
       const color = hexToRgb(d.color);
-      return color ? [...color, Math.floor(255 * opacity)] : [255, 107, 107, Math.floor(255 * opacity)];
+      return color
+        ? [...color, Math.floor(255 * opacity)]
+        : [255, 107, 107, Math.floor(255 * opacity)];
     },
     getWidth: (d) => (d.vehicleId === selectedVehicleId ? width * 1.5 : width),
     updateTriggers: {

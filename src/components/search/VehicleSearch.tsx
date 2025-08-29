@@ -44,7 +44,7 @@ export function VehicleSearch({
 
   // Get the currently selected vehicle
   const selectedVehicle = useMemo(
-    () => vehicles.find((v) => v.id === selectedVehicleId),
+    () => vehicles.find((v: Vehicle) => v.id === selectedVehicleId),
     [vehicles, selectedVehicleId]
   );
 
@@ -69,7 +69,7 @@ export function VehicleSearch({
 
     const lowerQuery = query.toLowerCase().trim();
     return vehicles
-      .filter((vehicle) => {
+      .filter((vehicle: Vehicle) => {
         return (
           vehicle.name.toLowerCase().includes(lowerQuery) ||
           vehicle.registrationNumber.toLowerCase().includes(lowerQuery) ||
@@ -77,7 +77,7 @@ export function VehicleSearch({
           vehicle.type.toLowerCase().includes(lowerQuery)
         );
       })
-      .sort((a, b) => {
+      .sort((a: Vehicle, b: Vehicle) => {
         // Prioritize exact matches and name matches
         const aNameMatch = a.name.toLowerCase().startsWith(lowerQuery);
         const bNameMatch = b.name.toLowerCase().startsWith(lowerQuery);
@@ -421,7 +421,7 @@ export function VehicleSearch({
               aria-label="Vehicle search results"
               id="vehicle-search-results"
             >
-              {filteredVehicles.map((vehicle, index) => (
+              {filteredVehicles.map((vehicle: Vehicle, index: number) => (
                 <li
                   key={vehicle.id}
                   role="option"
