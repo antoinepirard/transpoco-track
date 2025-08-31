@@ -23,6 +23,7 @@ interface FleetMapProps {
   autoConnect?: boolean;
   demoMode?: boolean;
   showSidebar?: boolean;
+  centerOnLocation?: {latitude: number, longitude: number, zoom?: number} | null;
 }
 
 export function FleetMap({
@@ -34,6 +35,7 @@ export function FleetMap({
   autoConnect = true,
   demoMode = false,
   showSidebar = false,
+  centerOnLocation = null,
 }: FleetMapProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [internalShowTrails, setInternalShowTrails] = useState(showTrails);
@@ -340,6 +342,19 @@ export function FleetMap({
       hasAutocenteredRef.current = false;
     }
   }, [vehicles.length, selectedVehicleId, calculateFleetBounds, setViewport]);
+
+  // Center map on external location (Google Maps-like behavior)
+  useEffect(() => {
+    if (centerOnLocation) {
+      setViewport({
+        latitude: centerOnLocation.latitude,
+        longitude: centerOnLocation.longitude,
+        zoom: centerOnLocation.zoom || 15,
+        bearing: 0,
+        pitch: 0,
+      });
+    }
+  }, [centerOnLocation, setViewport]);
 
   return (
     <div className="w-full h-full relative">

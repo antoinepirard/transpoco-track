@@ -83,6 +83,29 @@ export interface GeofenceAlert {
   position: VehiclePosition;
 }
 
+export interface Location {
+  id: string;
+  name: string;
+  address: string;
+  type: 'depot' | 'warehouse' | 'customer' | 'service_center' | 'fuel_station' | 'parking';
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  description?: string;
+  operatingHours?: {
+    open: string;
+    close: string;
+    days: string[];
+  };
+  contactInfo?: {
+    phone?: string;
+    email?: string;
+  };
+  isActive: boolean;
+  metadata?: Record<string, unknown>;
+}
+
 export interface FleetStats {
   totalVehicles: number;
   activeVehicles: number;
