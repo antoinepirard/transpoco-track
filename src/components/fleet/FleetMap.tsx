@@ -88,11 +88,7 @@ export function FleetMap({
     return () => {
       fakeDataGenerator.stop();
     };
-  }, [
-    demoMode,
-    updateVehiclesIfChanged,
-    setConnectionStatus,
-  ]);
+  }, [demoMode, updateVehiclesIfChanged, setConnectionStatus]);
 
   const handleVehicleClick = useCallback(
     (vehicle: Vehicle) => {

@@ -4,11 +4,20 @@
 
 import type { Vehicle } from '@/types/fleet';
 
+interface Viewport {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+}
+
 export interface VehicleManagerState {
   vehiclesById: Record<string, Vehicle>;
   vehicleIds: string[];
   selectedVehicleId: string | null;
   lastUpdate: number | null;
+  _vehiclesArray?: Vehicle[];
+  _vehiclesArrayVersion?: number | null;
+  viewport: Viewport;
   [key: string]: unknown;
 }
 
@@ -30,6 +39,11 @@ export const createVehicleManagerSlice = (set: (updates: Record<string, unknown>
   vehicleIds: [],
   selectedVehicleId: null,
   lastUpdate: null,
+  viewport: {
+    latitude: 53.35,
+    longitude: -6.26,
+    zoom: 10,
+  },
 
   // Getters with memoization
   getVehicles: () => {
@@ -42,16 +56,10 @@ export const createVehicleManagerSlice = (set: (updates: Record<string, unknown>
       return state._vehiclesArray;
     }
 
-    // Rebuild and cache the array
+    // Rebuild the array (without updating state during render)
     const vehiclesArray = state.vehicleIds
       .map((id: string) => state.vehiclesById[id])
       .filter(Boolean);
-
-    // Update cache (use set to update state)
-    set((currentState: VehicleManagerState & Record<string, unknown>) => ({
-      _vehiclesArray: vehiclesArray,
-      _vehiclesArrayVersion: currentState.lastUpdate,
-    }));
 
     return vehiclesArray;
   },
@@ -70,10 +78,13 @@ export const createVehicleManagerSlice = (set: (updates: Record<string, unknown>
       vehicleIds.push(vehicle.id);
     });
 
+    const timestamp = Date.now();
     set({
       vehiclesById,
       vehicleIds,
-      lastUpdate: Date.now(),
+      lastUpdate: timestamp,
+      _vehiclesArray: vehicles,
+      _vehiclesArrayVersion: timestamp,
     });
   },
 
@@ -90,10 +101,13 @@ export const createVehicleManagerSlice = (set: (updates: Record<string, unknown>
           vehicleIds.push(vehicle.id);
         });
 
+        const timestamp = Date.now();
         return {
           vehiclesById,
           vehicleIds,
-          lastUpdate: Date.now(),
+          lastUpdate: timestamp,
+          _vehiclesArray: newVehicles,
+          _vehiclesArrayVersion: timestamp,
         };
       }
 
@@ -124,10 +138,13 @@ export const createVehicleManagerSlice = (set: (updates: Record<string, unknown>
 
       // Only update if there are actual changes
       if (hasChanges) {
+        const timestamp = Date.now();
         return {
           vehiclesById: newVehiclesById,
           vehicleIds: newVehicleIds,
-          lastUpdate: Date.now(),
+          lastUpdate: timestamp,
+          _vehiclesArray: newVehicles,
+          _vehiclesArrayVersion: timestamp,
         };
       }
 
@@ -140,12 +157,16 @@ export const createVehicleManagerSlice = (set: (updates: Record<string, unknown>
       const existingVehicle = state.vehiclesById[vehicleId];
       if (!existingVehicle) return state;
 
+      const timestamp = Date.now();
       return {
         vehiclesById: {
           ...state.vehiclesById,
           [vehicleId]: { ...existingVehicle, ...update },
         },
-        lastUpdate: Date.now(),
+        lastUpdate: timestamp,
+        // Invalidate cache since data changed
+        _vehiclesArray: undefined,
+        _vehiclesArrayVersion: undefined,
       };
     });
   },
@@ -167,9 +188,13 @@ export const createVehicleManagerSlice = (set: (updates: Record<string, unknown>
 
       if (!hasChanges) return state;
 
+      const timestamp = Date.now();
       return {
         vehiclesById: updatedVehiclesById,
-        lastUpdate: Date.now(),
+        lastUpdate: timestamp,
+        // Invalidate cache since data changed
+        _vehiclesArray: undefined,
+        _vehiclesArrayVersion: undefined,
       };
     });
   },
@@ -182,10 +207,10 @@ export const createVehicleManagerSlice = (set: (updates: Record<string, unknown>
       if (vehicle) {
         set((state: VehicleManagerState & Record<string, unknown>) => ({
           viewport: {
-            ...(state as any).viewport,
+            ...state.viewport,
             latitude: vehicle.currentPosition.latitude,
             longitude: vehicle.currentPosition.longitude,
-            zoom: Math.max((state as any).viewport.zoom, 15),
+            zoom: Math.max(state.viewport.zoom, 15),
           },
         }));
       }
