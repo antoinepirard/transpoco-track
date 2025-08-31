@@ -391,7 +391,7 @@ export function FleetMap({
         </MapErrorBoundary>
 
         {/* Map Controls - positioned in top-right of map area */}
-        <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
           <MapStyleSwitcher
             currentStyle={currentMapStyle || ''}
             onStyleChange={setCurrentMapStyle}

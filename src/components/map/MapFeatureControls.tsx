@@ -72,11 +72,11 @@ export function MapFeatureControls({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          p-3 rounded-lg transition-all duration-200
-          border border-gray-200 bg-white/90 backdrop-blur-sm shadow-sm
-          hover:bg-gray-50 hover:border-gray-300 hover:shadow-md
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
-          ${isOpen ? 'bg-gray-100 border-gray-300' : ''}
+          p-2 rounded-lg transition-all duration-200
+          bg-white/90 backdrop-blur-sm shadow-sm
+          hover:bg-gray-50 hover:shadow-md
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-1
+          ${isOpen ? 'bg-gray-100' : ''}
         `}
         title="Map layer settings"
         aria-label="Toggle map layer settings"

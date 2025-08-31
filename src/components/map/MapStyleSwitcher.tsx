@@ -2,13 +2,13 @@
 
 import React, { useState } from 'react';
 import {
-  MapPin,
-  Sun,
-  Moon,
-  Mountains,
-  Eye,
-  Globe,
-  Camera,
+  MapPinIcon,
+  SunIcon,
+  MoonIcon,
+  MountainsIcon,
+  EyeIcon,
+  GlobeIcon,
+  CameraIcon,
 } from '@phosphor-icons/react';
 import { MAP_STYLES } from '@/lib/maplibre/config';
 
@@ -35,7 +35,7 @@ const STYLE_OPTIONS: StyleOption[] = [
     key: 'bright',
     name: 'High Contrast Roads',
     description: 'Maximum road visibility - ideal for fleet tracking',
-    icon: <Sun className="w-4 h-4" />,
+    icon: <SunIcon className="w-4 h-4" />,
     category: 'professional',
     recommended: true,
   },
@@ -43,21 +43,21 @@ const STYLE_OPTIONS: StyleOption[] = [
     key: 'dataviz',
     name: 'Data Visualization',
     description: 'Clean, data-focused style with good road visibility',
-    icon: <Eye className="w-4 h-4" />,
+    icon: <EyeIcon className="w-4 h-4" />,
     category: 'professional',
   },
   {
     key: 'basic',
     name: 'Business Basic',
     description: 'Minimal, business-focused style with clear roads',
-    icon: <MapPin className="w-4 h-4" />,
+    icon: <MapPinIcon className="w-4 h-4" />,
     category: 'professional',
   },
   {
     key: 'positron',
     name: 'Light Professional',
     description: 'Ultra-clean minimal style for focused fleet tracking',
-    icon: <Sun className="w-4 h-4" />,
+    icon: <SunIcon className="w-4 h-4" />,
     category: 'professional',
   },
 
@@ -66,14 +66,14 @@ const STYLE_OPTIONS: StyleOption[] = [
     key: 'satellite',
     name: 'Satellite',
     description: 'High-resolution satellite imagery',
-    icon: <Camera className="w-4 h-4" />,
+    icon: <CameraIcon className="w-4 h-4" />,
     category: 'satellite',
   },
   {
     key: 'hybrid',
     name: 'Hybrid',
     description: 'Satellite imagery with street labels',
-    icon: <Globe className="w-4 h-4" />,
+    icon: <GlobeIcon className="w-4 h-4" />,
     category: 'satellite',
   },
 
@@ -82,28 +82,28 @@ const STYLE_OPTIONS: StyleOption[] = [
     key: 'streets',
     name: 'Traditional Streets',
     description: 'Classic street map view',
-    icon: <MapPin className="w-4 h-4" />,
+    icon: <MapPinIcon className="w-4 h-4" />,
     category: 'specialized',
   },
   {
     key: 'dark',
     name: 'Night Mode',
     description: 'Dark theme for night operations',
-    icon: <Moon className="w-4 h-4" />,
+    icon: <MoonIcon className="w-4 h-4" />,
     category: 'specialized',
   },
   {
     key: 'topo',
     name: 'Topographic',
     description: 'Terrain analysis and elevation data',
-    icon: <Mountains className="w-4 h-4" />,
+    icon: <MountainsIcon className="w-4 h-4" />,
     category: 'specialized',
   },
   {
     key: 'landscape',
     name: 'Landscape',
     description: 'Clean landscape view with natural features',
-    icon: <Mountains className="w-4 h-4" />,
+    icon: <MountainsIcon className="w-4 h-4" />,
     category: 'specialized',
   },
 ];
@@ -149,25 +149,11 @@ export function MapStyleSwitcher({
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 bg-white shadow-sm border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+        className="flex items-center gap-2 bg-white shadow-sm rounded-lg px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        {currentOption.icon}
-        <span className="hidden sm:inline">{currentOption.name}</span>
-        <svg
-          className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+        <GlobeIcon className="w-4 h-4" />
       </button>
 
       {/* Dropdown Menu */}
