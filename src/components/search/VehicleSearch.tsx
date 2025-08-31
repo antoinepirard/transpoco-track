@@ -8,6 +8,7 @@ import {
   XIcon,
   CaretRightIcon,
   CaretDownIcon,
+  FunnelIcon,
 } from '@phosphor-icons/react';
 import { useFleetStore } from '@/stores/fleetStore';
 import type { Vehicle } from '@/types/fleet';
@@ -35,6 +36,7 @@ export function VehicleSearch({
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [showReports, setShowReports] = useState(false);
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const reportsRef = useRef<HTMLDivElement>(null);
@@ -63,32 +65,80 @@ export function VehicleSearch({
     [selectVehicle, onVehicleSelect]
   );
 
-  // Filter and sort vehicles based on query
+  // Map vehicle status to filter labels
+  const mapVehicleStatus = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'Active';
+      case 'offline':
+      case 'inactive':
+        return 'Inactive';
+      case 'maintenance':
+      case 'delayed':
+        return 'Delayed';
+      case 'accident':
+      case 'emergency':
+        return 'Accident';
+      default:
+        return 'Inactive';
+    }
+  };
+
+  // Filter and sort vehicles based on query and status filters
   const filteredVehicles = useMemo(() => {
-    if (!query.trim()) {
-      return vehicles.slice(0, 10); // Show first 10 vehicles when no query
+    let filtered = vehicles;
+
+    // Apply status filtering
+    if (statusFilters.length > 0) {
+      filtered = filtered.filter((vehicle: Vehicle) => {
+        const vehicleStatus = mapVehicleStatus(vehicle.status);
+        return statusFilters.includes(vehicleStatus);
+      });
     }
 
-    const lowerQuery = query.toLowerCase().trim();
-    return vehicles
-      .filter((vehicle: Vehicle) => {
+    // Apply text search filtering
+    if (query.trim()) {
+      const lowerQuery = query.toLowerCase().trim();
+      filtered = filtered.filter((vehicle: Vehicle) => {
         return (
           vehicle.name.toLowerCase().includes(lowerQuery) ||
           vehicle.registrationNumber.toLowerCase().includes(lowerQuery) ||
           vehicle.driver?.name.toLowerCase().includes(lowerQuery) ||
           vehicle.type.toLowerCase().includes(lowerQuery)
         );
-      })
+      });
+    }
+
+    return filtered
       .sort((a: Vehicle, b: Vehicle) => {
+        if (!query.trim()) return a.name.localeCompare(b.name);
         // Prioritize exact matches and name matches
+        const lowerQuery = query.toLowerCase().trim();
         const aNameMatch = a.name.toLowerCase().startsWith(lowerQuery);
         const bNameMatch = b.name.toLowerCase().startsWith(lowerQuery);
         if (aNameMatch && !bNameMatch) return -1;
         if (!aNameMatch && bNameMatch) return 1;
         return a.name.localeCompare(b.name);
       })
-      .slice(0, 8); // Limit to 8 results
-  }, [query, vehicles]);
+      .slice(0, 20); // Increased limit to 20 results
+  }, [query, vehicles, statusFilters]);
+
+  // Available status filters
+  const availableStatusFilters = ['Active', 'Inactive', 'Delayed', 'Accident'];
+
+  // Toggle status filter
+  const toggleStatusFilter = (status: string) => {
+    setStatusFilters(prev => 
+      prev.includes(status)
+        ? prev.filter(s => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setStatusFilters([]);
+  };
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -408,93 +458,136 @@ export function VehicleSearch({
 
       {/* Dropdown Results - only shown when searching and no vehicle selected */}
       <AnimatePresence>
-        {isOpen && !selectedVehicle && filteredVehicles.length > 0 && (
+        {isOpen && !selectedVehicle && (
           <motion.div
-            className="absolute z-50 mt-1 w-full bg-white ring-1 ring-gray-300/50 rounded-lg shadow-lg max-h-64 overflow-auto"
+            className="absolute z-50 mt-1 w-full bg-white ring-1 ring-gray-300/50 rounded-lg shadow-lg max-h-96 overflow-hidden flex flex-col"
             initial={{ opacity: 0, y: -4, scale: 0.99 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.99 }}
             transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
           >
-            <ul
-              ref={listRef}
-              role="listbox"
-              className="py-1"
-              aria-label="Vehicle search results"
-              id="vehicle-search-results"
-            >
-              {filteredVehicles.map((vehicle: Vehicle, index: number) => (
-                <li
-                  key={vehicle.id}
-                  role="option"
-                  aria-selected={vehicle.id === selectedVehicleId}
-                  className={`px-3 py-2 cursor-pointer flex items-center justify-between transition-colors ${
-                    index === highlightedIndex
-                      ? 'bg-blue-50'
-                      : vehicle.id === selectedVehicleId
-                        ? 'bg-blue-100'
-                        : 'hover:bg-gray-50'
-                  }`}
-                  onClick={() => handleVehicleSelect(vehicle)}
-                  onMouseEnter={() => setHighlightedIndex(index)}
-                >
-                  <div className="flex items-center flex-1 min-w-0">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-medium text-gray-900 truncate">
-                          {vehicle.name}
-                        </span>
-                        <span className="text-xs text-gray-500 truncate">
-                          {vehicle.registrationNumber}
-                        </span>
-                      </div>
-                      {vehicle.driver && (
-                        <div className="text-xs text-gray-500 truncate">
-                          Driver: {vehicle.driver.name}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2 flex-shrink-0">
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        vehicle.status === 'active'
-                          ? 'bg-green-500'
-                          : vehicle.status === 'maintenance'
-                            ? 'bg-yellow-500'
-                            : vehicle.status === 'offline'
-                              ? 'bg-red-500'
-                              : 'bg-gray-400'
+            {/* Status Filters */}
+            <div className="p-3 border-b border-gray-100 bg-gray-50/50">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <FunnelIcon className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Filter by status</span>
+                </div>
+                {statusFilters.length > 0 && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {availableStatusFilters.map((status) => {
+                  const isSelected = statusFilters.includes(status);
+                  return (
+                    <button
+                      key={status}
+                      onClick={() => toggleStatusFilter(status)}
+                      className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                        isSelected
+                          ? 'bg-blue-100 border-blue-200 text-blue-700'
+                          : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
                       }`}
-                      title={`Status: ${vehicle.status}`}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    >
+                      {status}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Vehicle List */}
+            {filteredVehicles.length > 0 ? (
+              <ul
+                ref={listRef}
+                role="listbox"
+                className="py-1 overflow-auto flex-1"
+                aria-label="Vehicle search results"
+                id="vehicle-search-results"
+              >
+                {filteredVehicles.map((vehicle: Vehicle, index: number) => {
+                  const vehicleStatus = mapVehicleStatus(vehicle.status);
+                  return (
+                    <li
+                      key={vehicle.id}
+                      role="option"
+                      aria-selected={vehicle.id === selectedVehicleId}
+                      className={`px-3 py-2 cursor-pointer flex items-center justify-between transition-colors ${
+                        index === highlightedIndex
+                          ? 'bg-blue-50'
+                          : vehicle.id === selectedVehicleId
+                            ? 'bg-blue-100'
+                            : 'hover:bg-gray-50'
+                      }`}
+                      onClick={() => handleVehicleSelect(vehicle)}
+                      onMouseEnter={() => setHighlightedIndex(index)}
+                    >
+                      <div className="flex items-center flex-1 min-w-0">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium text-gray-900 truncate">
+                              {vehicle.name}
+                            </span>
+                            <span className="text-xs text-gray-500 truncate">
+                              {vehicle.registrationNumber}
+                            </span>
+                          </div>
+                          {vehicle.driver && (
+                            <div className="text-xs text-gray-500 truncate">
+                              Driver: {vehicle.driver.name}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 flex-shrink-0">
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                          vehicleStatus === 'Active'
+                            ? 'bg-green-100 text-green-700'
+                            : vehicleStatus === 'Delayed'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : vehicleStatus === 'Accident'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {vehicleStatus}
+                        </span>
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            vehicleStatus === 'Active'
+                              ? 'bg-green-500'
+                              : vehicleStatus === 'Delayed'
+                                ? 'bg-yellow-500'
+                                : vehicleStatus === 'Accident'
+                                  ? 'bg-red-500'
+                                  : 'bg-gray-400'
+                          }`}
+                          title={`Status: ${vehicleStatus}`}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <div className="px-3 py-8 text-sm text-gray-500 text-center">
+                {query.trim() && statusFilters.length === 0
+                  ? `No vehicles found matching "${query}"`
+                  : statusFilters.length > 0 && !query.trim()
+                    ? `No vehicles found with status: ${statusFilters.join(', ')}`
+                    : `No vehicles found matching "${query}" with status: ${statusFilters.join(', ')}`
+                }
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* No Results */}
-      <AnimatePresence>
-        {isOpen &&
-          !selectedVehicle &&
-          query.trim() &&
-          filteredVehicles.length === 0 && (
-            <motion.div
-              className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg"
-              initial={{ opacity: 0, y: -4, scale: 0.99 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -4, scale: 0.99 }}
-              transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <div className="px-3 py-4 text-sm text-gray-500 text-center">
-                No vehicles found matching &quot;{query}&quot;
-              </div>
-            </motion.div>
-          )}
-      </AnimatePresence>
     </div>
   );
 }

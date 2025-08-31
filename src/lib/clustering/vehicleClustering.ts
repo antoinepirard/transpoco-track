@@ -1,7 +1,7 @@
 import type { Vehicle } from '@/types/fleet';
 
 // Global cluster cache for position stability
-let clusterCache = new Map<string, VehicleCluster>();
+const clusterCache = new Map<string, VehicleCluster>();
 let cacheTimestamp = 0;
 
 export interface VehicleCluster {
@@ -72,12 +72,12 @@ function findSimilarCluster(vehicles: Vehicle[], existingClusters: VehicleCluste
 }
 
 /**
- * Calculate stable position for a cluster, considering previous position
+ * Calculate stable position for a cluster, prioritizing actual vehicle centroid
  */
 function calculateStablePosition(
   vehicles: Vehicle[], 
   previousPosition?: [number, number],
-  stabilityFactor: number = 0.3
+  stabilityFactor: number = 0.1 // Reduced stability factor to stay closer to actual GPS positions
 ): [number, number] {
   const centroid = calculateCentroid(vehicles);
   
@@ -85,9 +85,16 @@ function calculateStablePosition(
     return centroid;
   }
 
-  // Weighted average between new centroid and previous position for stability
+  // Minimal weighted average - prioritize actual vehicle positions over stability
   const [prevLng, prevLat] = previousPosition;
   const [newLng, newLat] = centroid;
+  
+  // Only apply stability if the change is very small (< 50 meters)
+  const distance = calculateDistance(prevLat, prevLng, newLat, newLng);
+  if (distance > 50) {
+    // Large changes indicate real vehicle movement - use actual centroid
+    return centroid;
+  }
   
   return [
     prevLng * stabilityFactor + newLng * (1 - stabilityFactor),

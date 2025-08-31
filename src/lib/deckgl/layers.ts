@@ -32,21 +32,23 @@ export function createVehicleLayer({
   centerLatitude?: number;
   previousZoom?: number;
 }) {
-  // If clustering is enabled
+  // ALWAYS create individual vehicle layer first - vehicles never move from GPS positions
+  const individualVehicleLayer = createIndividualVehicleLayer({
+    vehicles,
+    selectedVehicleId,
+    onVehicleClick,
+    onVehicleHover,
+  });
+
+  // If clustering is enabled, add cluster overlays WITHOUT affecting vehicle positions
   if (clusterVehicles && zoom !== undefined) {
     // Enhanced transition zone for smooth layer switching
     const clusteringThreshold = 12;
     const transitionZone = 0.5;
 
-    // At street/building level (zoom 12+), disable clustering entirely for precise navigation
-    // But use a transition zone to prevent abrupt switches
+    // At street/building level (zoom 12+), only show individual vehicles
     if (zoom >= clusteringThreshold + transitionZone) {
-      return createIndividualVehicleLayer({
-        vehicles,
-        selectedVehicleId,
-        onVehicleClick,
-        onVehicleHover,
-      });
+      return individualVehicleLayer;
     }
 
     // In transition zone, prefer previous state for stability
@@ -56,12 +58,7 @@ export function createVehicleLayer({
       zoom <= clusteringThreshold + transitionZone
     ) {
       if (previousZoom >= clusteringThreshold) {
-        return createIndividualVehicleLayer({
-          vehicles,
-          selectedVehicleId,
-          onVehicleClick,
-          onVehicleHover,
-        });
+        return individualVehicleLayer;
       }
     }
 
@@ -73,8 +70,34 @@ export function createVehicleLayer({
 
     const layers = [];
 
-    // Add cluster markers layer
+    // Always add individual vehicles at their exact GPS positions
+    layers.push(individualVehicleLayer);
+
+    // Add cluster overlays only when there are actually clusters
     if (clusteringResult.clusters.length > 0) {
+      // Hide individual vehicles that are part of clusters
+      const clusteredVehicleIds = new Set(
+        clusteringResult.clusters.flatMap(cluster => cluster.vehicles.map(v => v.id))
+      );
+      
+      // Create filtered individual vehicle layer (only non-clustered vehicles)
+      const nonClusteredVehicles = vehicles.filter(v => !clusteredVehicleIds.has(v.id));
+      
+      layers.splice(0, 1); // Remove the full individual vehicle layer
+      
+      // Add non-clustered individual vehicles
+      if (nonClusteredVehicles.length > 0) {
+        layers.push(
+          createIndividualVehicleLayer({
+            vehicles: nonClusteredVehicles,
+            selectedVehicleId,
+            onVehicleClick,
+            onVehicleHover,
+          })
+        );
+      }
+      
+      // Add cluster visual overlays
       layers.push(
         createVehicleClusterLayer({
           clusters: clusteringResult.clusters,
@@ -83,28 +106,11 @@ export function createVehicleLayer({
       );
     }
 
-    // Add individual vehicles layer
-    if (clusteringResult.individualVehicles.length > 0) {
-      layers.push(
-        createIndividualVehicleLayer({
-          vehicles: clusteringResult.individualVehicles,
-          selectedVehicleId,
-          onVehicleClick,
-          onVehicleHover,
-        })
-      );
-    }
-
     return layers;
   }
 
-  // Fall back to individual vehicles
-  return createIndividualVehicleLayer({
-    vehicles,
-    selectedVehicleId,
-    onVehicleClick,
-    onVehicleHover,
-  });
+  // Fall back to individual vehicles only
+  return individualVehicleLayer;
 }
 
 /**
@@ -151,11 +157,8 @@ function createIndividualVehicleLayer({
     updateTriggers: {
       getSize: selectedVehicleId,
     },
+    // Remove position transitions to prevent GPS coordinate movement
     transitions: {
-      getPosition: {
-        duration: 600,
-        easing: (t: number) => t * (2 - t), // Match cluster transitions
-      },
       getAngle: {
         duration: 400,
         easing: (t: number) => t * t * (3 - 2 * t), // Smooth ease-in-out

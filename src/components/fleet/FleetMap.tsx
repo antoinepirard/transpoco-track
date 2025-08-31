@@ -56,7 +56,6 @@ export function FleetMap({
     selectVehicle,
     setViewport,
     updateVehiclesIfChanged,
-    updateVehicleWithRoadSnapping,
     setConnectionStatus,
   } = useFleetStore();
 
@@ -139,6 +138,32 @@ export function FleetMap({
     [toggleMapLayer]
   );
 
+  // Separate clustering calculation from layer creation for better stability
+  const clusteringResult = useMemo(() => {
+    if (vehicles.length === 0) return null;
+    
+    // Only recalculate clustering when vehicles change or zoom changes significantly
+    const clusteringResult = createVehicleLayer({
+      vehicles,
+      selectedVehicleId: selectedVehicleId ?? undefined,
+      onVehicleClick: handleVehicleClick,
+      onVehicleHover: handleVehicleHover,
+      clusterVehicles: true,
+      zoom: debouncedZoom,
+      centerLatitude: viewport.latitude,
+      previousZoom: previousZoomRef.current,
+    });
+    
+    return clusteringResult;
+  }, [
+    vehicles, // Only recalculate when vehicles actually change
+    selectedVehicleId,
+    handleVehicleClick,
+    handleVehicleHover,
+    debouncedZoom, // Include zoom for clustering decisions
+    viewport.latitude,
+  ]);
+
   const layers = useMemo(() => {
     const deckLayers: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -165,38 +190,21 @@ export function FleetMap({
       }
     }
 
-    if (vehicles.length > 0) {
-      const vehicleLayer = createVehicleLayer({
-        vehicles,
-        selectedVehicleId: selectedVehicleId ?? undefined,
-        onVehicleClick: handleVehicleClick,
-        onVehicleHover: handleVehicleHover,
-        clusterVehicles: true, // Enable clustering
-        zoom: debouncedZoom,
-        centerLatitude: viewport.latitude,
-        // No cluster hover - clusters are purely visual
-        previousZoom: previousZoomRef.current,
-      });
-
-      // Handle both single layer and array of layers from clustering
-      if (Array.isArray(vehicleLayer)) {
-        deckLayers.push(...vehicleLayer.flat());
+    // Add vehicle/cluster layers
+    if (clusteringResult) {
+      if (Array.isArray(clusteringResult)) {
+        deckLayers.push(...clusteringResult.flat());
       } else {
-        deckLayers.push(vehicleLayer);
+        deckLayers.push(clusteringResult);
       }
     }
 
     return deckLayers;
   }, [
-    vehicles, // Now will only change when vehicles actually change (thanks to updateVehiclesIfChanged)
     trails,
     internalShowTrails,
     selectedVehicleId,
-    handleVehicleClick,
-    handleVehicleHover,
-    // Removed handleClusterHover dependency
-    debouncedZoom, // Re-cluster when debounced zoom changes
-    viewport.latitude, // Re-cluster when latitude changes (for radius calculation)
+    clusteringResult, // Only depend on the clustering result, not zoom directly
   ]);
 
   // Calculate fleet bounds and auto-center map
