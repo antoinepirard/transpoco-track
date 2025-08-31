@@ -72,8 +72,8 @@ export function MapFeatureControls({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          p-2 rounded-lg transition-all duration-200
-          bg-white/90 backdrop-blur-sm shadow-sm
+          relative flex items-center justify-center p-2 rounded-lg transition-all duration-200
+          bg-white/90 backdrop-blur-sm shadow-sm text-gray-700
           hover:bg-gray-50 hover:shadow-md
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-1
           ${isOpen ? 'bg-gray-100' : ''}
@@ -81,20 +81,18 @@ export function MapFeatureControls({
         title="Map layer settings"
         aria-label="Toggle map layer settings"
       >
-        <div className="relative">
-          <Gear
-            size={18}
-            weight="regular"
-            className={`text-gray-600 transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`}
-          />
-          {activeCount > 0 && (
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-[8px] text-white font-medium leading-none">
-                {activeCount}
-              </span>
-            </div>
-          )}
-        </div>
+        <Gear
+          size={18}
+          weight="regular"
+          className={`text-gray-600 transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`}
+        />
+        {activeCount > 0 && (
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
+            <span className="text-[8px] text-white font-medium leading-none">
+              {activeCount}
+            </span>
+          </div>
+        )}
       </button>
 
       {/* Feature Panel */}
