@@ -23,13 +23,31 @@ export interface RoadSnappingActions {
   getRoutingServiceHealth: () => Record<string, boolean>;
 }
 
-export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> | ((state: RoadSnappingState & Record<string, unknown>) => Record<string, unknown>)) => void, get: () => RoadSnappingState & Record<string, unknown>) => ({
+import type { Vehicle } from '@/types/fleet';
+import type { SnapCacheEntry } from './cacheManager';
+
+
+interface FleetState {
+  vehiclesById: Record<string, Vehicle>;
+  trails: Record<string, VehiclePosition[]>;
+  lastSnapTimes: Record<string, number>;
+  _pendingSnaps: Set<string>;
+  lastUpdate: number | null;
+  routingEnabled: boolean;
+  isVehiclePending?: (vehicleId: string) => boolean;
+  getSnapCache?: (latitude: number, longitude: number) => SnapCacheEntry | undefined;
+  addPendingSnap?: (vehicleId: string) => void;
+  removePendingSnap?: (vehicleId: string) => void;
+  addSnapCache: (latitude: number, longitude: number, entry: Omit<SnapCacheEntry, 'timestamp'>) => void;
+}
+
+export const createRoadSnappingSlice = (set: (updates: Partial<FleetState> | ((state: RoadSnappingState & FleetState) => Partial<FleetState>)) => void, get: () => RoadSnappingState & FleetState) => ({
   // Actions
   snapVehicleToRoad: async (vehicleId: string): Promise<boolean> => {
     const state = get();
     if (!state.routingEnabled) return false;
 
-    const vehicle = (state as any).vehiclesById[vehicleId];
+    const vehicle = state.vehiclesById[vehicleId];
     if (!vehicle) return false;
 
     try {
@@ -52,7 +70,7 @@ export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> |
         ),
       };
 
-      set((state: any) => ({
+      set((state: FleetState) => ({
         vehiclesById: {
           ...state.vehiclesById,
           [vehicleId]: {
@@ -90,13 +108,13 @@ export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> |
 
     // Throttle road snapping: only snap once every 3 seconds per vehicle
     const now = Date.now();
-    const lastSnapTime = (state as any).lastSnapTimes[vehicleId] || 0;
+    const lastSnapTime = state.lastSnapTimes?.[vehicleId] || 0;
     const SNAP_THROTTLE_MS = 3000;
 
     const shouldThrottle = now - lastSnapTime < SNAP_THROTTLE_MS;
 
     // Check if there's already a pending snap for this vehicle (prevent race conditions)
-    if ((state as any).isVehiclePending && (state as any).isVehiclePending(vehicleId)) {
+    if (state.isVehiclePending?.(vehicleId)) {
       // Just update with raw position and return
       const rawPosition: VehiclePosition = {
         id: `pos-${vehicleId}-${Date.now()}`,
@@ -109,7 +127,7 @@ export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> |
         ignition: true,
       };
 
-      set((currentState: any) => ({
+      set((currentState: FleetState) => ({
         vehiclesById: {
           ...currentState.vehiclesById,
           [vehicleId]: {
@@ -141,12 +159,11 @@ export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> |
     }
 
     // Get previous position for two-point map matching
-    const previousVehicle = (state as any).vehiclesById[vehicleId];
+    const previousVehicle = state.vehiclesById[vehicleId];
     const previousPosition = previousVehicle?.currentPosition;
 
     // Use cached snap result if available and throttled
-    const cachedSnap =
-      (state as any).getSnapCache && (state as any).getSnapCache(latitude, longitude);
+    const cachedSnap = state.getSnapCache?.(latitude, longitude);
     if (cachedSnap && shouldThrottle) {
       const snappedPosition: VehiclePosition = {
         id: `pos-${vehicleId}-${Date.now()}`,
@@ -159,7 +176,7 @@ export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> |
         ignition: true,
       };
 
-      set((currentState: any) => ({
+      set((currentState: FleetState) => ({
         vehiclesById: {
           ...currentState.vehiclesById,
           [vehicleId]: {
@@ -171,7 +188,7 @@ export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> |
         trails: {
           ...currentState.trails,
           [vehicleId]: [
-            ...(currentState.trails[vehicleId] || []),
+            ...(currentState.trails?.[vehicleId] || []),
             snappedPosition,
           ].slice(-100),
         },
@@ -193,7 +210,7 @@ export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> |
         ignition: true,
       };
 
-      set((currentState: any) => ({
+      set((currentState: FleetState) => ({
         vehiclesById: {
           ...currentState.vehiclesById,
           [vehicleId]: {
@@ -205,7 +222,7 @@ export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> |
         trails: {
           ...currentState.trails,
           [vehicleId]: [
-            ...(currentState.trails[vehicleId] || []),
+            ...(currentState.trails?.[vehicleId] || []),
             rawPosition,
           ].slice(-100),
         },
@@ -227,24 +244,25 @@ export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> |
     };
 
     // Update vehicle with raw position first
-    set((currentState: any) => ({
-      vehiclesById: {
-        ...currentState.vehiclesById,
-        [vehicleId]: {
-          ...currentState.vehiclesById[vehicleId],
-          currentPosition: rawPosition,
-          lastUpdate: Date.now(),
+    set((currentState: FleetState) => {
+      const currentVehicle = currentState.vehiclesById[vehicleId] || {} as Vehicle;
+      return {
+        vehiclesById: {
+          ...currentState.vehiclesById,
+          [vehicleId]: {
+            ...currentVehicle,
+            currentPosition: rawPosition,
+            lastUpdate: Date.now(),
+          },
         },
-      },
-      lastUpdate: Date.now(),
-    }));
+        lastUpdate: Date.now(),
+      };
+    });
 
     // Then try to snap to road if routing is enabled
     if (state.routingEnabled) {
       // Mark this vehicle as having a pending snap operation
-      if ((state as any).addPendingSnap) {
-        (state as any).addPendingSnap(vehicleId);
-      }
+      state.addPendingSnap?.(vehicleId);
 
       try {
         let snappedLng = longitude;
@@ -317,15 +335,16 @@ export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> |
             accuracy: undefined, // Clear accuracy since this is now road-snapped
           };
 
-          set((currentState: any) => {
-            const updatedPendingSnaps = new Set(currentState._pendingSnaps);
+          set((currentState: FleetState) => {
+            const updatedPendingSnaps = new Set(currentState._pendingSnaps || []);
             updatedPendingSnaps.delete(vehicleId);
+            const currentVehicle = currentState.vehiclesById[vehicleId] || {} as Vehicle;
 
             return {
               vehiclesById: {
                 ...currentState.vehiclesById,
                 [vehicleId]: {
-                  ...currentState.vehiclesById[vehicleId],
+                  ...currentVehicle,
                   currentPosition: snappedPosition,
                   lastUpdate: Date.now(),
                 },
@@ -333,7 +352,7 @@ export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> |
               trails: {
                 ...currentState.trails,
                 [vehicleId]: [
-                  ...(currentState.trails[vehicleId] || []),
+                  ...(currentState.trails?.[vehicleId] || []),
                   snappedPosition,
                 ].slice(-100),
               },
@@ -347,19 +366,17 @@ export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> |
           });
 
           // Cache the snapped result for nearby positions
-          if ((state as any).addSnapCache) {
-            (state as any).addSnapCache(latitude, longitude, {
-              location: [snappedLng, snappedLat],
-              heading: snappedHeading,
-            });
-          }
+          state.addSnapCache?.(latitude, longitude, {
+            location: [snappedLng, snappedLat],
+            heading: snappedHeading,
+          });
         } else {
           // Append raw position to the trail if we didn't use snapped
-          set((currentState: any) => ({
+          set((currentState: FleetState) => ({
             trails: {
               ...currentState.trails,
               [vehicleId]: [
-                ...(currentState.trails[vehicleId] || []),
+                ...(currentState.trails?.[vehicleId] || []),
                 rawPosition,
               ].slice(-100),
             },
@@ -373,9 +390,7 @@ export const createRoadSnappingSlice = (set: (updates: Record<string, unknown> |
         // Continue with raw coordinates - this is not a critical error
       } finally {
         // Always clean up pending snaps
-        if ((state as any).removePendingSnap) {
-          (state as any).removePendingSnap(vehicleId);
-        }
+        state.removePendingSnap?.(vehicleId);
       }
     }
   },

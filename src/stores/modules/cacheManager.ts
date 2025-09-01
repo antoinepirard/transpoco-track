@@ -15,9 +15,8 @@ export interface CacheManagerState {
   lastSnapTimes: Record<string, number>;
   snapCache: Map<string, SnapCacheEntry>;
 
-  // Memoized vehicles array
-  _vehiclesArray: unknown[]; // Generic storage for vehicles
-  _vehiclesArrayVersion: number | null;
+  // Memoized vehicles array (using optional to avoid conflict with VehicleManager)
+  _vehiclesArrayVersion?: number | null;
 
   // Synchronization for road snapping
   _pendingSnaps: Set<string>;

@@ -5,7 +5,6 @@ import { useFleetStore } from '@/stores/fleetStore';
 import RoutingStatus from '@/components/routing/RoutingStatus';
 import RoutingConfigGuide from '@/components/routing/RoutingConfigGuide';
 import { getRoutingService, RoutingUtils } from '@/lib/routing';
-import { fakeDataGenerator } from '@/lib/demo/fakeDataGenerator';
 import type { Vehicle } from '@/types/fleet';
 
 export default function RoutingPage() {

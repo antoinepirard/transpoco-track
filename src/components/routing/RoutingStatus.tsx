@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getRoutingService, type RoutingService } from '@/lib/routing';
 
 interface RoutingStatusProps {
@@ -16,7 +16,7 @@ export function RoutingStatus({ className = '' }: RoutingStatusProps) {
   const [lastCheck, setLastCheck] = useState<Date | null>(null);
 
   // Check service health
-  const checkHealth = async () => {
+  const checkHealth = useCallback(async () => {
     setIsChecking(true);
     try {
       // Check if service is available
@@ -26,9 +26,12 @@ export function RoutingStatus({ className = '' }: RoutingStatusProps) {
       let health = { routing: isAvailable };
 
       if ('getServiceHealth' in routingService) {
+        const serviceWithHealth = routingService as RoutingService & {
+          getServiceHealth: () => Record<string, boolean>;
+        };
         health = {
           ...health,
-          ...(routingService as any).getServiceHealth(),
+          ...serviceWithHealth.getServiceHealth(),
         };
       }
 
@@ -40,7 +43,7 @@ export function RoutingStatus({ className = '' }: RoutingStatusProps) {
     } finally {
       setIsChecking(false);
     }
-  };
+  }, [routingService]);
 
   // Initial health check
   useEffect(() => {
@@ -50,7 +53,7 @@ export function RoutingStatus({ className = '' }: RoutingStatusProps) {
     const interval = setInterval(checkHealth, 30000); // Every 30 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [checkHealth]);
 
   // Get status color based on health
   const getStatusColor = (isHealthy: boolean) => {

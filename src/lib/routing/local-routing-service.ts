@@ -8,12 +8,10 @@ import type {
 } from '@/types/routing';
 import {
   snapToNearestRoad,
-  moveAlongRoad,
   getRandomRoadSegment,
-  type SegmentPosition,
 } from '@/lib/geo/roadNetwork';
 import { getSegmentById } from '@/lib/demo/roadCoordinates';
-import { distance, bearing } from '@turf/turf';
+import { distance } from '@turf/turf';
 
 /**
  * Local routing service using the existing Ireland road network
@@ -32,8 +30,7 @@ export class LocalRoutingService implements RoutingService {
 
   async snapToRoad(
     latitude: number,
-    longitude: number,
-    options?: RoutingOptions
+    longitude: number
   ): Promise<RoadSnapResult> {
     try {
       const segmentPosition = snapToNearestRoad(latitude, longitude);
@@ -74,12 +71,12 @@ export class LocalRoutingService implements RoutingService {
   async calculateRoute(
     from: [number, number],
     to: [number, number],
-    options?: RoutingOptions
+    _options?: RoutingOptions
   ): Promise<Route> {
     try {
       // Snap start and end points to road network
-      const startSnap = await this.snapToRoad(from[1], from[0], options);
-      const endSnap = await this.snapToRoad(to[1], to[0], options);
+      const startSnap = await this.snapToRoad(from[1], from[0]);
+      const endSnap = await this.snapToRoad(to[1], to[0]);
 
       // For now, create a simple straight-line route
       // In a full implementation, this would use A* or similar pathfinding
@@ -116,7 +113,7 @@ export class LocalRoutingService implements RoutingService {
 
   async matchToRoads(
     coordinates: Array<[number, number]>,
-    options?: RoutingOptions
+    _options?: RoutingOptions
   ): Promise<{
     matchedCoordinates: Array<[number, number]>;
     confidence: number;
@@ -127,7 +124,7 @@ export class LocalRoutingService implements RoutingService {
       let totalConfidence = 0;
 
       for (const coord of coordinates) {
-        const snapped = await this.snapToRoad(coord[1], coord[0], options);
+        const snapped = await this.snapToRoad(coord[1], coord[0]);
         matchedCoordinates.push(snapped.location);
         totalConfidence += snapped.confidence || 0.5;
       }
@@ -164,10 +161,7 @@ export class LocalRoutingService implements RoutingService {
     }
   }
 
-  async getTrafficInfo(
-    from: [number, number],
-    to: [number, number]
-  ): Promise<TrafficInfo> {
+  async getTrafficInfo(): Promise<TrafficInfo> {
     // Local service doesn't have real traffic data, return simulated data
     return {
       congestionLevel: 'moderate',
@@ -197,8 +191,8 @@ export class LocalRoutingService implements RoutingService {
   /**
    * Create standardized routing error
    */
-  private createError(code: any, message: string): Error {
-    const error = new Error(message) as any;
+  private createError(code: string, message: string): Error & { code: string; provider: string; retryable: boolean } {
+    const error = new Error(message) as Error & { code: string; provider: string; retryable: boolean };
     error.code = code;
     error.provider = 'local';
     error.retryable = false;

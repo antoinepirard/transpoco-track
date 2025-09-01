@@ -4,7 +4,6 @@ import type {
   RoadSnapResult,
   RoutingOptions,
   TrafficInfo,
-  RoutingServiceConfig,
   RoutingError,
   RoutingProvider,
 } from '@/types/routing';
@@ -114,13 +113,12 @@ export class HybridRoutingService implements RoutingService {
             snappedCoords: result.location,
             distance: result.distance,
             confidence: result.confidence,
-            provider: (service as any).constructor.name
+            provider: service.constructor.name
           });
         }
         
         return result;
-      },
-      { latitude, longitude, options }
+      }
     );
   }
 
@@ -131,8 +129,7 @@ export class HybridRoutingService implements RoutingService {
   ): Promise<Route> {
     return this.executeWithFallback(
       'calculateRoute',
-      async (service) => service.calculateRoute(from, to, options),
-      { from, to, options }
+      async (service) => service.calculateRoute(from, to, options)
     );
   }
 
@@ -146,8 +143,7 @@ export class HybridRoutingService implements RoutingService {
   }> {
     return this.executeWithFallback(
       'matchToRoads',
-      async (service) => service.matchToRoads(coordinates, options),
-      { coordinates, options }
+      async (service) => service.matchToRoads(coordinates, options)
     );
   }
 
@@ -164,7 +160,7 @@ export class HybridRoutingService implements RoutingService {
       }
     }
 
-    return this.localService.getTrafficInfo!(from, to);
+    return this.localService.getTrafficInfo!();
   }
 
   async isAvailable(): Promise<boolean> {
@@ -181,8 +177,7 @@ export class HybridRoutingService implements RoutingService {
    */
   private async executeWithFallback<T>(
     operation: string,
-    serviceCall: (service: RoutingService) => Promise<T>,
-    params: any
+    serviceCall: (service: RoutingService) => Promise<T>
   ): Promise<T> {
     await this.ensureHealthCheck();
 

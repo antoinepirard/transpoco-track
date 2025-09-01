@@ -2,13 +2,7 @@
  * Vehicle state management with normalized storage and memoization
  */
 
-import type { Vehicle } from '@/types/fleet';
-
-interface Viewport {
-  latitude: number;
-  longitude: number;
-  zoom: number;
-}
+import type { Vehicle, MapViewport } from '@/types/fleet';
 
 export interface VehicleManagerState {
   vehiclesById: Record<string, Vehicle>;
@@ -17,7 +11,7 @@ export interface VehicleManagerState {
   lastUpdate: number | null;
   _vehiclesArray?: Vehicle[];
   _vehiclesArrayVersion?: number | null;
-  viewport: Viewport;
+  viewport: MapViewport;
   [key: string]: unknown;
 }
 
