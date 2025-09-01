@@ -280,7 +280,7 @@ export function FleetMap({
 
     zoomDebounceTimeoutRef.current = setTimeout(() => {
       setDebouncedZoom(viewport.zoom);
-    }, 150); // 150ms debounce delay
+    }, 50); // 50ms debounce delay for more responsive clustering
 
     return () => {
       if (zoomDebounceTimeoutRef.current) {

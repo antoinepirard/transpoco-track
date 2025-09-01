@@ -145,9 +145,10 @@ function getClusteringPixelRadius(zoom: number): number {
   const padding = 8; // Small padding to detect near-overlaps
   
   // At very low zoom, allow slightly more generous clustering
-  if (zoom <= 6) return vehicleIconSize + padding + 8;  // ~48px - very rare clustering
-  if (zoom <= 9) return vehicleIconSize + padding + 4;  // ~44px - rare clustering  
-  if (zoom <= 11) return vehicleIconSize + padding;     // ~40px - minimal clustering
+  if (zoom <= 6) return vehicleIconSize + padding + 16; // ~56px - more generous clustering
+  if (zoom <= 8) return vehicleIconSize + padding + 12; // ~52px - generous clustering
+  if (zoom <= 10) return vehicleIconSize + padding + 8; // ~48px - moderate clustering  
+  if (zoom <= 11) return vehicleIconSize + padding + 4; // ~44px - minimal clustering
   
   // At higher zooms, be very restrictive - only true visual overlaps
   return vehicleIconSize * 0.75; // ~24px - only when icons actually overlap
@@ -157,17 +158,17 @@ function getClusteringPixelRadius(zoom: number): number {
  * Get minimum cluster size based on zoom level with enhanced hysteresis
  */
 function getMinClusterSize(zoom: number, previousZoom?: number): number {
-  const hysteresis = 0.5; // Increased buffer zone to prevent flickering
+  const hysteresis = 0.2; // Reduced buffer zone for more responsive transitions
   
-  // Base thresholds - more restrictive to make clusters rare and stable
+  // Base thresholds - adjusted for better visibility with demo dataset
   const thresholds = [
-    { zoom: 6, size: 3 },   // Very low zoom: need 3+ vehicles to cluster
-    { zoom: 9, size: 4 },   // Low zoom: need 4+ vehicles  
-    { zoom: 11, size: 5 },  // Medium zoom: need 5+ vehicles
-    { zoom: 13, size: 6 },  // High zoom: need 6+ vehicles
+    { zoom: 6, size: 2 },   // Very low zoom: need 2+ vehicles to cluster
+    { zoom: 9, size: 3 },   // Low zoom: need 3+ vehicles  
+    { zoom: 11, size: 4 },  // Medium zoom: need 4+ vehicles
+    { zoom: 13, size: 5 },  // High zoom: need 5+ vehicles
   ];
   
-  let targetSize = 7; // Default for very high zoom - rare clustering
+  let targetSize = 6; // Default for very high zoom - rare clustering
   
   for (const threshold of thresholds) {
     if (zoom <= threshold.zoom) {
@@ -176,34 +177,21 @@ function getMinClusterSize(zoom: number, previousZoom?: number): number {
     }
   }
   
-  // Apply enhanced hysteresis if we have a previous zoom
+  // Apply simplified hysteresis only at threshold boundaries
   if (previousZoom !== undefined) {
     const previousSize = getMinClusterSizeNoHysteresis(previousZoom);
-    const zoomDirection = zoom > previousZoom ? 1 : -1;
     
-    // Enhanced hysteresis with directional bias
+    // Only apply hysteresis when crossing threshold boundaries
     for (const threshold of thresholds) {
       const distance = Math.abs(zoom - threshold.zoom);
-      const directionAdjustedHysteresis = zoomDirection > 0 ? hysteresis * 1.5 : hysteresis;
       
-      if (distance < directionAdjustedHysteresis) {
-        // Stay with previous size if we're in the buffer zone
-        if (previousSize !== targetSize) {
-          // Bias towards maintaining existing clusters when zooming in
-          if (zoomDirection > 0 && previousSize < targetSize) {
-            return previousSize;
-          }
-          // Bias towards breaking clusters when zooming out
-          if (zoomDirection < 0 && previousSize > targetSize) {
-            return previousSize;
-          }
+      if (distance < hysteresis) {
+        // We're near a threshold boundary - use previous size for stability
+        if (Math.abs(previousZoom - threshold.zoom) > hysteresis) {
+          // Previous zoom was not near this boundary, so maintain previous size
+          return previousSize;
         }
       }
-    }
-    
-    // Additional stability: if the change is small, keep previous size
-    if (Math.abs(targetSize - previousSize) === 1 && Math.abs(zoom - (previousZoom || zoom)) < 1.0) {
-      return previousSize;
     }
   }
   
@@ -214,11 +202,11 @@ function getMinClusterSize(zoom: number, previousZoom?: number): number {
  * Helper function to get min cluster size without hysteresis
  */
 function getMinClusterSizeNoHysteresis(zoom: number): number {
-  if (zoom <= 6) return 3;
-  if (zoom <= 9) return 4;
-  if (zoom <= 11) return 5;
-  if (zoom <= 13) return 6;
-  return 7;
+  if (zoom <= 6) return 2;
+  if (zoom <= 9) return 3;
+  if (zoom <= 11) return 4;
+  if (zoom <= 13) return 5;
+  return 6;
 }
 
 /**
@@ -227,14 +215,14 @@ function getMinClusterSizeNoHysteresis(zoom: number): number {
 function getClusteringRadius(zoom: number, centerLatitude: number = 53.35, previousZoom?: number): number {
   let pixelRadius = getClusteringPixelRadius(zoom);
   
-  // Apply radius hysteresis to prevent rapid cluster boundary changes
+  // Apply minimal radius hysteresis only for very small zoom changes
   if (previousZoom !== undefined) {
     const previousPixelRadius = getClusteringPixelRadius(previousZoom);
     const radiusDiff = Math.abs(pixelRadius - previousPixelRadius);
     
-    // If the radius change is small, use interpolation for stability
-    if (radiusDiff < 10 && Math.abs(zoom - previousZoom) < 0.5) {
-      pixelRadius = (pixelRadius + previousPixelRadius) / 2;
+    // Only interpolate for very small zoom changes to maintain responsiveness
+    if (radiusDiff < 5 && Math.abs(zoom - previousZoom) < 0.2) {
+      pixelRadius = pixelRadius * 0.7 + previousPixelRadius * 0.3; // Favor current zoom
     }
   }
   
@@ -357,6 +345,9 @@ export function clusterVehicles(
   const minClusterSize = getMinClusterSize(zoom, previousZoom);
   const radiusMeters = getClusteringRadius(zoom, centerLatitude, previousZoom);
   
+  // Temporary debugging logs for clustering decisions
+  console.log(`🔍 Clustering params: zoom=${zoom.toFixed(2)}, prevZoom=${previousZoom?.toFixed(2)}, minSize=${minClusterSize}, radius=${radiusMeters.toFixed(0)}m`);
+  
   const clusters: VehicleCluster[] = [];
   const visited = new Set<string>();
   const individualVehicles: Vehicle[] = [];
@@ -465,6 +456,9 @@ export function clusterVehicles(
     }
   }
 
+  // Log clustering results
+  console.log(`🎯 Clustering result: ${clusters.length} clusters, ${individualVehicles.length} individual vehicles`);
+  
   return {
     clusters,
     individualVehicles,

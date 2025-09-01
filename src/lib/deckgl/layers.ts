@@ -42,26 +42,6 @@ export function createVehicleLayer({
 
   // If clustering is enabled, add cluster overlays WITHOUT affecting vehicle positions
   if (clusterVehicles && zoom !== undefined) {
-    // Enhanced transition zone for smooth layer switching
-    const clusteringThreshold = 12;
-    const transitionZone = 0.5;
-
-    // At street/building level (zoom 12+), only show individual vehicles
-    if (zoom >= clusteringThreshold + transitionZone) {
-      return individualVehicleLayer;
-    }
-
-    // In transition zone, prefer previous state for stability
-    if (
-      previousZoom !== undefined &&
-      zoom >= clusteringThreshold - transitionZone &&
-      zoom <= clusteringThreshold + transitionZone
-    ) {
-      if (previousZoom >= clusteringThreshold) {
-        return individualVehicleLayer;
-      }
-    }
-
     const clusteringResult = clusterVehiclesByDistance(vehicles, {
       zoom,
       centerLatitude,
@@ -222,6 +202,10 @@ function createVehicleClusterLayer({
       updateTriggers: {
         getRadius: [zoom],
         getFillColor: 'count',
+      },
+      parameters: {
+        depthTest: false,
+        depthMask: false,
       },
       transitions: {
         getPosition: {
