@@ -339,7 +339,7 @@ export function MapView({
 
       {/* Error overlay */}
       {mapError && !isLoading && (
-        <div className="absolute top-4 left-4 right-4 z-10 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
+        <div className="absolute bottom-4 left-4 right-4 z-10 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
           <div className="text-red-600 mt-0.5">⚠</div>
           <div className="flex-1 text-sm text-red-700">{mapError}</div>
           <button
