@@ -437,11 +437,13 @@ export const createRoadSnappingSlice = (set: (updates: Partial<FleetState> | ((s
   },
 
   enableRouting: (enabled: boolean) => {
-    set({ routingEnabled: enabled });
+    // Road snapping is now always enabled for realistic fleet tracking
+    // This method is kept for backwards compatibility but always sets to true
+    set({ routingEnabled: true });
 
     if (process.env.NODE_ENV === 'development') {
       console.log(
-        `Routing ${enabled ? 'enabled' : 'disabled'} for fleet tracking`
+        `Road snapping is always enabled for realistic fleet tracking (requested: ${enabled ? 'enabled' : 'disabled'})`
       );
     }
   },

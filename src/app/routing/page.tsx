@@ -10,8 +10,6 @@ import type { Vehicle } from '@/types/fleet';
 export default function RoutingPage() {
   const {
     getVehicles,
-    routingEnabled,
-    enableRouting,
     snapVehicleToRoad,
     updateVehicleWithRoadSnapping,
     getRoutingServiceHealth,
@@ -148,25 +146,20 @@ export default function RoutingPage() {
           <div className="lg:col-span-1 space-y-6">
             <RoutingStatus />
 
-            {/* Routing toggle */}
+            {/* Routing status - always enabled */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
               <h3 className="text-sm font-medium text-gray-900 mb-3">
                 Fleet Routing
               </h3>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={routingEnabled}
-                  onChange={(e) => enableRouting(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">
-                  Enable road snapping for vehicles
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-sm text-gray-700">
+                  Road snapping always enabled
                 </span>
-              </label>
+              </div>
               <p className="mt-2 text-xs text-gray-500">
-                When enabled, vehicle positions will be automatically snapped to
-                nearby roads for increased accuracy.
+                All vehicles are automatically positioned on roads for realistic fleet tracking.
+                This ensures accurate positioning and eliminates GPS noise.
               </p>
             </div>
 
