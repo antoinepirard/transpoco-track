@@ -6,6 +6,7 @@ import { MapboxOverlay } from '@deck.gl/mapbox';
 import type { MapViewport } from '@/types/fleet';
 import type { MapConfiguration, DeckGLLayer } from '@/types/map';
 import { DEFAULT_MAP_CONFIG, INITIAL_VIEWPORT } from '@/lib/maplibre/config';
+import { MapContextMenu } from './MapContextMenu';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -43,6 +44,7 @@ export function MapView({
   const [mapError, setMapError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [retryTrigger, setRetryTrigger] = useState(0);
+  const [contextMenuCoords, setContextMenuCoords] = useState<{ lat: number; lng: number } | null>(null);
   const retryCountRef = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
   const isInitializingRef = useRef(false);
@@ -66,6 +68,58 @@ export function MapView({
       pitch,
     });
   }, [onViewportChange]);
+
+  // Track mouse position for context menu coordinate capture
+  const mousePositionRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Handle mouse move to track position for context menu
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    mousePositionRef.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+  }, []);
+
+  // Handle context menu open - capture coordinates at mouse position
+  const handleContextMenuOpen = useCallback((open: boolean) => {
+    if (open && mousePositionRef.current && mapInstanceRef.current) {
+      try {
+        const map = mapInstanceRef.current;
+        const { x, y } = mousePositionRef.current;
+        const lngLat = map.unproject([x, y]);
+        const coords = { lat: lngLat.lat, lng: lngLat.lng };
+        setContextMenuCoords(coords);
+        console.log('Context menu opened at coordinates:', coords); // Debug log
+      } catch (error) {
+        console.error('Error getting coordinates for context menu:', error);
+        setContextMenuCoords(null);
+      }
+    } else if (!open) {
+      // Clear coordinates when menu closes
+      setContextMenuCoords(null);
+    }
+  }, []);
+
+  // Handle Street View opening
+  const handleStreetView = useCallback(() => {
+    if (contextMenuCoords) {
+      const { lat, lng } = contextMenuCoords;
+      const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+      console.log('Opening Street View at:', { lat, lng }, 'URL:', streetViewUrl); // Debug log
+      try {
+        const newWindow = window.open(streetViewUrl, '_blank');
+        if (!newWindow) {
+          console.warn('Failed to open Street View - popup might be blocked');
+        }
+      } catch (error) {
+        console.error('Error opening Street View:', error);
+      }
+      setContextMenuCoords(null);
+    } else {
+      console.warn('No coordinates available for Street View');
+    }
+  }, [contextMenuCoords]);
 
   const getMapStyle = useCallback(() => {
     if (typeof mapStyle === 'string') {
@@ -312,18 +366,21 @@ export function MapView({
 
   return (
     <div className={className} style={{ position: 'relative' }}>
-      {/* MapLibre base map */}
-      <div
-        ref={mapContainerRef}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: 0,
-        }}
-      />
+      {/* MapLibre base map with context menu */}
+      <MapContextMenu onStreetView={handleStreetView} onOpenChange={handleContextMenuOpen}>
+        <div
+          ref={mapContainerRef}
+          onMouseMove={handleMouseMove}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 0,
+          }}
+        />
+      </MapContextMenu>
 
       {/* Loading overlay - non-blocking */}
       {(isLoading || !isFleetLoaded) && (
