@@ -287,7 +287,7 @@ export function MapView({
     if (overlay) {
       overlay.setProps({ layers: layers as any[] }); // eslint-disable-line @typescript-eslint/no-explicit-any
     }
-  }, [layers]);
+  }, [layers, isLoading]);
 
   // Update map viewport when prop changes
   useEffect(() => {
