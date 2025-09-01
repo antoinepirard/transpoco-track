@@ -119,12 +119,6 @@ export class MapboxRoutingService implements RoutingService {
         [longitude + lngOffsetDegrees, latitude], // East
       ];
 
-      console.log('🔍 Mapbox snapToRoad input:', {
-        originalCoords: [longitude, latitude],
-        syntheticCoords: coords,
-        offsetMeters,
-        radiusMeters: options?.radiusMeters || 100,
-      });
 
       // Use appropriate radius for better matching - increased for Dublin area
       const matchOptions = {
@@ -281,15 +275,6 @@ export class MapboxRoutingService implements RoutingService {
 
       const matching = response.matchings[0];
 
-      console.log('📊 Mapbox Map Matching response details:', {
-        matchingsCount: response.matchings.length,
-        confidence: matching.confidence,
-        coordinatesCount: matching.geometry.coordinates.length,
-        distance: matching.distance,
-        duration: matching.duration,
-        tracepointsCount: response.tracepoints?.length,
-        originalInputCount: coordinates.length,
-      });
 
       const result = {
         matchedCoordinates: matching.geometry.coordinates,
@@ -371,11 +356,6 @@ export class MapboxRoutingService implements RoutingService {
       const result = await this.snapToRoad(53.3498, -6.2603, {
         radiusMeters: 100,
       });
-      console.log('✅ Mapbox availability test succeeded:', {
-        location: result.location,
-        distance: result.distance,
-        confidence: result.confidence,
-      });
       return true;
     } catch (err) {
       console.error('❌ Mapbox availability test failed:', err);
@@ -429,12 +409,6 @@ export class MapboxRoutingService implements RoutingService {
 
     const url = `${this.config.baseUrl}/matching/v5/mapbox/${options.profile || 'driving'}/${coords}?${params}`;
 
-    console.log('🌐 Mapbox Map Matching URL:', {
-      coordCount: coordinates.length,
-      coordinates: coordinates,
-      radiusMeters: options.radiusMeters,
-      profile: options.profile || 'driving',
-    });
 
     return url;
   }
@@ -443,11 +417,6 @@ export class MapboxRoutingService implements RoutingService {
     return new Promise((resolve, reject) => {
       const makeCall = async () => {
         try {
-          console.log('📡 Mapbox API request:', {
-            url: url.length > 200 ? url.substring(0, 200) + '...' : url,
-            queueLength: this.rateLimitQueue.length,
-            requestsInProgress: this.requestsInProgress,
-          });
 
           // Rate limiting
           await this.waitForRateLimit();
@@ -477,19 +446,6 @@ export class MapboxRoutingService implements RoutingService {
           this.requestsInProgress--;
           const duration = Date.now() - startTime;
 
-          console.log('📨 Mapbox API response:', {
-            status: response.status,
-            statusText: response.statusText,
-            duration: `${duration}ms`,
-            headers: {
-              'content-type': response.headers.get('content-type'),
-              'x-rate-limit-interval': response.headers.get(
-                'x-rate-limit-interval'
-              ),
-              'x-rate-limit-limit': response.headers.get('x-rate-limit-limit'),
-              'x-rate-limit-reset': response.headers.get('x-rate-limit-reset'),
-            },
-          });
 
           if (!response.ok) {
             const errorText = await response.text();
@@ -521,10 +477,6 @@ export class MapboxRoutingService implements RoutingService {
           }
 
           const data = await response.json();
-          console.log('✅ Mapbox API success:', {
-            dataKeys: Object.keys(data),
-            dataSize: JSON.stringify(data).length,
-          });
 
           // Reset rate limiting on successful request
           if (this.isRateLimited && Date.now() > this.rateLimitResetTime) {

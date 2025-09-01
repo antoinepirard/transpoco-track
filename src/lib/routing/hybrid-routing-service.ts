@@ -182,57 +182,37 @@ export class HybridRoutingService implements RoutingService {
     await this.ensureHealthCheck();
 
     const providers = this.getPreferredProviders();
-    console.log(`🔄 Executing ${operation} with providers:`, providers);
-    console.log(`📊 Current service health:`, this.getServiceHealth());
     
     let lastError: RoutingError | null = null;
 
     for (const provider of providers) {
       const service = this.getService(provider);
       const isHealthy = this.serviceHealth.get(provider);
-      
-      console.log(`🎯 Trying ${provider} service:`, {
-        hasService: !!service,
-        isHealthy,
-        operation
-      });
 
       if (!service || !isHealthy) {
-        console.log(`⏭️ Skipping ${provider}: ${!service ? 'no service' : 'unhealthy'}`);
         continue;
       }
 
       try {
-        console.log(`⚡ Executing ${operation} via ${provider}...`);
-        const startTime = Date.now();
-        
         const result = await this.executeWithRetry(
           serviceCall,
           service,
           operation
         );
         
-        const duration = Date.now() - startTime;
-        console.log(`✅ ${operation} succeeded via ${provider} in ${duration}ms`);
-        
         this.onOperationSuccess(provider, operation);
         return result;
       } catch (error) {
         lastError = error as RoutingError;
-        console.warn(`❌ ${provider} ${operation} failed:`, error);
-        
         this.onOperationError(provider, operation, lastError);
 
-        // If it's not retryable, mark service as unhealthy
         if (!lastError.retryable) {
-          console.log(`💀 Marking ${provider} as unhealthy due to non-retryable error`);
           this.serviceHealth.set(provider, false);
         }
       }
     }
 
-    // All services failed
-    console.error(`💥 All routing services failed for ${operation}:`, lastError);
+    console.error(`All routing services failed for ${operation}:`, lastError);
     throw (
       lastError ||
       this.createError(
@@ -329,35 +309,24 @@ export class HybridRoutingService implements RoutingService {
    * Check health of all services
    */
   private async checkServiceHealth(): Promise<void> {
-    console.log('🏥 Starting health check...');
-    
     try {
-      // Check local service (should always be healthy)
-      console.log('🔍 Checking local service health...');
       const localHealthy = await this.localService.isAvailable();
       this.serviceHealth.set('local', localHealthy);
-      console.log(`📋 Local service health: ${localHealthy ? '✅ Healthy' : '❌ Unhealthy'}`);
 
-      // Check Mapbox service if available
       if (this.mapboxService) {
-        console.log('🔍 Checking Mapbox service health...');
         try {
           const mapboxHealthy = await this.mapboxService.isAvailable();
           this.serviceHealth.set('mapbox', mapboxHealthy);
-          console.log(`📋 Mapbox service health: ${mapboxHealthy ? '✅ Healthy' : '❌ Unhealthy'}`);
         } catch (error) {
-          console.warn('❌ Mapbox health check failed:', error);
           this.serviceHealth.set('mapbox', false);
         }
       } else {
-        console.log('⚠️ No Mapbox service available for health check');
         this.serviceHealth.set('mapbox', false);
       }
 
       this.lastHealthCheck = Date.now();
-      console.log('🏁 Health check complete:', this.getServiceHealth());
     } catch (error) {
-      console.error('💥 Health check failed:', error);
+      console.error('Health check failed:', error);
     }
   }
 
