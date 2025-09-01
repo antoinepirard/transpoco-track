@@ -29,6 +29,7 @@ import type { SnapCacheEntry } from './cacheManager';
 
 interface FleetState {
   vehiclesById: Record<string, Vehicle>;
+  vehicleIds: string[];
   trails: Record<string, VehiclePosition[]>;
   lastSnapTimes: Record<string, number>;
   _pendingSnaps: Set<string>;
@@ -127,17 +128,26 @@ export const createRoadSnappingSlice = (set: (updates: Partial<FleetState> | ((s
         ignition: true,
       };
 
-      set((currentState: FleetState) => ({
-        vehiclesById: {
-          ...currentState.vehiclesById,
-          [vehicleId]: {
-            ...currentState.vehiclesById[vehicleId],
-            currentPosition: rawPosition,
-            lastUpdate: Date.now(),
+      set((currentState: FleetState) => {
+        const isNewVehicle = !currentState.vehiclesById[vehicleId];
+        const updatedVehicleIds = isNewVehicle 
+          ? [...currentState.vehicleIds, vehicleId]
+          : currentState.vehicleIds;
+        
+        return {
+          vehiclesById: {
+            ...currentState.vehiclesById,
+            [vehicleId]: {
+              ...currentState.vehiclesById[vehicleId],
+              id: vehicleId, // Ensure ID is set
+              currentPosition: rawPosition,
+              lastUpdate: Date.now(),
+            },
           },
-        },
-        lastUpdate: Date.now(),
-      }));
+          vehicleIds: updatedVehicleIds,
+          lastUpdate: Date.now(),
+        };
+      });
       return;
     }
 
@@ -176,24 +186,33 @@ export const createRoadSnappingSlice = (set: (updates: Partial<FleetState> | ((s
         ignition: true,
       };
 
-      set((currentState: FleetState) => ({
-        vehiclesById: {
-          ...currentState.vehiclesById,
-          [vehicleId]: {
-            ...currentState.vehiclesById[vehicleId],
-            currentPosition: snappedPosition,
-            lastUpdate: Date.now(),
+      set((currentState: FleetState) => {
+        const isNewVehicle = !currentState.vehiclesById[vehicleId];
+        const updatedVehicleIds = isNewVehicle 
+          ? [...currentState.vehicleIds, vehicleId]
+          : currentState.vehicleIds;
+        
+        return {
+          vehiclesById: {
+            ...currentState.vehiclesById,
+            [vehicleId]: {
+              ...currentState.vehiclesById[vehicleId],
+              id: vehicleId, // Ensure ID is set
+              currentPosition: snappedPosition,
+              lastUpdate: Date.now(),
+            },
           },
-        },
-        trails: {
-          ...currentState.trails,
-          [vehicleId]: [
-            ...(currentState.trails?.[vehicleId] || []),
-            snappedPosition,
-          ].slice(-100),
-        },
-        lastUpdate: Date.now(),
-      }));
+          vehicleIds: updatedVehicleIds,
+          trails: {
+            ...currentState.trails,
+            [vehicleId]: [
+              ...(currentState.trails?.[vehicleId] || []),
+              snappedPosition,
+            ].slice(-100),
+          },
+          lastUpdate: Date.now(),
+        };
+      });
       return;
     }
 
@@ -210,24 +229,33 @@ export const createRoadSnappingSlice = (set: (updates: Partial<FleetState> | ((s
         ignition: true,
       };
 
-      set((currentState: FleetState) => ({
-        vehiclesById: {
-          ...currentState.vehiclesById,
-          [vehicleId]: {
-            ...currentState.vehiclesById[vehicleId],
-            currentPosition: rawPosition,
-            lastUpdate: Date.now(),
+      set((currentState: FleetState) => {
+        const isNewVehicle = !currentState.vehiclesById[vehicleId];
+        const updatedVehicleIds = isNewVehicle 
+          ? [...currentState.vehicleIds, vehicleId]
+          : currentState.vehicleIds;
+        
+        return {
+          vehiclesById: {
+            ...currentState.vehiclesById,
+            [vehicleId]: {
+              ...currentState.vehiclesById[vehicleId],
+              id: vehicleId, // Ensure ID is set
+              currentPosition: rawPosition,
+              lastUpdate: Date.now(),
+            },
           },
-        },
-        trails: {
-          ...currentState.trails,
-          [vehicleId]: [
-            ...(currentState.trails?.[vehicleId] || []),
-            rawPosition,
-          ].slice(-100),
-        },
-        lastUpdate: Date.now(),
-      }));
+          vehicleIds: updatedVehicleIds,
+          trails: {
+            ...currentState.trails,
+            [vehicleId]: [
+              ...(currentState.trails?.[vehicleId] || []),
+              rawPosition,
+            ].slice(-100),
+          },
+          lastUpdate: Date.now(),
+        };
+      });
       return;
     }
 
@@ -246,15 +274,22 @@ export const createRoadSnappingSlice = (set: (updates: Partial<FleetState> | ((s
     // Update vehicle with raw position first
     set((currentState: FleetState) => {
       const currentVehicle = currentState.vehiclesById[vehicleId] || {} as Vehicle;
+      const isNewVehicle = !currentState.vehiclesById[vehicleId];
+      const updatedVehicleIds = isNewVehicle 
+        ? [...currentState.vehicleIds, vehicleId]
+        : currentState.vehicleIds;
+      
       return {
         vehiclesById: {
           ...currentState.vehiclesById,
           [vehicleId]: {
             ...currentVehicle,
+            id: vehicleId, // Ensure ID is set
             currentPosition: rawPosition,
             lastUpdate: Date.now(),
           },
         },
+        vehicleIds: updatedVehicleIds,
         lastUpdate: Date.now(),
       };
     });
@@ -339,16 +374,22 @@ export const createRoadSnappingSlice = (set: (updates: Partial<FleetState> | ((s
             const updatedPendingSnaps = new Set(currentState._pendingSnaps || []);
             updatedPendingSnaps.delete(vehicleId);
             const currentVehicle = currentState.vehiclesById[vehicleId] || {} as Vehicle;
+            const isNewVehicle = !currentState.vehiclesById[vehicleId];
+            const updatedVehicleIds = isNewVehicle 
+              ? [...currentState.vehicleIds, vehicleId]
+              : currentState.vehicleIds;
 
             return {
               vehiclesById: {
                 ...currentState.vehiclesById,
                 [vehicleId]: {
                   ...currentVehicle,
+                  id: vehicleId, // Ensure ID is set
                   currentPosition: snappedPosition,
                   lastUpdate: Date.now(),
                 },
               },
+              vehicleIds: updatedVehicleIds,
               trails: {
                 ...currentState.trails,
                 [vehicleId]: [

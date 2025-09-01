@@ -115,6 +115,14 @@ export class WebSocketClient {
     });
   }
 
+  requestFleetSnapshot(): void {
+    this.send({
+      type: 'request_snapshot',
+      target: 'fleet',
+      organizationId: this.options.organizationId,
+    });
+  }
+
   get connected(): boolean {
     return this.isConnected;
   }

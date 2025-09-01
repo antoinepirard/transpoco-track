@@ -69,7 +69,7 @@ export interface VehicleUpdate {
 }
 
 export interface WebSocketMessage {
-  type: 'vehicle_update' | 'bulk_update' | 'geofence_alert';
+  type: 'vehicle_update' | 'bulk_update' | 'geofence_alert' | 'fleet_snapshot';
   organizationId: string;
   data: VehicleUpdate | VehicleUpdate[] | GeofenceAlert;
 }

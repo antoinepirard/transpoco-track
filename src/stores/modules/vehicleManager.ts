@@ -149,14 +149,39 @@ export const createVehicleManagerSlice = (set: (updates: Record<string, unknown>
   updateVehicle: (vehicleId: string, update: Partial<Vehicle>) => {
     set((state: VehicleManagerState & Record<string, unknown>) => {
       const existingVehicle = state.vehiclesById[vehicleId];
-      if (!existingVehicle) return state;
+      const isNewVehicle = !existingVehicle;
+      
+      // Create base vehicle with required fields if it's new
+      const baseVehicle: Vehicle = isNewVehicle ? {
+        id: vehicleId,
+        name: `Vehicle ${vehicleId}`,
+        registrationNumber: '',
+        type: 'car',
+        status: 'offline',
+        currentPosition: {
+          id: `pos-${vehicleId}-${Date.now()}`,
+          vehicleId,
+          latitude: 0,
+          longitude: 0,
+          heading: 0,
+          timestamp: Date.now(),
+          speed: 0,
+          ignition: false,
+        },
+        lastUpdate: Date.now(),
+      } : existingVehicle;
+
+      const updatedVehicleIds = isNewVehicle 
+        ? [...state.vehicleIds, vehicleId]
+        : state.vehicleIds;
 
       const timestamp = Date.now();
       return {
         vehiclesById: {
           ...state.vehiclesById,
-          [vehicleId]: { ...existingVehicle, ...update },
+          [vehicleId]: { ...baseVehicle, ...update },
         },
+        vehicleIds: updatedVehicleIds,
         lastUpdate: timestamp,
         // Invalidate cache since data changed
         _vehiclesArray: undefined,
@@ -170,12 +195,38 @@ export const createVehicleManagerSlice = (set: (updates: Record<string, unknown>
   ) => {
     set((state: VehicleManagerState & Record<string, unknown>) => {
       const updatedVehiclesById = { ...state.vehiclesById };
+      const updatedVehicleIds = [...state.vehicleIds];
       let hasChanges = false;
 
       for (const { vehicleId, update } of updates) {
-        const vehicle = updatedVehiclesById[vehicleId];
-        if (vehicle) {
-          updatedVehiclesById[vehicleId] = { ...vehicle, ...update };
+        const existingVehicle = updatedVehiclesById[vehicleId];
+        
+        if (existingVehicle) {
+          updatedVehiclesById[vehicleId] = { ...existingVehicle, ...update };
+          hasChanges = true;
+        } else {
+          // Create new vehicle with required fields
+          const baseVehicle: Vehicle = {
+            id: vehicleId,
+            name: `Vehicle ${vehicleId}`,
+            registrationNumber: '',
+            type: 'car',
+            status: 'offline',
+            currentPosition: {
+              id: `pos-${vehicleId}-${Date.now()}`,
+              vehicleId,
+              latitude: 0,
+              longitude: 0,
+              heading: 0,
+              timestamp: Date.now(),
+              speed: 0,
+              ignition: false,
+            },
+            lastUpdate: Date.now(),
+          };
+          
+          updatedVehiclesById[vehicleId] = { ...baseVehicle, ...update };
+          updatedVehicleIds.push(vehicleId);
           hasChanges = true;
         }
       }
@@ -185,6 +236,7 @@ export const createVehicleManagerSlice = (set: (updates: Record<string, unknown>
       const timestamp = Date.now();
       return {
         vehiclesById: updatedVehiclesById,
+        vehicleIds: updatedVehicleIds,
         lastUpdate: timestamp,
         // Invalidate cache since data changed
         _vehiclesArray: undefined,

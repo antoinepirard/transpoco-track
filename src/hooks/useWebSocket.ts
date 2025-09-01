@@ -81,6 +81,27 @@ export function useWebSocket({
             }
           }
           break;
+        case 'fleet_snapshot':
+          // Handle initial fleet snapshot
+          const snapshotUpdates = message.data as VehicleUpdate[];
+          for (const u of snapshotUpdates) {
+            const p = u.data?.currentPosition;
+            if (
+              p &&
+              typeof p.latitude === 'number' &&
+              typeof p.longitude === 'number'
+            ) {
+              updateVehicleWithRoadSnapping(
+                u.vehicleId,
+                p.latitude,
+                p.longitude,
+                p.heading
+              );
+            } else {
+              updateVehicle(u.vehicleId, u.data);
+            }
+          }
+          break;
       }
     };
 
@@ -93,6 +114,7 @@ export function useWebSocket({
         setError(null);
 
         client.subscribeToOrganization();
+        client.requestFleetSnapshot();
       },
       onDisconnect: () => {
         setConnectionStatus(false);
