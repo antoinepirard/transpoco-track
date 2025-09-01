@@ -9,8 +9,6 @@ interface VehicleLayerProps {
   selectedVehicleId?: string;
   onVehicleClick?: (vehicle: Vehicle) => void;
   onVehicleHover?: (vehicle: Vehicle | null) => void;
-  clusterVehicles?: boolean;
-  zoom?: number;
 }
 
 export function VehicleLayer({
@@ -18,8 +16,6 @@ export function VehicleLayer({
   selectedVehicleId,
   onVehicleClick,
   onVehicleHover,
-  clusterVehicles = false,
-  zoom,
 }: VehicleLayerProps) {
   const layer = useMemo(() => {
     if (!vehicles.length) return null;
@@ -29,16 +25,12 @@ export function VehicleLayer({
       ...(selectedVehicleId !== undefined ? { selectedVehicleId } : {}),
       ...(onVehicleClick ? { onVehicleClick } : {}),
       ...(onVehicleHover ? { onVehicleHover } : {}),
-      clusterVehicles,
-      zoom,
     });
   }, [
     vehicles,
     selectedVehicleId,
     onVehicleClick,
     onVehicleHover,
-    clusterVehicles,
-    zoom,
   ]);
 
   return layer;

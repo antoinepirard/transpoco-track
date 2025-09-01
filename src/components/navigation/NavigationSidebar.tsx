@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import {
@@ -24,6 +24,14 @@ import {
   CaretRightIcon,
   CaretLeftIcon,
   GearIcon,
+  TruckIcon,
+  ChartLineIcon,
+  NavigationArrowIcon,
+  PauseIcon,
+  StopIcon,
+  TargetIcon,
+  CheckCircleIcon,
+  WarningIcon,
 } from '@phosphor-icons/react';
 
 interface NavigationItem {
@@ -74,10 +82,61 @@ const navigationData: NavigationSection[] = [
         href: '/',
       },
       {
-        id: 'live-reports',
-        label: 'Live Reports',
+        id: 'reports',
+        label: 'Reports',
         icon: ChartBarIcon,
-        href: '/reports',
+        children: [
+          {
+            id: 'last-location-report',
+            label: 'Last Location (Report)',
+            icon: MapPinIcon,
+          },
+          {
+            id: 'fleet-summary',
+            label: 'Fleet Summary',
+            icon: TruckIcon,
+          },
+          {
+            id: 'summary',
+            label: 'Summary',
+            icon: ChartLineIcon,
+          },
+          {
+            id: 'journeys',
+            label: 'Journeys',
+            icon: NavigationArrowIcon,
+          },
+          {
+            id: 'idling',
+            label: 'Idling',
+            icon: PauseIcon,
+          },
+          {
+            id: 'stops',
+            label: 'Stops',
+            icon: StopIcon,
+          },
+          {
+            id: 'stops-idling',
+            label: 'Stops/Idling',
+            icon: ClockIcon,
+          },
+          {
+            id: 'locations',
+            label: 'Locations',
+            icon: TargetIcon,
+          },
+          {
+            id: 'route-completion-summary',
+            label: 'Route Completion Summary',
+            icon: CheckCircleIcon,
+          },
+          {
+            id: 'alerts',
+            label: 'Alerts',
+            icon: WarningIcon,
+          },
+        ],
       },
       {
         id: 'locations',
@@ -216,6 +275,16 @@ export function NavigationSidebar({
     []
   );
 
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  const handleToggleExpanded = (itemId: string) => {
+    if (expandedItems.includes(itemId)) {
+      setExpandedItems(expandedItems.filter((id) => id !== itemId));
+    } else {
+      setExpandedItems([...expandedItems, itemId]);
+    }
+  };
+
   if (isCollapsed) {
     return (
       <div className="w-12 bg-white shadow-lg border-r border-gray-200 flex flex-col items-center py-4">
@@ -254,7 +323,7 @@ export function NavigationSidebar({
       {/* Navigation */}
       <nav
         ref={navRef}
-        className="flex-1 overflow-y-auto py-4"
+        className="flex-1 overflow-y-auto py-4 custom-scrollbar"
         role="navigation"
         aria-label="Main navigation"
       >
@@ -271,50 +340,100 @@ export function NavigationSidebar({
               {section.items.map((item) => {
                 const IconComponent = item.icon;
                 const isActive = activeItem === item.id;
+                const isExpanded = expandedItems.includes(item.id);
                 return (
-                  <button
-                    key={item.id}
-                    data-nav-item={item.id}
-                    onClick={() => {
-                      if (item.href) {
-                        router.push(item.href);
-                      }
-                    }}
-                    onKeyDown={(e) => handleKeyDown(e, item.id)}
-                    className={`w-full flex items-center px-2 py-1.5 text-sm font-medium rounded-md transition-immediate group focus-ring ${
-                      isActive
-                        ? 'bg-gray-100 text-gray-700'
-                        : 'text-gray-700 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-900'
-                    }`}
-                    aria-current={isActive ? 'page' : undefined}
-                    role="menuitem"
-                  >
-                    <IconComponent
-                      className={`mr-3 h-5 w-5 flex-shrink-0 transition-immediate ${
+                  <div key={item.id}>
+                    <button
+                      data-nav-item={item.id}
+                      onClick={() => {
+                        if (item.href) {
+                          router.push(item.href);
+                        } else if (item.children) {
+                          handleToggleExpanded(item.id);
+                        }
+                      }}
+                      onKeyDown={(e) => handleKeyDown(e, item.id)}
+                      className={`w-full flex items-center px-2 py-1.5 text-sm font-medium rounded-md transition-immediate group focus-ring ${
                         isActive
-                          ? 'text-blue-500'
-                          : 'text-gray-400 group-hover:hover-only:text-gray-500'
+                          ? 'bg-gray-100 text-gray-700'
+                          : 'text-gray-700 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-900'
                       }`}
-                      aria-hidden="true"
-                    />
-                    <span className="flex-1 text-left truncate">
-                      {item.label}
-                    </span>
-                    {item.badge && (
-                      <span
-                        className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 tabular-nums"
-                        aria-label={`${item.badge} notifications`}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
-                    {item.children && (
-                      <CaretRightIcon
-                        className="ml-2 h-4 w-4 text-gray-400 flex-shrink-0"
+                      aria-current={isActive ? 'page' : undefined}
+                      role="menuitem"
+                    >
+                      <IconComponent
+                        className={`mr-3 h-5 w-5 flex-shrink-0 transition-immediate ${
+                          isActive
+                            ? 'text-blue-500'
+                            : 'text-gray-400 group-hover:hover-only:text-gray-500'
+                        }`}
                         aria-hidden="true"
                       />
+                      <span className="flex-1 text-left truncate">
+                        {item.label}
+                      </span>
+                      {item.badge && (
+                        <span
+                          className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 tabular-nums"
+                          aria-label={`${item.badge} notifications`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                      {item.children && (
+                        <CaretRightIcon
+                          className={`ml-2 h-4 w-4 text-gray-400 flex-shrink-0 transition-all duration-200 ${
+                            isExpanded ? 'rotate-90' : ''
+                          }`}
+                          aria-hidden="true"
+                        />
+                      )}
+                    </button>
+                    {item.children && (
+                      <div 
+                        className={`ml-4 overflow-hidden transition-all duration-200 ease-out ${
+                          isExpanded ? 'max-h-96 mt-1' : 'max-h-0'
+                        }`}
+                      >
+                        <div className="space-y-0.5">
+                          {item.children.map((childItem) => {
+                            const isChildActive = activeItem === childItem.id;
+                            return (
+                              <button
+                                key={childItem.id}
+                                data-nav-item={childItem.id}
+                                onClick={() => {
+                                  if (childItem.href) {
+                                    router.push(childItem.href);
+                                  }
+                                }}
+                                onKeyDown={(e) => handleKeyDown(e, childItem.id)}
+                                className={`w-full flex items-center px-2 py-1.5 text-sm font-medium rounded-md transition-immediate group focus-ring ${
+                                  isChildActive
+                                    ? 'bg-gray-100 text-gray-700'
+                                    : 'text-gray-600 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-900'
+                                }`}
+                                aria-current={isChildActive ? 'page' : undefined}
+                                role="menuitem"
+                              >
+                                <span className="flex-1 text-left truncate pl-3">
+                                  {childItem.label}
+                                </span>
+                                {childItem.badge && (
+                                  <span
+                                    className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 tabular-nums"
+                                    aria-label={`${childItem.badge} notifications`}
+                                  >
+                                    {childItem.badge}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     )}
-                  </button>
+                  </div>
                 );
               })}
             </div>

@@ -42,11 +42,8 @@ export function FleetMap({
   const [currentMapStyle, setCurrentMapStyle] = useState(initialMapStyle);
   const [isFleetLoaded, setIsFleetLoaded] = useState(false);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
-  // Removed hoveredCluster state - clusters are now purely visual
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
   const hasAutocenteredRef = useRef(false);
-  const previousZoomRef = useRef<number | undefined>(undefined);
-  const zoomDebounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toggleMapLayer } = useMapLayers();
 
   const {
@@ -60,8 +57,6 @@ export function FleetMap({
     updateVehiclesIfChanged,
     setConnectionStatus,
   } = useFleetStore();
-
-  const [debouncedZoom, setDebouncedZoom] = useState(viewport.zoom);
 
   const vehicles = getVehicles();
 
@@ -107,9 +102,6 @@ export function FleetMap({
 
   const handleVehicleHover = useCallback(() => {}, []);
 
-  // Removed cluster click - clusters expand automatically on zoom
-
-  // Removed cluster hover handler - clusters are now non-interactive
 
   const handleMapLoad = useCallback((map: MapLibreMap) => {
     mapInstanceRef.current = map;
@@ -140,30 +132,21 @@ export function FleetMap({
     [toggleMapLayer]
   );
 
-  // Separate clustering calculation from layer creation for better stability
-  const clusteringResult = useMemo(() => {
+  // Create vehicle layer - always shows individual vehicles
+  const vehicleLayer = useMemo(() => {
     if (vehicles.length === 0) return null;
     
-    // Only recalculate clustering when vehicles change or zoom changes significantly
-    const clusteringResult = createVehicleLayer({
+    return createVehicleLayer({
       vehicles,
       selectedVehicleId: selectedVehicleId ?? undefined,
       onVehicleClick: handleVehicleClick,
       onVehicleHover: handleVehicleHover,
-      clusterVehicles: true,
-      zoom: debouncedZoom,
-      centerLatitude: viewport.latitude,
-      previousZoom: previousZoomRef.current,
     });
-    
-    return clusteringResult;
   }, [
-    vehicles, // Only recalculate when vehicles actually change
+    vehicles, // Recalculate when vehicles change
     selectedVehicleId,
     handleVehicleClick,
     handleVehicleHover,
-    debouncedZoom, // Include zoom for clustering decisions
-    viewport.latitude,
   ]);
 
   const layers = useMemo(() => {
@@ -192,13 +175,9 @@ export function FleetMap({
       }
     }
 
-    // Add vehicle/cluster layers
-    if (clusteringResult) {
-      if (Array.isArray(clusteringResult)) {
-        deckLayers.push(...clusteringResult.flat());
-      } else {
-        deckLayers.push(clusteringResult);
-      }
+    // Add vehicle layer
+    if (vehicleLayer) {
+      deckLayers.push(vehicleLayer);
     }
 
     return deckLayers;
@@ -206,7 +185,7 @@ export function FleetMap({
     trails,
     internalShowTrails,
     selectedVehicleId,
-    clusteringResult, // Only depend on the clustering result, not zoom directly
+    vehicleLayer, // Simple vehicle layer dependency
   ]);
 
   // Calculate fleet bounds and auto-center map
@@ -272,27 +251,6 @@ export function FleetMap({
     }
   }, [selectedVehicleId, getVehicle]);
 
-  // Debounce zoom changes to prevent excessive layer re-creation
-  useEffect(() => {
-    if (zoomDebounceTimeoutRef.current) {
-      clearTimeout(zoomDebounceTimeoutRef.current);
-    }
-
-    zoomDebounceTimeoutRef.current = setTimeout(() => {
-      setDebouncedZoom(viewport.zoom);
-    }, 50); // 50ms debounce delay for more responsive clustering
-
-    return () => {
-      if (zoomDebounceTimeoutRef.current) {
-        clearTimeout(zoomDebounceTimeoutRef.current);
-      }
-    };
-  }, [viewport.zoom]);
-
-  // Track previous zoom for hysteresis
-  useEffect(() => {
-    previousZoomRef.current = debouncedZoom;
-  }, [debouncedZoom]);
 
   // Track fleet loading state - wait for map to be loaded, vehicles AND layers to be ready
   useEffect(() => {
@@ -399,7 +357,6 @@ export function FleetMap({
           <MapFeatureControls onFeatureToggle={handleFeatureToggle} />
         </div>
 
-        {/* Removed cluster tooltip - clusters are now purely visual */}
 
         {/* WebSocket Error */}
         {wsError && (
