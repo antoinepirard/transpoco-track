@@ -102,6 +102,7 @@ export function createVehicleLayer({
         createVehicleClusterLayer({
           clusters: clusteringResult.clusters,
           zoom,
+          previousZoom,
         })
       );
     }
@@ -181,10 +182,20 @@ function createIndividualVehicleLayer({
 function createVehicleClusterLayer({
   clusters,
   zoom,
+  previousZoom,
 }: {
   clusters: VehicleCluster[];
   zoom?: number;
+  previousZoom?: number;
 }) {
+  // Detect active zooming to adjust transition behavior
+  const isZooming = previousZoom !== undefined && zoom !== undefined && 
+    Math.abs(zoom - previousZoom) > 0.1;
+
+  // Dynamic transition durations based on zoom state
+  const positionDuration = isZooming ? 0 : 150; // No sliding during zoom
+  const radiusDuration = isZooming ? 100 : 150; // Quick size adjustment during zoom
+  const colorDuration = 120; // Always fast color transitions
   return [
     // Cluster background circles
     new ScatterplotLayer({
@@ -214,15 +225,15 @@ function createVehicleClusterLayer({
       },
       transitions: {
         getPosition: {
-          duration: 600,
+          duration: positionDuration,
           easing: (t: number) => t * (2 - t), // Ease-out quadratic
         },
         getRadius: {
-          duration: 600,
+          duration: radiusDuration,
           easing: (t: number) => t * (2 - t),
         },
         getFillColor: {
-          duration: 300,
+          duration: colorDuration,
           easing: (t: number) => t,
         },
       },
@@ -254,15 +265,15 @@ function createVehicleClusterLayer({
       },
       transitions: {
         getPosition: {
-          duration: 600,
+          duration: positionDuration,
           easing: (t: number) => t * (2 - t), // Match cluster position transitions
         },
         getSize: {
-          duration: 600,
+          duration: radiusDuration,
           easing: (t: number) => t * (2 - t),
         },
         getColor: {
-          duration: 300,
+          duration: colorDuration,
           easing: (t: number) => t,
         },
       },

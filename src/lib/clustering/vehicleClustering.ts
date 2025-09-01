@@ -342,6 +342,10 @@ export function clusterVehicles(
     previousZoom,
   } = options;
 
+  // Detect active zooming to disable centroid smoothing
+  const isZooming = previousZoom !== undefined && Math.abs(zoom - previousZoom) > 0.1;
+  const stabilityFactor = isZooming ? 0 : 0.15; // No smoothing during zoom, light smoothing otherwise
+
   // Clean old cache entries (older than 5 seconds)
   const now = Date.now();
   if (now - cacheTimestamp > 5000) {
@@ -437,7 +441,7 @@ export function clusterVehicles(
       const stablePosition = calculateStablePosition(
         component,
         similarCluster?.position,
-        0.3 // 30% weight for previous position
+        stabilityFactor
       );
       
       const clusterId = similarCluster?.id || `cluster-${hash}`;
