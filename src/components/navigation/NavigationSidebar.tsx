@@ -87,8 +87,8 @@ const navigationData: NavigationSection[] = [
         icon: ChartBarIcon,
         children: [
           {
-            id: 'last-location-report',
-            label: 'Last Location (Report)',
+            id: 'last-location',
+            label: 'Last Location',
             icon: MapPinIcon,
           },
           {
@@ -353,7 +353,7 @@ export function NavigationSidebar({
                         }
                       }}
                       onKeyDown={(e) => handleKeyDown(e, item.id)}
-                      className={`w-full flex items-center px-2 py-1.5 text-sm font-medium rounded-md transition-immediate group focus-ring ${
+                      className={`w-full flex items-center px-2 py-1.5 text-sm font-medium rounded-md transition-immediate group focus-ring cursor-pointer ${
                         isActive
                           ? 'bg-gray-100 text-gray-700'
                           : 'text-gray-700 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-900'
@@ -395,7 +395,9 @@ export function NavigationSidebar({
                           isExpanded ? 'max-h-96 mt-1' : 'max-h-0'
                         }`}
                       >
-                        <div className="space-y-0.5">
+                        <div className="space-y-0.5 relative">
+                          {/* Vertical line indicator */}
+                          <div className="absolute left-2 top-0 bottom-0 w-px bg-gray-200" />
                           {item.children.map((childItem) => {
                             const isChildActive = activeItem === childItem.id;
                             return (
@@ -408,7 +410,7 @@ export function NavigationSidebar({
                                   }
                                 }}
                                 onKeyDown={(e) => handleKeyDown(e, childItem.id)}
-                                className={`w-full flex items-center px-2 py-1.5 text-sm font-medium rounded-md transition-immediate group focus-ring ${
+                                className={`w-full flex items-center py-1.5 pr-2 pl-6 text-sm font-medium rounded-md transition-immediate group focus-ring relative cursor-pointer ${
                                   isChildActive
                                     ? 'bg-gray-100 text-gray-700'
                                     : 'text-gray-600 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-900'
@@ -416,7 +418,7 @@ export function NavigationSidebar({
                                 aria-current={isChildActive ? 'page' : undefined}
                                 role="menuitem"
                               >
-                                <span className="flex-1 text-left truncate pl-3">
+                                <span className="flex-1 text-left truncate">
                                   {childItem.label}
                                 </span>
                                 {childItem.badge && (
