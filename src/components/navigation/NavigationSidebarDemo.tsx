@@ -1,8 +1,7 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
 import { useNavigation } from '@/contexts/NavigationContext';
 import {
   BellIcon,
@@ -53,6 +52,7 @@ interface NavigationSection {
 interface NavigationSidebarDemoProps {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  onActiveItemChange?: (item: {id: string, label: string}) => void;
 }
 
 const navigationData: NavigationSection[] = [
@@ -239,26 +239,12 @@ const navigationData: NavigationSection[] = [
 export function NavigationSidebarDemo({
   isCollapsed = false,
   onToggleCollapse,
+  onActiveItemChange,
 }: NavigationSidebarDemoProps) {
   const navRef = useRef<HTMLElement>(null);
-  const pathname = usePathname();
   const { toggleExpandedItem, isItemExpanded } = useNavigation();
-
-  const getActiveItemFromPath = (path: string): string => {
-    if (path === '/') {
-      return 'live-map';
-    }
-    if (path === '/reports') {
-      return 'reports';
-    }
-    if (path.startsWith('/reports/')) {
-      const reportType = path.replace('/reports/', '');
-      return reportType;
-    }
-    return 'live-map';
-  };
-
-  const activeItem = getActiveItemFromPath(pathname);
+  // Local active state just for demo purposes (no routing)
+  const [activeItemId, setActiveItemId] = useState<string>('live-map');
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent, itemId: string) => {
@@ -340,7 +326,7 @@ export function NavigationSidebarDemo({
             <div className="space-y-0.5 px-2">
               {section.items.map((item) => {
                 const IconComponent = item.icon;
-                const isActive = activeItem === item.id;
+                const isActive = activeItemId === item.id;
                 const isExpanded = isItemExpanded(item.id);
                 return (
                   <div key={item.id}>
@@ -350,7 +336,9 @@ export function NavigationSidebarDemo({
                         if (item.children) {
                           toggleExpandedItem(item.id);
                         } else {
-                          console.log(`[Demo] Click on "${item.label}" ignored`);
+                          setActiveItemId(item.id);
+                          onActiveItemChange?.({ id: item.id, label: item.label });
+                          console.log(`[Demo] Active item set to "${item.label}"`);
                         }
                       }}
                       onKeyDown={(e) => handleKeyDown(e, item.id)}
@@ -400,13 +388,15 @@ export function NavigationSidebarDemo({
                           {/* Vertical line indicator */}
                           <div className="absolute left-2 top-0 bottom-0 w-px bg-gray-200" />
                           {item.children.map((childItem) => {
-                            const isChildActive = activeItem === childItem.id;
+                            const isChildActive = activeItemId === childItem.id;
                             return (
                               <button
                                 key={childItem.id}
                                 data-nav-item={childItem.id}
                                 onClick={() => {
-                                  console.log(`[Demo] Click on "${childItem.label}" ignored`);
+                                  setActiveItemId(childItem.id);
+                                  onActiveItemChange?.({ id: childItem.id, label: childItem.label });
+                                  console.log(`[Demo] Active item set to "${childItem.label}"`);
                                 }}
                                 onKeyDown={(e) => handleKeyDown(e, childItem.id)}
                                 className={`w-full flex items-center py-1.5 pr-2 pl-6 text-sm font-medium rounded-md transition-immediate group focus-ring relative cursor-pointer ${
