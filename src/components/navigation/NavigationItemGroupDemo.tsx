@@ -12,6 +12,13 @@ interface NavigationItem {
   children?: NavigationItem[];
 }
 
+interface TooltipContent {
+  title: string;
+  description: string;
+  image?: string;
+  learnMoreUrl?: string;
+}
+
 interface NavigationItemGroupDemoProps {
   item: NavigationItem;
   isActive?: boolean;
@@ -19,6 +26,7 @@ interface NavigationItemGroupDemoProps {
   isLocked?: boolean;
   activeItemId?: string;
   lockedItemIds?: string[];
+  tooltipContentMap?: Record<string, TooltipContent>;
   onItemClick?: (item: NavigationItem) => void;
   onExpandToggle?: (itemId: string) => void;
   onLearnMore?: (item: NavigationItem) => void;
@@ -32,6 +40,7 @@ export function NavigationItemGroupDemo({
   isLocked = false,
   activeItemId,
   lockedItemIds = [],
+  tooltipContentMap,
   onItemClick,
   onExpandToggle,
   onLearnMore,
@@ -46,6 +55,7 @@ export function NavigationItemGroupDemo({
         isExpanded={isExpanded}
         isLocked={isLocked}
         level="parent"
+        tooltipContent={tooltipContentMap?.[item.id]}
         onItemClick={onItemClick}
         onExpandToggle={onExpandToggle}
         onLearnMore={onLearnMore}
@@ -74,6 +84,7 @@ export function NavigationItemGroupDemo({
                     isActive={isChildActive}
                     isLocked={isChildLocked}
                     level="child"
+                    tooltipContent={tooltipContentMap?.[childItem.id]}
                     onItemClick={onItemClick}
                     onLearnMore={onLearnMore}
                     onKeyDown={onKeyDown}

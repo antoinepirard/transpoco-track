@@ -397,6 +397,26 @@ export function NavigationSidebarDemo({
   
   // Demo locked items (premium features)
   const lockedItemIds = ['bikly', 'fleet-ai', 'cost-management', 'fuel-electric'];
+  
+  // Tooltip content for locked items
+  const tooltipContent = {
+    'bikly': {
+      title: 'Bikly',
+      description: 'Advanced safety and compliance monitoring for your fleet. Get real-time alerts, driver behavior insights, and comprehensive safety reporting to reduce incidents and improve driver performance.',
+    },
+    'fleet-ai': {
+      title: 'Fleet AI',
+      description: 'AI-powered predictive analytics and intelligent fleet optimization. Leverage machine learning to predict maintenance needs, optimize routes, and make data-driven decisions for maximum efficiency.',
+    },
+    'cost-management': {
+      title: 'Cost Management',
+      description: 'Complete Total Cost of Ownership (TCO) analysis and financial optimization tools. Track all fleet expenses, identify cost-saving opportunities, and optimize your fleet budget with detailed analytics.',
+    },
+    'fuel-electric': {
+      title: 'Fuel/Electric Vehicles',
+      description: 'Comprehensive EV fleet management and fuel optimization. Monitor charging status, plan efficient routes for electric vehicles, and seamlessly manage mixed fuel and electric fleets.',
+    },
+  };
 
   useLayoutEffect(() => {
     const update = () => {
@@ -570,6 +590,7 @@ export function NavigationSidebarDemo({
                     isLocked={isLocked}
                     activeItemId={currentActiveId}
                     lockedItemIds={lockedItemIds}
+                    tooltipContentMap={tooltipContent}
                     onItemClick={handleItemClick}
                     onExpandToggle={toggleExpandedItem}
                     onLearnMore={handleLearnMore}

@@ -1,11 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
   CaretUpIcon,
   CaretDownIcon,
   LockIcon,
+  ArrowSquareOutIcon,
 } from '@phosphor-icons/react';
+import { NavigationTooltip } from './NavigationTooltip';
 
 interface NavigationItem {
   id: string;
@@ -16,12 +18,20 @@ interface NavigationItem {
   children?: NavigationItem[];
 }
 
+interface TooltipContent {
+  title: string;
+  description: string;
+  image?: string;
+  learnMoreUrl?: string;
+}
+
 interface NavigationItemDemoProps {
   item: NavigationItem;
   isActive?: boolean;
   isExpanded?: boolean;
   isLocked?: boolean;
   level?: 'parent' | 'child';
+  tooltipContent?: TooltipContent;
   onItemClick?: (item: NavigationItem) => void;
   onExpandToggle?: (itemId: string) => void;
   onLearnMore?: (item: NavigationItem) => void;
@@ -34,6 +44,7 @@ export function NavigationItemDemo({
   isExpanded = false,
   isLocked = false,
   level = 'parent',
+  tooltipContent,
   onItemClick,
   onExpandToggle,
   onLearnMore,
@@ -42,6 +53,11 @@ export function NavigationItemDemo({
   const IconComponent = item.icon;
   const isParent = level === 'parent';
   const isChild = level === 'child';
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  
+  // Tooltip state
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipAnchor, setTooltipAnchor] = useState<DOMRect | undefined>();
 
   const handleClick = () => {
     if (isLocked) {
@@ -53,6 +69,20 @@ export function NavigationItemDemo({
       onExpandToggle?.(item.id);
     } else {
       onItemClick?.(item);
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (isLocked && tooltipContent && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setTooltipAnchor(rect);
+      setShowTooltip(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (isLocked) {
+      setShowTooltip(false);
     }
   };
 
@@ -115,15 +145,19 @@ export function NavigationItemDemo({
   };
 
   return (
-    <button
-      data-nav-item={item.id}
-      onClick={handleClick}
-      onKeyDown={(e) => onKeyDown?.(e, item.id)}
-      className={getButtonClassName()}
-      aria-current={isActive ? 'page' : undefined}
-      role="menuitem"
-      title={isLocked ? `${item.label} (Premium Feature - Click to learn more)` : item.label}
-    >
+    <>
+      <button
+        ref={buttonRef}
+        data-nav-item={item.id}
+        onClick={handleClick}
+        onKeyDown={(e) => onKeyDown?.(e, item.id)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className={getButtonClassName()}
+        aria-current={isActive ? 'page' : undefined}
+        role="menuitem"
+        title={isLocked ? `${item.label} (Premium Feature - Click to learn more)` : item.label}
+      >
       {isParent && (
         <IconComponent
           className={getIconClassName()}
@@ -134,12 +168,18 @@ export function NavigationItemDemo({
         {item.label}
       </span>
       
-      {/* Lock icon for locked items */}
+      {/* Lock icon for locked items - transforms to arrow on hover */}
       {isLocked && (
-        <LockIcon 
-          className={`ml-2 h-4 w-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-gray-400'}`}
-          aria-hidden="true"
-        />
+        <div className="ml-2 h-4 w-4 flex-shrink-0 relative">
+          <LockIcon 
+            className={`absolute inset-0 h-4 w-4 transition-all duration-200 ${isActive ? 'text-white' : 'text-gray-400'} group-hover:opacity-0 group-hover:scale-90`}
+            aria-hidden="true"
+          />
+          <ArrowSquareOutIcon 
+            className={`absolute inset-0 h-4 w-4 transition-all duration-200 ${isActive ? 'text-white' : 'text-gray-500'} opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100`}
+            aria-hidden="true"
+          />
+        </div>
       )}
       
       {/* Badge */}
@@ -168,6 +208,17 @@ export function NavigationItemDemo({
           )}
         </>
       )}
-    </button>
+      </button>
+      
+      {/* Tooltip for locked items */}
+      {isLocked && tooltipContent && (
+        <NavigationTooltip
+          isVisible={showTooltip}
+          content={tooltipContent}
+          anchorRect={tooltipAnchor}
+          onClose={() => setShowTooltip(false)}
+        />
+      )}
+    </>
   );
 }
