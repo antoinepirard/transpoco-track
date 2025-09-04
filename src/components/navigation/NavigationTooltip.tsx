@@ -16,14 +16,20 @@ interface NavigationTooltipProps {
   isVisible: boolean;
   content: TooltipContent;
   anchorRect?: DOMRect;
+  previousAnchorRect?: DOMRect;
   onClose?: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 export function NavigationTooltip({ 
   isVisible, 
   content, 
   anchorRect,
-  onClose 
+  previousAnchorRect,
+  onClose,
+  onMouseEnter,
+  onMouseLeave
 }: NavigationTooltipProps) {
   const [mounted, setMounted] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -66,30 +72,53 @@ export function NavigationTooltip({
   const tooltipHeight = 200;
   const spacing = 12;
   
-  // Position to the right of the anchor with some spacing
-  let left = anchorRect.right + spacing;
-  let top = anchorRect.top + (anchorRect.height / 2) - (tooltipHeight / 2);
+  // Helper function to calculate tooltip position for any anchor rect
+  const calculateTooltipPosition = (anchor: DOMRect) => {
+    let left = anchor.right + spacing;
+    let top = anchor.top + (anchor.height / 2) - (tooltipHeight / 2);
 
-  // Ensure tooltip stays within viewport
-  if (left + tooltipWidth > window.innerWidth) {
-    left = anchorRect.left - tooltipWidth - spacing;
-  }
+    // Ensure tooltip stays within viewport
+    if (left + tooltipWidth > window.innerWidth) {
+      left = anchor.left - tooltipWidth - spacing;
+    }
+    
+    if (top < spacing) {
+      top = spacing;
+    } else if (top + tooltipHeight > window.innerHeight - spacing) {
+      top = window.innerHeight - tooltipHeight - spacing;
+    }
+    
+    return { left, top };
+  };
   
-  if (top < spacing) {
-    top = spacing;
-  } else if (top + tooltipHeight > window.innerHeight - spacing) {
-    top = window.innerHeight - tooltipHeight - spacing;
-  }
-
-  // Animation variants based on final position
+  // Calculate current and previous tooltip positions
+  const currentPosition = calculateTooltipPosition(anchorRect);
+  const { left, top } = currentPosition;
+  
+  // Animation variants based on final position and morphing
   const direction: 'left' | 'right' = left > anchorRect.right ? 'left' : 'right';
+  
+  // Calculate morphing offset based on actual tooltip positions (not just anchor positions)
+  const getMorphOffset = () => {
+    if (previousAnchorRect) {
+      const previousPosition = calculateTooltipPosition(previousAnchorRect);
+      return {
+        x: previousPosition.left - currentPosition.left,
+        y: previousPosition.top - currentPosition.top,
+      };
+    }
+    return { x: direction === 'left' ? -20 : 20, y: -8 };
+  };
+
+  const morphOffset = getMorphOffset();
+  const isMorphing = !!previousAnchorRect;
 
   const animationVariants = {
     initial: {
-      opacity: 0,
-      scale: 0.85,
-      x: direction === 'left' ? -20 : 20,
-      y: -8,
+      opacity: isMorphing ? 1 : 0,
+      scale: isMorphing ? 1 : 0.85,
+      x: morphOffset.x,
+      y: morphOffset.y,
     },
     animate: {
       opacity: 1,
@@ -126,6 +155,8 @@ export function NavigationTooltip({
       animate="animate"
       exit="exit"
       transition={springTransition}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       {/* Image placeholder */}
       <motion.div 

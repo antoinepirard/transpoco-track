@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import React, { useRef } from 'react';
 import {
   CaretUpIcon,
   CaretDownIcon,
   LockIcon,
   ArrowSquareOutIcon,
 } from '@phosphor-icons/react';
-import { NavigationTooltip } from './NavigationTooltip';
 
 interface NavigationItem {
   id: string;
@@ -19,24 +17,18 @@ interface NavigationItem {
   children?: NavigationItem[];
 }
 
-interface TooltipContent {
-  title: string;
-  description: string;
-  image?: string;
-  learnMoreUrl?: string;
-}
-
 interface NavigationItemDemoProps {
   item: NavigationItem;
   isActive?: boolean;
   isExpanded?: boolean;
   isLocked?: boolean;
   level?: 'parent' | 'child';
-  tooltipContent?: TooltipContent;
   onItemClick?: (item: NavigationItem) => void;
   onExpandToggle?: (itemId: string) => void;
   onLearnMore?: (item: NavigationItem) => void;
   onKeyDown?: (e: React.KeyboardEvent, itemId: string) => void;
+  onItemHover?: (itemId: string, anchorRect: DOMRect) => void;
+  onItemLeave?: () => void;
 }
 
 export function NavigationItemDemo({
@@ -45,20 +37,17 @@ export function NavigationItemDemo({
   isExpanded = false,
   isLocked = false,
   level = 'parent',
-  tooltipContent,
   onItemClick,
   onExpandToggle,
   onLearnMore,
   onKeyDown,
+  onItemHover,
+  onItemLeave,
 }: NavigationItemDemoProps) {
   const IconComponent = item.icon;
   const isParent = level === 'parent';
   const isChild = level === 'child';
   const buttonRef = useRef<HTMLButtonElement>(null);
-  
-  // Tooltip state
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [tooltipAnchor, setTooltipAnchor] = useState<DOMRect | undefined>();
 
   const handleClick = () => {
     if (isLocked) {
@@ -74,16 +63,15 @@ export function NavigationItemDemo({
   };
 
   const handleMouseEnter = () => {
-    if (isLocked && tooltipContent && buttonRef.current) {
+    if (isLocked && buttonRef.current && onItemHover) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setTooltipAnchor(rect);
-      setShowTooltip(true);
+      onItemHover(item.id, rect);
     }
   };
 
   const handleMouseLeave = () => {
-    if (isLocked) {
-      setShowTooltip(false);
+    if (isLocked && onItemLeave) {
+      onItemLeave();
     }
   };
 
@@ -211,17 +199,6 @@ export function NavigationItemDemo({
       )}
       </button>
       
-      {/* Tooltip for locked items */}
-      <AnimatePresence>
-        {isLocked && tooltipContent && showTooltip && (
-          <NavigationTooltip
-            isVisible={showTooltip}
-            content={tooltipContent}
-            anchorRect={tooltipAnchor}
-            onClose={() => setShowTooltip(false)}
-          />
-        )}
-      </AnimatePresence>
     </>
   );
 }

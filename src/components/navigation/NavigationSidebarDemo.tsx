@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState, useLayoutEffect } from 'react';
+import { useCallback, useRef, useState, useLayoutEffect, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { Menu } from '@base-ui-components/react';
 import { useNavigation } from '@/contexts/NavigationContext';
@@ -47,6 +47,8 @@ import {
   ArrowLeftIcon,
 } from '@phosphor-icons/react';
 import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
+import { NavigationTooltip } from './NavigationTooltip';
+import { AnimatePresence } from 'framer-motion';
 
 interface NavigationItem {
   id: string;
@@ -395,11 +397,11 @@ export function NavigationSidebarDemo({
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [menuWidth, setMenuWidth] = useState<number>(0);
   
-  // Demo locked items (premium features)
-  const lockedItemIds = ['bikly', 'fleet-ai', 'cost-management', 'fuel-electric'];
+  // Demo locked items (premium features) - memoized to prevent re-renders
+  const lockedItemIds = useMemo(() => ['bikly', 'fleet-ai', 'cost-management', 'fuel-electric'], []);
   
-  // Tooltip content for locked items
-  const tooltipContent = {
+  // Tooltip content for locked items - memoized to prevent re-renders
+  const tooltipContent = useMemo(() => ({
     'bikly': {
       title: 'Bikly',
       description: 'Advanced safety and compliance monitoring for your fleet. Get real-time alerts, driver behavior insights, and comprehensive safety reporting to reduce incidents and improve driver performance.',
@@ -416,7 +418,96 @@ export function NavigationSidebarDemo({
       title: 'Fuel/Electric Vehicles',
       description: 'Comprehensive EV fleet management and fuel optimization. Monitor charging status, plan efficient routes for electric vehicles, and seamlessly manage mixed fuel and electric fleets.',
     },
-  };
+  }), []);
+
+  // Timeout refs for tooltip management
+  const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Global tooltip state
+  const [globalTooltip, setGlobalTooltip] = useState<{
+    isVisible: boolean;
+    itemId: string | null;
+    anchorRect: DOMRect | null;
+    previousAnchorRect: DOMRect | null;
+    content: typeof tooltipContent[keyof typeof tooltipContent] | null;
+  }>({
+    isVisible: false,
+    itemId: null,
+    anchorRect: null,
+    previousAnchorRect: null,
+    content: null,
+  });
+
+  const handleItemHover = useCallback((itemId: string, anchorRect: DOMRect) => {
+    // Clear any pending hide timeout
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+      tooltipTimeoutRef.current = null;
+    }
+    
+    if (lockedItemIds.includes(itemId) && tooltipContent[itemId as keyof typeof tooltipContent]) {
+      setGlobalTooltip(prev => ({
+        isVisible: true,
+        itemId,
+        anchorRect,
+        previousAnchorRect: prev.isVisible && prev.itemId !== itemId ? prev.anchorRect : null,
+        content: tooltipContent[itemId as keyof typeof tooltipContent],
+      }));
+    }
+  }, [lockedItemIds, tooltipContent]);
+
+  const handleItemLeave = useCallback(() => {
+    // Clear any existing timeout
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+    }
+    
+    // Add a delay before hiding to allow moving between items or to tooltip
+    tooltipTimeoutRef.current = setTimeout(() => {
+      setGlobalTooltip(prev => ({
+        ...prev,
+        isVisible: false,
+      }));
+      tooltipTimeoutRef.current = null;
+    }, 300); // Increased delay for better UX
+  }, []);
+
+  const handleTooltipClose = useCallback(() => {
+    setGlobalTooltip({
+      isVisible: false,
+      itemId: null,
+      anchorRect: null,
+      previousAnchorRect: null,
+      content: null,
+    });
+  }, []);
+
+  const handleNavigationMouseLeave = useCallback(() => {
+    // Clear any existing timeout
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+    }
+    
+    // Hide tooltip when completely leaving the navigation area
+    tooltipTimeoutRef.current = setTimeout(() => {
+      setGlobalTooltip({
+        isVisible: false,
+        itemId: null,
+        anchorRect: null,
+        previousAnchorRect: null,
+        content: null,
+      });
+      tooltipTimeoutRef.current = null;
+    }, 500); // Longer delay when leaving entire nav area
+  }, []);
+
+  const handleNavigationMouseEnter = useCallback(() => {
+    // Cancel any pending hide when re-entering navigation area
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current);
+      tooltipTimeoutRef.current = null;
+    }
+  }, []);
 
   useLayoutEffect(() => {
     const update = () => {
@@ -475,6 +566,15 @@ export function NavigationSidebarDemo({
   const handleLearnMore = useCallback((item: NavigationItem) => {
     console.log(`[Demo] Learn more about premium feature: "${item.label}"`);
     // In a real app, this would open a modal or navigate to a pricing page
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+      }
+    };
   }, []);
 
 
@@ -543,6 +643,8 @@ export function NavigationSidebarDemo({
         className="flex-1 overflow-y-auto py-4 custom-scrollbar"
         role="navigation"
         aria-label={showSettingsNav ? "Settings navigation" : "Main navigation"}
+        onMouseEnter={handleNavigationMouseEnter}
+        onMouseLeave={handleNavigationMouseLeave}
       >
         <div className="transition-all duration-200 ease-in-out">
           {showSettingsNav && (
@@ -590,11 +692,12 @@ export function NavigationSidebarDemo({
                     isLocked={isLocked}
                     activeItemId={currentActiveId}
                     lockedItemIds={lockedItemIds}
-                    tooltipContentMap={tooltipContent}
                     onItemClick={handleItemClick}
                     onExpandToggle={toggleExpandedItem}
                     onLearnMore={handleLearnMore}
                     onKeyDown={handleKeyDown}
+                    onItemHover={handleItemHover}
+                    onItemLeave={handleItemLeave}
                   />
                 );
               })}
@@ -638,6 +741,21 @@ export function NavigationSidebarDemo({
           </div>
         </button>
       </div>
+
+      {/* Global tooltip for locked items */}
+      <AnimatePresence>
+        {globalTooltip.isVisible && globalTooltip.content && globalTooltip.anchorRect && (
+          <NavigationTooltip
+            isVisible={globalTooltip.isVisible}
+            content={globalTooltip.content}
+            anchorRect={globalTooltip.anchorRect}
+            previousAnchorRect={globalTooltip.previousAnchorRect || undefined}
+            onClose={handleTooltipClose}
+            onMouseEnter={handleNavigationMouseEnter}
+            onMouseLeave={handleItemLeave}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
