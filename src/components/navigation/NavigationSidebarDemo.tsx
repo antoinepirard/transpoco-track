@@ -49,6 +49,7 @@ import {
 import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
 import { NavigationTooltip } from './NavigationTooltip';
 import { AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 interface NavigationItem {
   id: string;
@@ -707,39 +708,26 @@ export function NavigationSidebarDemo({
         </div>
       </nav>
 
-      {/* User Profile */}
+      {/* Settings Button */}
       <div className="p-4">
-        <button
+        <Button
           onClick={toggleSettingsNav}
-          className={`w-full border border-gray-200 rounded-lg p-3 hover:hover-only:bg-gray-100 transition-immediate group cursor-pointer focus-ring text-left ${
-            showSettingsNav ? 'bg-blue-50 border-blue-200' : ''
-          }`}
+          variant={showSettingsNav ? "default" : "outline"}
+          size="lg"
+          className="w-full"
         >
-          <div className="flex items-center space-x-3">
-          <Image
-            className="h-10 w-10 rounded-full object-cover"
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-            alt="Profile picture of Antoine Pirard"
-            width={40}
-            height={40}
-          />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              Antoine Pirard
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {showSettingsNav ? 'Settings' : 'Transpoco'}
-            </p>
-          </div>
-          <div className="p-1">
-            {showSettingsNav ? (
-              <ArrowLeftIcon className="w-4 h-4 text-blue-500 transition-immediate" aria-hidden="true" />
-            ) : (
-              <GearIcon className="w-4 h-4 text-gray-400 group-hover:hover-only:text-gray-600 transition-immediate" aria-hidden="true" />
-            )}
-          </div>
-          </div>
-        </button>
+          {showSettingsNav ? (
+            <>
+              <ArrowLeftIcon />
+              Back to Navigation
+            </>
+          ) : (
+            <>
+              <GearIcon />
+              Settings
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Global tooltip for locked items */}
