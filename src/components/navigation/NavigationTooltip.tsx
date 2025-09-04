@@ -159,12 +159,7 @@ export function NavigationTooltip({
       onMouseLeave={onMouseLeave}
     >
       {/* Image placeholder */}
-      <motion.div 
-        className="w-full h-20 bg-gradient-to-br from-gray-800 to-gray-700 rounded-md mb-3 flex items-center justify-center"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.3 }}
-      >
+      <div className="w-full h-20 bg-gradient-to-br from-gray-800 to-gray-700 rounded-md mb-3 flex items-center justify-center">
         {content.image ? (
           <Image 
             src={content.image} 
@@ -178,50 +173,17 @@ export function NavigationTooltip({
             {content.title}
           </div>
         )}
-      </motion.div>
+      </div>
       
       {/* Content */}
       <div className="space-y-2">
-        <motion.h3 
-          className="text-sm font-semibold text-white"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.3 }}
-        >
+        <h3 className="text-sm font-semibold text-white">
           {content.title}
-        </motion.h3>
-        <motion.p 
-          className="text-xs text-gray-300 leading-relaxed"
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.3 }}
-        >
+        </h3>
+        <p className="text-xs text-gray-300 leading-relaxed">
           {content.description}
-        </motion.p>
+        </p>
       </div>
-      
-      {/* Learn more indicator */}
-      <motion.div 
-        className="mt-3 pt-2 border-t border-gray-700"
-        initial={{ opacity: 0, y: 4 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25, duration: 0.3 }}
-      >
-        <div className="text-xs text-blue-400 font-medium flex items-center">
-          <span>Click to learn more</span>
-          <motion.svg 
-            className="w-3 h-3 ml-1" 
-            fill="currentColor" 
-            viewBox="0 0 20 20"
-            initial={{ x: -2 }}
-            animate={{ x: 0 }}
-            transition={{ delay: 0.4, duration: 0.3, type: "spring", stiffness: 200 }}
-          >
-            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-          </motion.svg>
-        </div>
-      </motion.div>
-      
     </motion.div>
   );
 
