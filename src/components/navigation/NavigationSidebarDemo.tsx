@@ -46,6 +46,9 @@ import {
   UserPlusIcon,
   ArrowLeftIcon,
   QuestionIcon,
+  EnvelopeIcon,
+  FileTextIcon,
+  NewspaperIcon,
 } from '@phosphor-icons/react';
 import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
 import { NavigationTooltip } from './NavigationTooltip';
@@ -751,18 +754,23 @@ export function NavigationSidebarDemo({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64">
             <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+              <EnvelopeIcon className="w-4 h-4 text-gray-400" />
               Get in Touch
             </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+              <ShieldIcon className="w-4 h-4 text-gray-400" />
               Terms & Privacy Policy
             </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+              <BookOpenIcon className="w-4 h-4 text-gray-400" />
               Knowledge Base
             </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+              <FileTextIcon className="w-4 h-4 text-gray-400" />
               User Manual
             </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+              <NewspaperIcon className="w-4 h-4 text-gray-400" />
               Whats New?
             </DropdownMenuItem>
           </DropdownMenuContent>
