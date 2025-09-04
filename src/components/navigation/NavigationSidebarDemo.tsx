@@ -45,7 +45,6 @@ import {
   CloudArrowDownIcon,
   UserPlusIcon,
   ArrowLeftIcon,
-  ArrowSquareOutIcon,
   QuestionIcon,
 } from '@phosphor-icons/react';
 import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
@@ -752,34 +751,19 @@ export function NavigationSidebarDemo({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64">
             <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
-              <div className="flex items-center justify-between w-full">
-                <span>Get in Touch</span>
-                <ArrowSquareOutIcon className="w-4 h-4" />
-              </div>
+              Get in Touch
             </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
-              <div className="flex items-center justify-between w-full">
-                <span>Terms & Conditions + Privacy Policy</span>
-                <ArrowSquareOutIcon className="w-4 h-4" />
-              </div>
+              Terms & Privacy Policy
             </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
-              <div className="flex items-center justify-between w-full">
-                <span>Knowledge Base</span>
-                <ArrowSquareOutIcon className="w-4 h-4" />
-              </div>
+              Knowledge Base
             </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
-              <div className="flex items-center justify-between w-full">
-                <span>User Manual</span>
-                <ArrowSquareOutIcon className="w-4 h-4" />
-              </div>
+              User Manual
             </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
-              <div className="flex items-center justify-between w-full">
-                <span>Whats New?</span>
-                <ArrowSquareOutIcon className="w-4 h-4" />
-              </div>
+              Whats New?
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
