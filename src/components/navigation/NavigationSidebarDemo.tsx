@@ -519,7 +519,7 @@ export function NavigationSidebarDemo({
           <div key={section.id} className="mb-6">
             {section.title && (
               <div className="px-4 mb-2">
-                <h3 className="text-xs font-medium text-gray-500 tracking-wider">
+                <h3 className="text-xs font-medium text-gray-500">
                   {section.title}
                 </h3>
               </div>
