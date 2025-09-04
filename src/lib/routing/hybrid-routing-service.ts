@@ -128,6 +128,9 @@ export class HybridRoutingService implements RoutingService {
     _from: [number, number],
     _to: [number, number]
   ): Promise<TrafficInfo> {
+    // Mark parameters as used to satisfy ESLint rule for unused vars
+    void _from;
+    void _to;
     // Using local service for traffic info simulation
     return this.localService.getTrafficInfo!();
   }

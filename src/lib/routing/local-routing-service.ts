@@ -73,6 +73,8 @@ export class LocalRoutingService implements RoutingService {
     to: [number, number],
     _options?: RoutingOptions
   ): Promise<Route> {
+    // Mark parameters as used to satisfy ESLint rule for unused vars
+    void _options;
     try {
       // Snap start and end points to road network
       const startSnap = await this.snapToRoad(from[1], from[0]);
@@ -119,6 +121,8 @@ export class LocalRoutingService implements RoutingService {
     confidence: number;
     route?: Route;
   }> {
+    // Mark parameters as used to satisfy ESLint rule for unused vars
+    void _options;
     try {
       const matchedCoordinates: Array<[number, number]> = [];
       let totalConfidence = 0;
