@@ -254,16 +254,9 @@ export function FleetMap({
 
   // Track fleet loading state - wait for map to be loaded
   useEffect(() => {
-    console.log('🚛 Fleet loading check:', {
-      isMapLoaded,
-      vehiclesCount: vehicles.length,
-      layersCount: layers.length,
-    });
-
     // Fleet is considered loaded when map is ready, regardless of vehicles
     // This prevents permanent "Loading fleet..." when no vehicles are available
     if (isMapLoaded) {
-      console.log('🚛 Map loaded, fleet is ready (vehicles will appear when available)');
       // Small delay to ensure map is fully initialized
       const renderTimeout = setTimeout(() => {
         setIsFleetLoaded(true);
@@ -272,11 +265,9 @@ export function FleetMap({
       return () => {
         clearTimeout(renderTimeout);
       };
-    } else {
-      console.log('🚛 Map not loaded yet, showing loading state');
-      setIsFleetLoaded(false);
-      return undefined;
     }
+    setIsFleetLoaded(false);
+    return undefined;
   }, [isMapLoaded]);
 
   // Auto-center on fleet when vehicles are first loaded (only once)
@@ -347,7 +338,7 @@ export function FleetMap({
         </MapErrorBoundary>
 
         {/* Map Controls - positioned in top-right of map area */}
-        <div className="absolute top-4 right-4 z-10 flex gap-2">
+        <div className="absolute top-4 right-4 z-20 flex gap-2">
           <MapStyleSwitcher
             currentStyle={currentMapStyle || ''}
             onStyleChange={setCurrentMapStyle}
