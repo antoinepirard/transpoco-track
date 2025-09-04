@@ -178,6 +178,26 @@ const navigationData: NavigationSection[] = [
         id: 'maintain',
         label: 'Maintain',
         icon: WrenchIcon,
+        children: [
+          {
+            id: 'service',
+            label: 'Service',
+            icon: WrenchIcon,
+            href: '/maintain/service',
+          },
+          {
+            id: 'types',
+            label: 'Types',
+            icon: SquaresFourIcon,
+            href: '/maintain/types',
+          },
+          {
+            id: 'garage',
+            label: 'Garage',
+            icon: TruckIcon,
+            href: '/maintain/garage',
+          },
+        ],
       },
       {
         id: 'temperature',
