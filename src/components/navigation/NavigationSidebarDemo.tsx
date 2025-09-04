@@ -95,6 +95,16 @@ const navigationData: NavigationSection[] = [
         href: '/',
       },
       {
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: SquaresFourIcon,
+      },
+      {
+        id: 'scheduled-reports',
+        label: 'Scheduled Reports',
+        icon: ClockIcon,
+      },
+      {
         id: 'reports',
         label: 'Reports',
         icon: ChartBarIcon,
@@ -174,19 +184,35 @@ const navigationData: NavigationSection[] = [
     ],
   },
   {
-    id: 'efficiency',
-    title: 'Efficiency',
+    id: 'safety',
+    title: 'Safety & Compliance',
     items: [
       {
-        id: 'dashboard',
-        label: 'Dashboard',
-        icon: SquaresFourIcon,
+        id: 'cameras',
+        label: 'Cameras',
+        icon: CameraIcon,
       },
       {
-        id: 'scheduled-reports',
-        label: 'Scheduled Reports',
-        icon: ClockIcon,
+        id: 'driving-style',
+        label: 'Driving Style',
+        icon: SteeringWheelIcon,
       },
+      {
+        id: 'walkaround',
+        label: 'Walkaround',
+        icon: ListChecksIcon,
+      },
+      {
+        id: 'bikly',
+        label: 'Bikly',
+        icon: ShieldIcon,
+      },
+    ],
+  },
+  {
+    id: 'efficiency',
+    title: 'Asset & Cost Management',
+    items: [
       {
         id: 'maintain',
         label: 'Maintain',
@@ -230,29 +256,8 @@ const navigationData: NavigationSection[] = [
     ],
   },
   {
-    id: 'safety',
-    title: 'Safety & Compliance',
-    items: [
-      {
-        id: 'walkaround',
-        label: 'Walkaround',
-        icon: ListChecksIcon,
-      },
-      {
-        id: 'driving-style',
-        label: 'Driving Style',
-        icon: SteeringWheelIcon,
-      },
-      {
-        id: 'cameras',
-        label: 'Cameras',
-        icon: CameraIcon,
-      },
-    ],
-  },
-  {
     id: 'ai',
-    title: 'AI & Insights',
+    title: 'Marketplace',
     items: [
       {
         id: 'fleet-ai',
