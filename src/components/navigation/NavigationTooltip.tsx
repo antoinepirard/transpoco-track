@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import Image from 'next/image';
 
 interface TooltipContent {
   title: string;
@@ -94,9 +95,11 @@ export function NavigationTooltip({
       {/* Image placeholder */}
       <div className="w-full h-20 bg-gradient-to-br from-gray-800 to-gray-700 rounded-md mb-3 flex items-center justify-center">
         {content.image ? (
-          <img 
+          <Image 
             src={content.image} 
             alt={content.title}
+            width={350}
+            height={80}
             className="w-full h-full object-cover rounded-md"
           />
         ) : (
