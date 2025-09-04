@@ -5,7 +5,7 @@ import maplibregl from 'maplibre-gl';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import type { MapViewport } from '@/types/fleet';
 import type { MapConfiguration, DeckGLLayer } from '@/types/map';
-import { DEFAULT_MAP_CONFIG, INITIAL_VIEWPORT } from '@/lib/maplibre/config';
+import { DEFAULT_MAP_CONFIG, INITIAL_VIEWPORT, FALLBACK_MAP_STYLE } from '@/lib/maplibre/config';
 import { MapContextMenu } from './MapContextMenu';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -125,6 +125,13 @@ export function MapView({
     if (typeof mapStyle === 'string') {
       const envApiKey = process.env.NEXT_PUBLIC_MAPTILER_API_KEY;
       const keyToUse = apiKey || envApiKey;
+      
+      // If no API key is available and style requires maptiler, use fallback
+      if (!keyToUse && mapStyle.includes('maptiler.com')) {
+        console.warn('No MapTiler API key found, using fallback map style');
+        return FALLBACK_MAP_STYLE;
+      }
+      
       return keyToUse ? `${mapStyle}?key=${keyToUse}` : mapStyle;
     }
     return mapStyle;

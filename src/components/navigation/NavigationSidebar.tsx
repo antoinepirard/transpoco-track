@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
+import { useNavigation } from '@/contexts/NavigationContext';
 import {
   BellIcon,
   ChatCircleIcon,
@@ -90,51 +91,61 @@ const navigationData: NavigationSection[] = [
             id: 'last-location',
             label: 'Last Location',
             icon: MapPinIcon,
+            href: '/reports/last-location',
           },
           {
             id: 'fleet-summary',
             label: 'Fleet Summary',
             icon: TruckIcon,
+            href: '/reports/fleet-summary',
           },
           {
             id: 'summary',
             label: 'Summary',
             icon: ChartLineIcon,
+            href: '/reports/summary',
           },
           {
             id: 'journeys',
             label: 'Journeys',
             icon: NavigationArrowIcon,
+            href: '/reports/journeys',
           },
           {
             id: 'idling',
             label: 'Idling',
             icon: PauseIcon,
+            href: '/reports/idling',
           },
           {
             id: 'stops',
             label: 'Stops',
             icon: StopIcon,
+            href: '/reports/stops',
           },
           {
             id: 'stops-idling',
             label: 'Stops/Idling',
             icon: ClockIcon,
+            href: '/reports/stops-idling',
           },
           {
             id: 'locations',
             label: 'Locations',
             icon: TargetIcon,
+            href: '/reports/locations',
           },
           {
             id: 'route-completion-summary',
             label: 'Route Completion Summary',
             icon: CheckCircleIcon,
+            href: '/reports/route-completion-summary',
           },
           {
             id: 'alerts',
             label: 'Alerts',
             icon: WarningIcon,
+            href: '/reports/alerts',
           },
         ],
       },
@@ -232,17 +243,21 @@ export function NavigationSidebar({
   const navRef = useRef<HTMLElement>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const { toggleExpandedItem, isItemExpanded } = useNavigation();
 
   // Map pathname to navigation item ID
   const getActiveItemFromPath = (path: string): string => {
-    switch (path) {
-      case '/':
-        return 'live-map';
-      case '/reports':
-        return 'live-reports';
-      default:
-        return 'live-map';
+    if (path === '/') {
+      return 'live-map';
     }
+    if (path === '/reports') {
+      return 'reports';
+    }
+    if (path.startsWith('/reports/')) {
+      const reportType = path.replace('/reports/', '');
+      return reportType;
+    }
+    return 'live-map';
   };
 
   const activeItem = getActiveItemFromPath(pathname);
@@ -275,15 +290,6 @@ export function NavigationSidebar({
     []
   );
 
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
-
-  const handleToggleExpanded = (itemId: string) => {
-    if (expandedItems.includes(itemId)) {
-      setExpandedItems(expandedItems.filter((id) => id !== itemId));
-    } else {
-      setExpandedItems([...expandedItems, itemId]);
-    }
-  };
 
   if (isCollapsed) {
     return (
@@ -340,7 +346,7 @@ export function NavigationSidebar({
               {section.items.map((item) => {
                 const IconComponent = item.icon;
                 const isActive = activeItem === item.id;
-                const isExpanded = expandedItems.includes(item.id);
+                const isExpanded = isItemExpanded(item.id);
                 return (
                   <div key={item.id}>
                     <button
@@ -349,7 +355,7 @@ export function NavigationSidebar({
                         if (item.href) {
                           router.push(item.href);
                         } else if (item.children) {
-                          handleToggleExpanded(item.id);
+                          toggleExpandedItem(item.id);
                         }
                       }}
                       onKeyDown={(e) => handleKeyDown(e, item.id)}

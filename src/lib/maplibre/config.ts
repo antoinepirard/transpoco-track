@@ -1,5 +1,8 @@
 import type { MapConfiguration } from '@/types/map';
 
+// Fallback map style that doesn't require API key
+export const FALLBACK_MAP_STYLE = 'https://demotiles.maplibre.org/style.json';
+
 // Professional map style with high contrast roads for fleet management
 export const DEFAULT_MAP_STYLE =
   'https://api.maptiler.com/maps/bright-v2/style.json';

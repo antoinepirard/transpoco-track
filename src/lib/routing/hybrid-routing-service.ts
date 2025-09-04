@@ -7,9 +7,8 @@ import type {
   RoutingError,
   RoutingProvider,
 } from '@/types/routing';
-import { MapboxRoutingService } from './mapbox-routing-service';
 import { LocalRoutingService } from './local-routing-service';
-import { getMapboxConfig, ROUTING_CONFIG } from './config';
+import { ROUTING_CONFIG } from './config';
 
 interface HybridConfig {
   preferredProvider: RoutingProvider;
@@ -20,13 +19,11 @@ interface HybridConfig {
 }
 
 /**
- * Hybrid routing service that intelligently combines Mapbox and local routing
- * - Uses Mapbox for production accuracy when available
- * - Falls back to local service for reliability and performance
- * - Monitors service health and switches automatically
+ * Hybrid routing service that uses local routing with extensibility for future providers
+ * - Currently uses local service for reliability and performance
+ * - Monitors service health and can be extended for additional providers
  */
 export class HybridRoutingService implements RoutingService {
-  private mapboxService: MapboxRoutingService | null = null;
   private localService: LocalRoutingService;
   private config: HybridConfig;
   private serviceHealth: Map<RoutingProvider, boolean> = new Map();
@@ -35,8 +32,8 @@ export class HybridRoutingService implements RoutingService {
 
   constructor(config: Partial<HybridConfig> = {}) {
     this.config = {
-      preferredProvider: 'mapbox',
-      fallbackEnabled: true,
+      preferredProvider: 'local',
+      fallbackEnabled: false,
       healthCheckInterval: 30000, // 30 seconds
       maxRetries: 2,
       retryDelay: 1000,
@@ -52,28 +49,8 @@ export class HybridRoutingService implements RoutingService {
     this.localService = new LocalRoutingService(ROUTING_CONFIG.local);
     console.log('✅ Local routing service initialized');
 
-    try {
-      const mapboxConfig = getMapboxConfig();
-      console.log('🔑 Mapbox configuration check:', {
-        hasApiKey: !!mapboxConfig.apiKey,
-        apiKeyPrefix: mapboxConfig.apiKey?.substring(0, 10) + '...'
-      });
-
-      if (mapboxConfig.apiKey) {
-        this.mapboxService = new MapboxRoutingService(mapboxConfig);
-        console.log('✅ Mapbox routing service initialized');
-      } else {
-        console.warn('❌ Mapbox API key not found, using local routing only');
-        this.config.preferredProvider = 'local';
-      }
-    } catch (error) {
-      console.warn('❌ Failed to initialize Mapbox service:', error);
-      this.config.preferredProvider = 'local';
-    }
-
     // Initialize service health
     this.serviceHealth.set('local', true); // Local is always healthy
-    this.serviceHealth.set('mapbox', false); // Will be checked
 
     console.log('🏁 Initial service health:', this.getServiceHealth());
 
@@ -148,28 +125,16 @@ export class HybridRoutingService implements RoutingService {
   }
 
   async getTrafficInfo(
-    from: [number, number],
-    to: [number, number]
+    _from: [number, number],
+    _to: [number, number]
   ): Promise<TrafficInfo> {
-    // Traffic info is only available from Mapbox, fallback to simulated data
-    if (this.mapboxService && this.serviceHealth.get('mapbox')) {
-      try {
-        return await this.mapboxService.getTrafficInfo!(from, to);
-      } catch (error) {
-        console.warn('Mapbox traffic info failed, using fallback:', error);
-      }
-    }
-
+    // Using local service for traffic info simulation
     return this.localService.getTrafficInfo!();
   }
 
   async isAvailable(): Promise<boolean> {
-    // Hybrid service is available if at least one service is healthy
-    return (
-      this.serviceHealth.get('local') ||
-      this.serviceHealth.get('mapbox') ||
-      false
-    );
+    // Service is available if local service is healthy
+    return this.serviceHealth.get('local') || false;
   }
 
   /**
@@ -258,24 +223,8 @@ export class HybridRoutingService implements RoutingService {
    * Get ordered list of providers to try
    */
   private getPreferredProviders(): RoutingProvider[] {
-    const providers: RoutingProvider[] = [];
-
-    // Add preferred provider first
-    if (this.config.preferredProvider === 'mapbox' && this.mapboxService) {
-      providers.push('mapbox');
-    }
-    providers.push('local');
-
-    // Add fallback provider if different from preferred
-    if (
-      this.config.preferredProvider === 'local' &&
-      this.mapboxService &&
-      this.config.fallbackEnabled
-    ) {
-      providers.push('mapbox');
-    }
-
-    return providers;
+    // Only local provider is available
+    return ['local'];
   }
 
   /**
@@ -283,8 +232,6 @@ export class HybridRoutingService implements RoutingService {
    */
   private getService(provider: RoutingProvider): RoutingService | null {
     switch (provider) {
-      case 'mapbox':
-        return this.mapboxService;
       case 'local':
         return this.localService;
       default:
@@ -312,18 +259,6 @@ export class HybridRoutingService implements RoutingService {
     try {
       const localHealthy = await this.localService.isAvailable();
       this.serviceHealth.set('local', localHealthy);
-
-      if (this.mapboxService) {
-        try {
-          const mapboxHealthy = await this.mapboxService.isAvailable();
-          this.serviceHealth.set('mapbox', mapboxHealthy);
-        } catch (error) {
-          this.serviceHealth.set('mapbox', false);
-        }
-      } else {
-        this.serviceHealth.set('mapbox', false);
-      }
-
       this.lastHealthCheck = Date.now();
     } catch (error) {
       console.error('Health check failed:', error);
@@ -398,7 +333,7 @@ export class HybridRoutingService implements RoutingService {
   getServiceHealth(): Record<RoutingProvider, boolean> {
     return {
       local: this.serviceHealth.get('local') || false,
-      mapbox: this.serviceHealth.get('mapbox') || false,
+      mapbox: false, // Mapbox is not available
       hybrid: true, // Hybrid is always available if we have at least one service
     };
   }

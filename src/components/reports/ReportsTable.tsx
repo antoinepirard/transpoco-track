@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import {
   ColumnDef,
   ExpandedState,
@@ -31,12 +31,36 @@ function fmtHMM(sec?: number) {
 }
 
 export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loading?: boolean }) {
+  // Component mount tracking
+  const mountedRef = useRef(false);
+  
   // Controlled state for table
   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [sorting, setSorting] = useState<SortingState>([]);
 
   // Safety check - ensure rows is always an array
   const safeRows = useMemo(() => rows || [], [rows]);
+
+  // Track component mount state
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Safe state setters that check if component is mounted
+  const safeSetExpanded = useCallback((value: ExpandedState | ((prev: ExpandedState) => ExpandedState)) => {
+    if (mountedRef.current) {
+      setExpanded(value);
+    }
+  }, []);
+
+  const safeSetSorting = useCallback((value: SortingState | ((prev: SortingState) => SortingState)) => {
+    if (mountedRef.current) {
+      setSorting(value);
+    }
+  }, []);
 
   const columns = useMemo<ColumnDef<ReportRow>[]>(() => [
     {
@@ -112,8 +136,8 @@ export default function ReportsTable({ rows, loading }: { rows: ReportRow[]; loa
       expanded,
       sorting,
     },
-    onExpandedChange: setExpanded,
-    onSortingChange: setSorting,
+    onExpandedChange: safeSetExpanded,
+    onSortingChange: safeSetSorting,
     getCoreRowModel: getCoreRowModel(),
     getGroupedRowModel: getGroupedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),

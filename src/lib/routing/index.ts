@@ -1,13 +1,11 @@
 import type { RoutingService, RoutingProvider } from '@/types/routing';
 import { HybridRoutingService } from './hybrid-routing-service';
-import { MapboxRoutingService } from './mapbox-routing-service';
 import { LocalRoutingService } from './local-routing-service';
-import { getMapboxConfig, ROUTING_CONFIG } from './config';
+import { ROUTING_CONFIG } from './config';
 
 // Export all types and classes
 export * from '@/types/routing';
 export { HybridRoutingService } from './hybrid-routing-service';
-export { MapboxRoutingService } from './mapbox-routing-service';
 export { LocalRoutingService } from './local-routing-service';
 export * from './config';
 
@@ -20,32 +18,26 @@ export function createRoutingService(
   switch (provider) {
     case 'hybrid':
       return new HybridRoutingService({
-        preferredProvider: 'mapbox',
-        fallbackEnabled: true,
+        preferredProvider: 'local',
+        fallbackEnabled: false,
         healthCheckInterval: 30000,
         maxRetries: 2,
         retryDelay: 1000,
       });
 
-    case 'mapbox':
-      const mapboxConfig = getMapboxConfig();
-      if (!mapboxConfig.apiKey) {
-        console.warn('Mapbox API key not found, falling back to local routing');
-        return new LocalRoutingService(ROUTING_CONFIG.local);
-      }
-      return new MapboxRoutingService(mapboxConfig);
-
     case 'local':
       return new LocalRoutingService(ROUTING_CONFIG.local);
 
     default:
-      throw new Error(`Unknown routing provider: ${provider}`);
+      // Fall back to local routing for any unknown provider
+      console.warn(`Unknown routing provider: ${provider}, falling back to local`);
+      return new LocalRoutingService(ROUTING_CONFIG.local);
   }
 }
 
 /**
  * Default routing service instance (singleton)
- * Uses hybrid approach with Mapbox preferred and local fallback
+ * Uses hybrid approach with local routing
  */
 let defaultRoutingService: RoutingService | null = null;
 

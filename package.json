@@ -21,7 +21,6 @@
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.12",
     "@turf/turf": "^7.2.0",
-    "@types/mapbox-gl": "^3.4.1",
     "ably": "^2.12.0",
     "framer-motion": "^12.23.12",
     "maplibre-gl": "^5.7.0",

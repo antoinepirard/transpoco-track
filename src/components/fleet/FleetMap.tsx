@@ -252,7 +252,7 @@ export function FleetMap({
   }, [selectedVehicleId, getVehicle]);
 
 
-  // Track fleet loading state - wait for map to be loaded, vehicles AND layers to be ready
+  // Track fleet loading state - wait for map to be loaded
   useEffect(() => {
     console.log('🚛 Fleet loading check:', {
       isMapLoaded,
@@ -260,26 +260,24 @@ export function FleetMap({
       layersCount: layers.length,
     });
 
-    if (isMapLoaded && vehicles.length > 0 && layers.length > 0) {
-      console.log('🚛 All conditions met, starting fleet render timer...');
-      // Increase delay to ensure DeckGL has time to fully render the layers
+    // Fleet is considered loaded when map is ready, regardless of vehicles
+    // This prevents permanent "Loading fleet..." when no vehicles are available
+    if (isMapLoaded) {
+      console.log('🚛 Map loaded, fleet is ready (vehicles will appear when available)');
+      // Small delay to ensure map is fully initialized
       const renderTimeout = setTimeout(() => {
-        console.log(
-          '🚛 Setting isFleetLoaded=true, fleet should now be visible!'
-        );
         setIsFleetLoaded(true);
-      }, 1000); // Increased to 1000ms for better visual rendering coordination
+      }, 500);
 
       return () => {
-        console.log('🚛 Cleaning up fleet render timer');
         clearTimeout(renderTimeout);
       };
     } else {
-      console.log('🚛 Setting isFleetLoaded=false, conditions not met');
+      console.log('🚛 Map not loaded yet, showing loading state');
       setIsFleetLoaded(false);
       return undefined;
     }
-  }, [isMapLoaded, vehicles.length, layers.length]);
+  }, [isMapLoaded]);
 
   // Auto-center on fleet when vehicles are first loaded (only once)
   useEffect(() => {
