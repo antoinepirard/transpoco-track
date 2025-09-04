@@ -180,11 +180,6 @@ const navigationData: NavigationSection[] = [
         icon: SquaresFourIcon,
       },
       {
-        id: 'scheduled-reports',
-        label: 'Scheduled Reports',
-        icon: ClockIcon,
-      },
-      {
         id: 'setup',
         label: 'Setup',
         icon: GearIcon,
@@ -198,6 +193,11 @@ const navigationData: NavigationSection[] = [
             id: 'routes',
             label: 'Routes',
             icon: PathIcon,
+          },
+          {
+            id: 'scheduled-reports',
+            label: 'Scheduled Reports',
+            icon: ClockIcon,
           },
         ],
       },
@@ -424,10 +424,12 @@ export function NavigationSidebarDemo({
     'cost-management': {
       title: 'Cost Management',
       description: 'Complete Total Cost of Ownership (TCO) analysis and financial optimization tools. Track all fleet expenses, identify cost-saving opportunities, and optimize your fleet budget with detailed analytics.',
+      image: '/vehicle-maintenance.webp',
     },
     'fuel-electric': {
       title: 'Fuel/Electric Vehicles',
       description: 'Comprehensive EV fleet management and fuel optimization. Monitor charging status, plan efficient routes for electric vehicles, and seamlessly manage mixed fuel and electric fleets.',
+      image: '/vans charging up at electrical charging points.webp',
     },
   }), []);
 
