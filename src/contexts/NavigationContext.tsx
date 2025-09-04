@@ -6,10 +6,13 @@ import { usePathname } from 'next/navigation';
 interface NavigationContextType {
   sidebarCollapsed: boolean;
   expandedItems: string[];
+  showSettingsNav: boolean;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebar: () => void;
   toggleExpandedItem: (itemId: string) => void;
   isItemExpanded: (itemId: string) => boolean;
+  toggleSettingsNav: () => void;
+  setShowSettingsNav: (show: boolean) => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -17,6 +20,7 @@ const NavigationContext = createContext<NavigationContextType | undefined>(undef
 const STORAGE_KEYS = {
   SIDEBAR_COLLAPSED: 'transpoco-sidebar-collapsed',
   EXPANDED_ITEMS: 'transpoco-nav-expanded-items',
+  SETTINGS_NAV: 'transpoco-settings-nav',
 };
 
 interface NavigationProviderProps {
@@ -27,6 +31,7 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [showSettingsNav, setShowSettingsNav] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize state from localStorage
@@ -49,6 +54,12 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
         if (Array.isArray(parsed)) {
           initialExpanded = parsed;
         }
+      }
+
+      // Load settings navigation state
+      const storedSettingsNav = localStorage.getItem(STORAGE_KEYS.SETTINGS_NAV);
+      if (storedSettingsNav) {
+        setShowSettingsNav(JSON.parse(storedSettingsNav));
       }
 
       // Auto-expand Reports section if on a report page
@@ -128,13 +139,39 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
     return expandedItems.includes(itemId);
   }, [expandedItems]);
 
+  // Save settings navigation state to localStorage
+  const saveSettingsNavState = useCallback((show: boolean) => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(STORAGE_KEYS.SETTINGS_NAV, JSON.stringify(show));
+    } catch (error) {
+      console.warn('Failed to save settings nav state to localStorage:', error);
+    }
+  }, []);
+
+  const toggleSettingsNav = useCallback(() => {
+    setShowSettingsNav(current => {
+      const newValue = !current;
+      saveSettingsNavState(newValue);
+      return newValue;
+    });
+  }, [saveSettingsNavState]);
+
+  const handleSetShowSettingsNav = useCallback((show: boolean) => {
+    setShowSettingsNav(show);
+    saveSettingsNavState(show);
+  }, [saveSettingsNavState]);
+
   const value: NavigationContextType = {
     sidebarCollapsed,
     expandedItems,
+    showSettingsNav,
     setSidebarCollapsed: handleSetSidebarCollapsed,
     toggleSidebar,
     toggleExpandedItem,
     isItemExpanded,
+    toggleSettingsNav,
+    setShowSettingsNav: handleSetShowSettingsNav,
   };
 
   return (

@@ -33,6 +33,19 @@ import {
   TargetIcon,
   CheckCircleIcon,
   WarningIcon,
+  UsersIcon,
+  UserCircleIcon,
+  ShieldCheckIcon,
+  ClockClockwiseIcon,
+  PlusIcon,
+  ReceiptIcon,
+  CreditCardIcon,
+  BookOpenIcon,
+  KeyIcon,
+  DownloadIcon,
+  CloudArrowDownIcon,
+  UserPlusIcon,
+  ArrowLeftIcon,
 } from '@phosphor-icons/react';
 
 interface NavigationItem {
@@ -255,13 +268,112 @@ const navigationData: NavigationSection[] = [
   },
 ];
 
+const settingsNavigationData: NavigationSection[] = [
+  {
+    id: 'users-permissions',
+    title: 'Users & Permissions',
+    items: [
+      {
+        id: 'users',
+        label: 'Users',
+        icon: UsersIcon,
+      },
+      {
+        id: 'profiles',
+        label: 'Profiles',
+        icon: UserCircleIcon,
+      },
+      {
+        id: 'security-settings',
+        label: 'Security Settings',
+        icon: ShieldCheckIcon,
+      },
+    ],
+  },
+  {
+    id: 'company-details',
+    title: 'Company Details',
+    items: [
+      {
+        id: 'audit-logs',
+        label: 'Audit logs',
+        icon: ClockClockwiseIcon,
+      },
+      {
+        id: 'shift-time',
+        label: 'Shift Time',
+        icon: ClockIcon,
+      },
+    ],
+  },
+  {
+    id: 'orders-billing',
+    title: 'Orders & Billing',
+    items: [
+      {
+        id: 'add-new-vehicles',
+        label: 'Add New Vehicles',
+        icon: PlusIcon,
+      },
+      {
+        id: 'view-orders',
+        label: 'View Orders',
+        icon: ReceiptIcon,
+      },
+      {
+        id: 'subscriptions',
+        label: 'Subscriptions',
+        icon: CreditCardIcon,
+      },
+    ],
+  },
+  {
+    id: 'api-resources',
+    title: 'API Resources',
+    items: [
+      {
+        id: 'api-documentation',
+        label: 'API Documentation',
+        icon: BookOpenIcon,
+      },
+      {
+        id: 'request-api-access',
+        label: 'Request API Access',
+        icon: KeyIcon,
+      },
+    ],
+  },
+  {
+    id: 'import-wizard',
+    title: 'Import Wizard',
+    items: [
+      {
+        id: 'import-services',
+        label: 'Import Services',
+        icon: DownloadIcon,
+      },
+      {
+        id: 'import-drivers',
+        label: 'Import Drivers',
+        icon: UserPlusIcon,
+      },
+      {
+        id: 'import-purchases',
+        label: 'Import Purchases',
+        icon: CloudArrowDownIcon,
+      },
+    ],
+  },
+];
+
 export function NavigationSidebarDemo({
   onActiveItemChange,
 }: NavigationSidebarDemoProps) {
   const navRef = useRef<HTMLElement>(null);
-  const { toggleExpandedItem, isItemExpanded } = useNavigation();
+  const { toggleExpandedItem, isItemExpanded, showSettingsNav, toggleSettingsNav } = useNavigation();
   // Local active state just for demo purposes (no routing)
   const [activeItemId, setActiveItemId] = useState<string>('live-map');
+  const [settingsActiveItemId, setSettingsActiveItemId] = useState<string>('');
   // Brand selection state
   const [selectedBrand, setSelectedBrand] = useState<'transpoco' | 'safely'>('transpoco');
   // Menu hover state
@@ -390,13 +502,24 @@ export function NavigationSidebarDemo({
         ref={navRef}
         className="flex-1 overflow-y-auto py-4 custom-scrollbar"
         role="navigation"
-        aria-label="Main navigation"
+        aria-label={showSettingsNav ? "Settings navigation" : "Main navigation"}
       >
-        {navigationData.map((section) => (
+        <div className="transition-all duration-200 ease-in-out">
+          {showSettingsNav && (
+            <div className="px-4 mb-4 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+              <div className="flex items-center space-x-2 text-blue-800">
+                <GearIcon className="w-4 h-4" />
+                <h2 className="text-base font-semibold">Settings</h2>
+              </div>
+              <div className="mt-1 h-px bg-gradient-to-r from-blue-200 to-transparent" />
+            </div>
+          )}
+          
+          {(showSettingsNav ? settingsNavigationData : navigationData).map((section) => (
           <div key={section.id} className="mb-6">
             {section.title && (
               <div className="px-4 mb-2">
-                <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <h3 className="text-xs font-medium text-gray-500 tracking-wider">
                   {section.title}
                 </h3>
               </div>
@@ -404,7 +527,8 @@ export function NavigationSidebarDemo({
             <div className="space-y-0.5 px-2">
               {section.items.map((item) => {
                 const IconComponent = item.icon;
-                const isActive = activeItemId === item.id;
+                const currentActiveId = showSettingsNav ? settingsActiveItemId : activeItemId;
+                const isActive = currentActiveId === item.id;
                 const isExpanded = isItemExpanded(item.id);
                 return (
                   <div key={item.id}>
@@ -414,7 +538,11 @@ export function NavigationSidebarDemo({
                         if (item.children) {
                           toggleExpandedItem(item.id);
                         } else {
-                          setActiveItemId(item.id);
+                          if (showSettingsNav) {
+                            setSettingsActiveItemId(item.id);
+                          } else {
+                            setActiveItemId(item.id);
+                          }
                           onActiveItemChange?.({ id: item.id, label: item.label });
                           console.log(`[Demo] Active item set to "${item.label}"`);
                         }
@@ -473,13 +601,18 @@ export function NavigationSidebarDemo({
                           {/* Vertical line indicator */}
                           <div className="absolute left-2 top-0 bottom-0 w-px bg-gray-200" />
                           {item.children.map((childItem) => {
-                            const isChildActive = activeItemId === childItem.id;
+                            const currentChildActiveId = showSettingsNav ? settingsActiveItemId : activeItemId;
+                            const isChildActive = currentChildActiveId === childItem.id;
                             return (
                               <button
                                 key={childItem.id}
                                 data-nav-item={childItem.id}
                                 onClick={() => {
-                                  setActiveItemId(childItem.id);
+                                  if (showSettingsNav) {
+                                    setSettingsActiveItemId(childItem.id);
+                                  } else {
+                                    setActiveItemId(childItem.id);
+                                  }
                                   onActiveItemChange?.({ id: childItem.id, label: childItem.label });
                                   console.log(`[Demo] Active item set to "${childItem.label}"`);
                                 }}
@@ -515,11 +648,17 @@ export function NavigationSidebarDemo({
             </div>
           </div>
         ))}
+        </div>
       </nav>
 
       {/* User Profile */}
       <div className="p-4">
-        <div className="border border-gray-200 rounded-lg p-3 hover:hover-only:bg-gray-100 transition-immediate group cursor-pointer">
+        <button
+          onClick={toggleSettingsNav}
+          className={`w-full border border-gray-200 rounded-lg p-3 hover:hover-only:bg-gray-100 transition-immediate group cursor-pointer focus-ring text-left ${
+            showSettingsNav ? 'bg-blue-50 border-blue-200' : ''
+          }`}
+        >
           <div className="flex items-center space-x-3">
           <Image
             className="h-10 w-10 rounded-full object-cover"
@@ -532,17 +671,19 @@ export function NavigationSidebarDemo({
             <p className="text-sm font-medium text-gray-900 truncate">
               Antoine Pirard
             </p>
-            <p className="text-xs text-gray-500 truncate">Transpoco</p>
+            <p className="text-xs text-gray-500 truncate">
+              {showSettingsNav ? 'Settings' : 'Transpoco'}
+            </p>
           </div>
-          <button
-            className="p-1 hover:hover-only:bg-gray-100 rounded transition-immediate focus-ring"
-            aria-label="User settings"
-            title="Settings"
-          >
-            <GearIcon className="w-4 h-4 text-gray-400 group-hover:hover-only:text-gray-600 transition-immediate" aria-hidden="true" />
-          </button>
+          <div className="p-1">
+            {showSettingsNav ? (
+              <ArrowLeftIcon className="w-4 h-4 text-blue-500 transition-immediate" aria-hidden="true" />
+            ) : (
+              <GearIcon className="w-4 h-4 text-gray-400 group-hover:hover-only:text-gray-600 transition-immediate" aria-hidden="true" />
+            )}
           </div>
-        </div>
+          </div>
+        </button>
       </div>
     </div>
   );
