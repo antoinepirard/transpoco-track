@@ -62,23 +62,23 @@ export function NavigationItemDemo({
     if (isChild) {
       const childPadding = 'py-1.5 pr-2 pl-6';
       if (isLocked) {
-        return `${baseClasses} ${childPadding} text-gray-600 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-900`;
+        return `${baseClasses} ${childPadding} text-gray-600 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
       }
       if (isActive) {
-        return `${baseClasses} ${childPadding} bg-gray-100 text-gray-700`;
+        return `${baseClasses} ${childPadding} bg-gray-900 text-white`;
       }
-      return `${baseClasses} ${childPadding} text-gray-600 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-900`;
+      return `${baseClasses} ${childPadding} text-gray-600 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
     }
 
     // Parent item styling
     const parentPadding = 'px-2 py-1.5';
     if (isLocked) {
-      return `${baseClasses} ${parentPadding} text-gray-700 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-900`;
+      return `${baseClasses} ${parentPadding} text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
     }
     if (isActive) {
-      return `${baseClasses} ${parentPadding} bg-gray-100 text-gray-700`;
+      return `${baseClasses} ${parentPadding} bg-gray-900 text-white`;
     }
-    return `${baseClasses} ${parentPadding} text-gray-700 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-900`;
+    return `${baseClasses} ${parentPadding} text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
   };
 
   const getIconClassName = () => {
@@ -88,12 +88,15 @@ export function NavigationItemDemo({
       return `${baseClasses} text-gray-400 group-hover:hover-only:text-gray-500`;
     }
     if (isActive) {
-      return `${baseClasses} text-blue-500`;
+      return `${baseClasses} text-white`;
     }
     return `${baseClasses} text-gray-400 group-hover:hover-only:text-gray-500`;
   };
 
   const getBadgeClassName = () => {
+    if (isActive) {
+      return "ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-500 text-white tabular-nums";
+    }
     if (isLocked) {
       return "ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 tabular-nums";
     }
@@ -102,6 +105,9 @@ export function NavigationItemDemo({
 
   const getCaretClassName = () => {
     const baseClasses = `ml-2 h-4 w-4 flex-shrink-0 transition-all duration-200`;
+    if (isActive) {
+      return `${baseClasses} text-white`;
+    }
     if (isLocked) {
       return `${baseClasses} text-gray-400`;
     }
@@ -118,18 +124,20 @@ export function NavigationItemDemo({
       role="menuitem"
       title={isLocked ? `${item.label} (Premium Feature - Click to learn more)` : item.label}
     >
-      <IconComponent
-        className={getIconClassName()}
-        aria-hidden="true"
-      />
-      <span className="flex-1 text-left truncate">
+      {isParent && (
+        <IconComponent
+          className={getIconClassName()}
+          aria-hidden="true"
+        />
+      )}
+      <span className={`flex-1 text-left truncate ${isChild ? 'ml-0' : ''}`}>
         {item.label}
       </span>
       
       {/* Lock icon for locked items */}
       {isLocked && (
         <LockIcon 
-          className="ml-2 h-4 w-4 text-gray-400 flex-shrink-0"
+          className={`ml-2 h-4 w-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-gray-400'}`}
           aria-hidden="true"
         />
       )}
