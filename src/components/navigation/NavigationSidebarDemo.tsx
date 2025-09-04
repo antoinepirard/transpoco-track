@@ -20,7 +20,6 @@ import {
   ListChecksIcon,
   SteeringWheelIcon,
   CameraIcon,
-  RobotIcon,
   ShieldIcon,
   CaretDownIcon,
   GearIcon,
@@ -49,6 +48,8 @@ import {
   EnvelopeIcon,
   FileTextIcon,
   NewspaperIcon,
+  StorefrontIcon,
+  PackageIcon,
 } from '@phosphor-icons/react';
 import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
 import { NavigationTooltip } from './NavigationTooltip';
@@ -276,18 +277,23 @@ const navigationData: NavigationSection[] = [
     ],
   },
   {
-    id: 'ai',
-    title: 'Marketplace',
+    id: 'addons',
+    title: 'Addons',
     items: [
       {
-        id: 'fleet-ai',
-        label: 'Fleet AI',
-        icon: RobotIcon,
+        id: 'marketplace',
+        label: 'Marketplace',
+        icon: StorefrontIcon,
       },
       {
-        id: 'safely',
-        label: 'Safely',
-        icon: ShieldIcon,
+        id: 'assets-tracking',
+        label: 'Assets Tracking',
+        icon: PackageIcon,
+      },
+      {
+        id: 'trailer-tracking',
+        label: 'Trailer tracking',
+        icon: TruckIcon,
       },
     ],
   },
@@ -416,6 +422,7 @@ export function NavigationSidebarDemo({
     'bikly': {
       title: 'Bikly',
       description: 'Advanced safety and compliance monitoring for your fleet. Get real-time alerts, driver behavior insights, and comprehensive safety reporting to reduce incidents and improve driver performance.',
+      image: '/pointing at laptop screen with data on show.webp',
     },
     'fleet-ai': {
       title: 'Fleet AI',
