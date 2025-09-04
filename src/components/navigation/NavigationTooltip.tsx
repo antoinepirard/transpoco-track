@@ -82,7 +82,7 @@ export function NavigationTooltip({
   const tooltipElement = (
     <div
       ref={tooltipRef}
-      className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200 p-4 transition-all duration-200 ease-out"
+      className="fixed z-50 bg-gray-900 rounded-lg shadow-xl border border-gray-700 p-4 transition-all duration-200 ease-out"
       style={{
         left: `${left}px`,
         top: `${top}px`,
@@ -92,7 +92,7 @@ export function NavigationTooltip({
       }}
     >
       {/* Image placeholder */}
-      <div className="w-full h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-md mb-3 flex items-center justify-center">
+      <div className="w-full h-20 bg-gradient-to-br from-gray-800 to-gray-700 rounded-md mb-3 flex items-center justify-center">
         {content.image ? (
           <img 
             src={content.image} 
@@ -108,17 +108,17 @@ export function NavigationTooltip({
       
       {/* Content */}
       <div className="space-y-2">
-        <h3 className="text-sm font-semibold text-gray-900">
+        <h3 className="text-sm font-semibold text-white">
           {content.title}
         </h3>
-        <p className="text-xs text-gray-600 leading-relaxed">
+        <p className="text-xs text-gray-300 leading-relaxed">
           {content.description}
         </p>
       </div>
       
       {/* Learn more indicator */}
-      <div className="mt-3 pt-2 border-t border-gray-100">
-        <div className="text-xs text-blue-600 font-medium flex items-center">
+      <div className="mt-3 pt-2 border-t border-gray-700">
+        <div className="text-xs text-blue-400 font-medium flex items-center">
           <span>Click to learn more</span>
           <svg className="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -128,7 +128,7 @@ export function NavigationTooltip({
       
       {/* Tooltip arrow */}
       <div 
-        className="absolute w-3 h-3 bg-white border-l border-b border-gray-200 transform rotate-45"
+        className="absolute w-3 h-3 bg-gray-900 border-l border-b border-gray-700 transform rotate-45"
         style={{
           left: left > anchorRect.right ? '100%' : '-6px',
           top: '50%',
