@@ -259,6 +259,11 @@ const navigationData: NavigationSection[] = [
         ],
       },
       {
+        id: 'fuel-electric',
+        label: 'Fuel/Electric Vehicles',
+        icon: BatteryHighIcon,
+      },
+      {
         id: 'temperature',
         label: 'Temperature',
         icon: ThermometerIcon,
@@ -267,11 +272,6 @@ const navigationData: NavigationSection[] = [
         id: 'cost-management',
         label: 'Cost Management',
         icon: CurrencyDollarIcon,
-      },
-      {
-        id: 'fuel-electric',
-        label: 'Fuel/Electric Vehicles',
-        icon: BatteryHighIcon,
       },
     ],
   },
