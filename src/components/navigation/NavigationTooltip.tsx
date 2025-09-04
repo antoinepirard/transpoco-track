@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
 
 interface TooltipContent {
   title: string;
@@ -176,13 +177,21 @@ export function NavigationTooltip({
       </div>
       
       {/* Content */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <h3 className="text-sm font-semibold text-white">
           {content.title}
         </h3>
         <p className="text-xs text-gray-300 leading-relaxed">
           {content.description}
         </p>
+        <Button 
+          size="sm" 
+          variant="secondary"
+          className="w-full text-xs h-8 cursor-pointer"
+          onClick={() => console.log(`[Demo] Learn more about: ${content.title}`)}
+        >
+          Learn More
+        </Button>
       </div>
     </motion.div>
   );
