@@ -708,8 +708,29 @@ export function NavigationSidebarDemo({
         </div>
       </nav>
 
+      {/* Promotional Banner */}
+      {/* <div className="p-4 pb-2 relative z-10">
+        <div className="bg-gradient-to-r from-gray-950 to-gray-900 rounded-lg p-4 text-white relative shadow-md">
+          {/* Background decoration */}
+          {/* <div className="absolute inset-0 bg-gradient-to-br from-gray-600/20 to-gray-600/20 rounded-lg" />
+          
+          {/* Try 30 days tag - positioned absolutely on the edge */}
+          {/* <div className="absolute -top-4 -left-2 ml-6 bg-green-400 text-green-900 text-xs font-semibold px-2 py-1 rounded-md z-20">
+            Try 30 days
+          </div>
+          
+          {/* Content */}
+          {/* <div className="relative z-10">
+            <h3 className="text-base font-bold mb-0">Drive with Safely</h3>
+            <p className="text-sm text-indigo-100 opacity-90">
+              Cut risk & save on insurance
+            </p>
+          </div>
+        </div>
+      </div> */}
+
       {/* Settings Button */}
-      <div className="p-4">
+      <div className="p-4 pt-0">
         <Button
           onClick={toggleSettingsNav}
           variant={showSettingsNav ? "default" : "outline"}
