@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import {
   CaretUpIcon,
   CaretDownIcon,
@@ -211,14 +212,16 @@ export function NavigationItemDemo({
       </button>
       
       {/* Tooltip for locked items */}
-      {isLocked && tooltipContent && (
-        <NavigationTooltip
-          isVisible={showTooltip}
-          content={tooltipContent}
-          anchorRect={tooltipAnchor}
-          onClose={() => setShowTooltip(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isLocked && tooltipContent && showTooltip && (
+          <NavigationTooltip
+            isVisible={showTooltip}
+            content={tooltipContent}
+            anchorRect={tooltipAnchor}
+            onClose={() => setShowTooltip(false)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
