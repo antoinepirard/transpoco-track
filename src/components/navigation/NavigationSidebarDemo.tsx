@@ -45,11 +45,19 @@ import {
   CloudArrowDownIcon,
   UserPlusIcon,
   ArrowLeftIcon,
+  ArrowSquareOutIcon,
+  QuestionIcon,
 } from '@phosphor-icons/react';
 import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
 import { NavigationTooltip } from './NavigationTooltip';
 import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface NavigationItem {
   id: string;
@@ -729,12 +737,60 @@ export function NavigationSidebarDemo({
         </div>
       </div> */}
 
+      {/* Feedback Button */}
+      <div className="px-4 pb-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="secondary"
+              size="default"
+              className="w-full"
+            >
+              <QuestionIcon />
+              Feedback
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-64">
+            <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+              <div className="flex items-center justify-between w-full">
+                <span>Get in Touch</span>
+                <ArrowSquareOutIcon className="w-4 h-4" />
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+              <div className="flex items-center justify-between w-full">
+                <span>Terms & Conditions + Privacy Policy</span>
+                <ArrowSquareOutIcon className="w-4 h-4" />
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+              <div className="flex items-center justify-between w-full">
+                <span>Knowledge Base</span>
+                <ArrowSquareOutIcon className="w-4 h-4" />
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+              <div className="flex items-center justify-between w-full">
+                <span>User Manual</span>
+                <ArrowSquareOutIcon className="w-4 h-4" />
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+              <div className="flex items-center justify-between w-full">
+                <span>Whats New?</span>
+                <ArrowSquareOutIcon className="w-4 h-4" />
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       {/* Settings Button */}
       <div className="p-4 pt-0">
         <Button
           onClick={toggleSettingsNav}
           variant={showSettingsNav ? "default" : "outline"}
-          size="lg"
+          size="default"
           className="w-full"
         >
           {showSettingsNav ? (
