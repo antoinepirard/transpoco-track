@@ -345,16 +345,18 @@ export function NavigationSidebarDemo({
                   className={`bg-white rounded-lg shadow-lg border border-gray-200 p-1 mt-2 transition-all duration-200 ease-out ${menuOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
                 >
                   <Menu.Item
-                    className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer transition-colors duration-150"
+                    className="flex flex-col items-start px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer transition-colors duration-150"
                     onClick={() => setSelectedBrand('transpoco')}
                   >
-                    Transpoco
+                    <span className="font-medium">Transpoco</span>
+                    <span className="text-xs text-gray-500">Fleet management & tracking</span>
                   </Menu.Item>
                   <Menu.Item
-                    className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer transition-colors duration-150"
+                    className="flex flex-col items-start px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer transition-colors duration-150"
                     onClick={() => setSelectedBrand('safely')}
                   >
-                    Safely
+                    <span className="font-medium">Safely</span>
+                    <span className="text-xs text-gray-500">AI-powered safety insights</span>
                   </Menu.Item>
                 </Menu.Popup>
               </Menu.Positioner>
