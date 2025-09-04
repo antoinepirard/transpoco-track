@@ -4,6 +4,7 @@ import React from 'react';
 import {
   CaretUpIcon,
   CaretDownIcon,
+  LockIcon,
 } from '@phosphor-icons/react';
 
 interface NavigationItem {
@@ -61,7 +62,7 @@ export function NavigationItemDemo({
     if (isChild) {
       const childPadding = 'py-1.5 pr-2 pl-6';
       if (isLocked) {
-        return `${baseClasses} ${childPadding} text-gray-400 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-500`;
+        return `${baseClasses} ${childPadding} text-gray-600 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-900`;
       }
       if (isActive) {
         return `${baseClasses} ${childPadding} bg-gray-100 text-gray-700`;
@@ -72,7 +73,7 @@ export function NavigationItemDemo({
     // Parent item styling
     const parentPadding = 'px-2 py-1.5';
     if (isLocked) {
-      return `${baseClasses} ${parentPadding} text-gray-400 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-500`;
+      return `${baseClasses} ${parentPadding} text-gray-700 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-900`;
     }
     if (isActive) {
       return `${baseClasses} ${parentPadding} bg-gray-100 text-gray-700`;
@@ -84,7 +85,7 @@ export function NavigationItemDemo({
     const baseClasses = `mr-3 h-5 w-5 flex-shrink-0 transition-immediate`;
     
     if (isLocked) {
-      return `${baseClasses} text-gray-300 group-hover:hover-only:text-gray-400`;
+      return `${baseClasses} text-gray-400 group-hover:hover-only:text-gray-500`;
     }
     if (isActive) {
       return `${baseClasses} text-blue-500`;
@@ -125,14 +126,12 @@ export function NavigationItemDemo({
         {item.label}
       </span>
       
-      {/* Learn tag for locked items */}
+      {/* Lock icon for locked items */}
       {isLocked && (
-        <span 
-          className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-50 text-gray-400 flex-shrink-0"
-          aria-label="Premium feature - click to learn more"
-        >
-          learn
-        </span>
+        <LockIcon 
+          className="ml-2 h-4 w-4 text-gray-400 flex-shrink-0"
+          aria-hidden="true"
+        />
       )}
       
       {/* Badge */}
