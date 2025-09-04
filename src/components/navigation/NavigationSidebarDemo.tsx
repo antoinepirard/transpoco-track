@@ -95,16 +95,6 @@ const navigationData: NavigationSection[] = [
         href: '/',
       },
       {
-        id: 'dashboard',
-        label: 'Dashboard',
-        icon: SquaresFourIcon,
-      },
-      {
-        id: 'scheduled-reports',
-        label: 'Scheduled Reports',
-        icon: ClockIcon,
-      },
-      {
         id: 'reports',
         label: 'Reports',
         icon: ChartBarIcon,
@@ -172,14 +162,31 @@ const navigationData: NavigationSection[] = [
         ],
       },
       {
-        id: 'locations',
-        label: 'Locations',
-        icon: MapPinIcon,
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: SquaresFourIcon,
       },
       {
-        id: 'routes',
-        label: 'Routes',
-        icon: PathIcon,
+        id: 'scheduled-reports',
+        label: 'Scheduled Reports',
+        icon: ClockIcon,
+      },
+      {
+        id: 'setup',
+        label: 'Setup',
+        icon: GearIcon,
+        children: [
+          {
+            id: 'locations',
+            label: 'Locations',
+            icon: MapPinIcon,
+          },
+          {
+            id: 'routes',
+            label: 'Routes',
+            icon: PathIcon,
+          },
+        ],
       },
     ],
   },
