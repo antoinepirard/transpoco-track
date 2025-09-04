@@ -647,14 +647,14 @@ export function NavigationSidebarDemo({
         onMouseEnter={handleNavigationMouseEnter}
         onMouseLeave={handleNavigationMouseLeave}
       >
-        <div className="transition-all duration-200 ease-in-out">
+        <div>
           {showSettingsNav && (
-            <div className="px-4 mb-4 animate-in fade-in-0 slide-in-from-top-2 duration-200">
-              <div className="flex items-center space-x-2 text-blue-800">
+            <div className="px-4 mb-4">
+              <div className="flex items-center space-x-2 text-gray-800">
                 <GearIcon className="w-4 h-4" />
                 <h2 className="text-base font-semibold">Settings</h2>
               </div>
-              <div className="mt-1 h-px bg-gradient-to-r from-blue-200 to-transparent" />
+              <div className="mt-1 h-px bg-gray-100" />
             </div>
           )}
           
