@@ -22,7 +22,6 @@ import {
   CameraIcon,
   RobotIcon,
   ShieldIcon,
-  CaretUpIcon,
   CaretDownIcon,
   GearIcon,
   TruckIcon,
@@ -47,6 +46,7 @@ import {
   UserPlusIcon,
   ArrowLeftIcon,
 } from '@phosphor-icons/react';
+import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
 
 interface NavigationItem {
   id: string;
@@ -394,6 +394,9 @@ export function NavigationSidebarDemo({
   // Measure trigger width to match popup width
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [menuWidth, setMenuWidth] = useState<number>(0);
+  
+  // Demo locked items (premium features)
+  const lockedItemIds = ['bikly', 'fleet-ai', 'cost-management', 'fuel-electric'];
 
   useLayoutEffect(() => {
     const update = () => {
@@ -448,6 +451,11 @@ export function NavigationSidebarDemo({
     },
     []
   );
+
+  const handleLearnMore = useCallback((item: NavigationItem) => {
+    console.log(`[Demo] Learn more about premium feature: "${item.label}"`);
+    // In a real app, this would open a modal or navigate to a pricing page
+  }, []);
 
 
   return (
@@ -538,123 +546,35 @@ export function NavigationSidebarDemo({
             )}
             <div className="space-y-0.5 px-2">
               {section.items.map((item) => {
-                const IconComponent = item.icon;
                 const currentActiveId = showSettingsNav ? settingsActiveItemId : activeItemId;
                 const isActive = currentActiveId === item.id;
                 const isExpanded = isItemExpanded(item.id);
+                const isLocked = lockedItemIds.includes(item.id);
+                
+                const handleItemClick = (clickedItem: NavigationItem) => {
+                  if (showSettingsNav) {
+                    setSettingsActiveItemId(clickedItem.id);
+                  } else {
+                    setActiveItemId(clickedItem.id);
+                  }
+                  onActiveItemChange?.({ id: clickedItem.id, label: clickedItem.label });
+                  console.log(`[Demo] Active item set to "${clickedItem.label}"`);
+                };
+                
                 return (
-                  <div key={item.id}>
-                    <button
-                      data-nav-item={item.id}
-                      onClick={() => {
-                        if (item.children) {
-                          toggleExpandedItem(item.id);
-                        } else {
-                          if (showSettingsNav) {
-                            setSettingsActiveItemId(item.id);
-                          } else {
-                            setActiveItemId(item.id);
-                          }
-                          onActiveItemChange?.({ id: item.id, label: item.label });
-                          console.log(`[Demo] Active item set to "${item.label}"`);
-                        }
-                      }}
-                      onKeyDown={(e) => handleKeyDown(e, item.id)}
-                      className={`w-full flex items-center px-2 py-1.5 text-sm font-medium rounded-md transition-immediate group focus-ring cursor-pointer ${
-                        isActive
-                          ? 'bg-gray-100 text-gray-700'
-                          : 'text-gray-700 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-900'
-                      }`}
-                      aria-current={isActive ? 'page' : undefined}
-                      role="menuitem"
-                    >
-                      <IconComponent
-                        className={`mr-3 h-5 w-5 flex-shrink-0 transition-immediate ${
-                          isActive
-                            ? 'text-blue-500'
-                            : 'text-gray-400 group-hover:hover-only:text-gray-500'
-                        }`}
-                        aria-hidden="true"
-                      />
-                      <span className="flex-1 text-left truncate">
-                        {item.label}
-                      </span>
-                      {item.badge && (
-                        <span
-                          className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 tabular-nums"
-                          aria-label={`${item.badge} notifications`}
-                        >
-                          {item.badge}
-                        </span>
-                      )}
-                      {item.children && (
-                        <>
-                          {isExpanded ? (
-                            <CaretUpIcon
-                              className="ml-2 h-4 w-4 text-gray-400 flex-shrink-0 transition-all duration-200"
-                              aria-hidden="true"
-                            />
-                          ) : (
-                            <CaretDownIcon
-                              className="ml-2 h-4 w-4 text-gray-400 flex-shrink-0 transition-all duration-200"
-                              aria-hidden="true"
-                            />
-                          )}
-                        </>
-                      )}
-                    </button>
-                    {item.children && (
-                      <div 
-                        className={`ml-4 overflow-hidden transition-all duration-200 ease-out ${
-                          isExpanded ? 'max-h-96 mt-1' : 'max-h-0'
-                        }`}
-                      >
-                        <div className="space-y-0.5 relative">
-                          {/* Vertical line indicator */}
-                          <div className="absolute left-2 top-0 bottom-0 w-px bg-gray-200" />
-                          {item.children.map((childItem) => {
-                            const currentChildActiveId = showSettingsNav ? settingsActiveItemId : activeItemId;
-                            const isChildActive = currentChildActiveId === childItem.id;
-                            return (
-                              <button
-                                key={childItem.id}
-                                data-nav-item={childItem.id}
-                                onClick={() => {
-                                  if (showSettingsNav) {
-                                    setSettingsActiveItemId(childItem.id);
-                                  } else {
-                                    setActiveItemId(childItem.id);
-                                  }
-                                  onActiveItemChange?.({ id: childItem.id, label: childItem.label });
-                                  console.log(`[Demo] Active item set to "${childItem.label}"`);
-                                }}
-                                onKeyDown={(e) => handleKeyDown(e, childItem.id)}
-                                className={`w-full flex items-center py-1.5 pr-2 pl-6 text-sm font-medium rounded-md transition-immediate group focus-ring relative cursor-pointer ${
-                                  isChildActive
-                                    ? 'bg-gray-100 text-gray-700'
-                                    : 'text-gray-600 hover:hover-only:bg-gray-50 hover:hover-only:text-gray-900'
-                                }`}
-                                aria-current={isChildActive ? 'page' : undefined}
-                                role="menuitem"
-                              >
-                                <span className="flex-1 text-left truncate">
-                                  {childItem.label}
-                                </span>
-                                {childItem.badge && (
-                                  <span
-                                    className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 tabular-nums"
-                                    aria-label={`${childItem.badge} notifications`}
-                                  >
-                                    {childItem.badge}
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <NavigationItemGroupDemo
+                    key={item.id}
+                    item={item}
+                    isActive={isActive}
+                    isExpanded={isExpanded}
+                    isLocked={isLocked}
+                    activeItemId={currentActiveId}
+                    lockedItemIds={lockedItemIds}
+                    onItemClick={handleItemClick}
+                    onExpandToggle={toggleExpandedItem}
+                    onLearnMore={handleLearnMore}
+                    onKeyDown={handleKeyDown}
+                  />
                 );
               })}
             </div>
