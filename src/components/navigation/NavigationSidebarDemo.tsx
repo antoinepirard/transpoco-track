@@ -21,8 +21,8 @@ import {
   CameraIcon,
   RobotIcon,
   ShieldIcon,
-  CaretRightIcon,
-  CaretLeftIcon,
+  CaretUpIcon,
+  CaretDownIcon,
   GearIcon,
   TruckIcon,
   ChartLineIcon,
@@ -50,8 +50,6 @@ interface NavigationSection {
 }
 
 interface NavigationSidebarDemoProps {
-  isCollapsed?: boolean;
-  onToggleCollapse?: () => void;
   onActiveItemChange?: (item: {id: string, label: string}) => void;
 }
 
@@ -237,8 +235,6 @@ const navigationData: NavigationSection[] = [
 ];
 
 export function NavigationSidebarDemo({
-  isCollapsed = false,
-  onToggleCollapse,
   onActiveItemChange,
 }: NavigationSidebarDemoProps) {
   const navRef = useRef<HTMLElement>(null);
@@ -272,39 +268,29 @@ export function NavigationSidebarDemo({
     []
   );
 
-  if (isCollapsed) {
-    return (
-      <div className="w-12 bg-white shadow-lg border-r border-gray-200 flex flex-col items-center py-4">
-        <button
-          onClick={onToggleCollapse}
-          className="p-2 hover:hover-only:bg-gray-100 rounded-lg transition-immediate focus-ring"
-          title="Expand navigation"
-          aria-label="Expand navigation sidebar"
-        >
-          <CaretRightIcon className="w-5 h-5 text-gray-600" />
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="w-68 bg-white shadow-lg border-r border-gray-200 flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-black rounded-md flex items-center justify-center">
-            <span className="text-white text-sm font-bold">T</span>
+      <div className="p-4">
+        <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+          <div className="flex items-center flex-1">
+            <Image
+              src="/transpoco-logo.svg"
+              alt="Transpoco logo"
+              width={111}
+              height={26}
+              className="h-6 w-auto"
+            />
           </div>
-          <span className="text-lg font-semibold text-gray-900">Transpoco</span>
+          <button
+            className="p-1 hover:hover-only:bg-gray-100 rounded transition-immediate focus-ring"
+            title="Toggle navigation"
+            aria-label="Toggle navigation"
+          >
+            <CaretDownIcon className="w-4 h-4 text-gray-600" />
+          </button>
         </div>
-        <button
-          onClick={onToggleCollapse}
-          className="p-1 hover:hover-only:bg-gray-100 rounded transition-immediate focus-ring"
-          title="Collapse navigation"
-          aria-label="Collapse navigation sidebar"
-        >
-          <CaretLeftIcon className="w-4 h-4 text-gray-600" />
-        </button>
       </div>
 
       {/* Navigation */}
@@ -370,12 +356,19 @@ export function NavigationSidebarDemo({
                         </span>
                       )}
                       {item.children && (
-                        <CaretRightIcon
-                          className={`ml-2 h-4 w-4 text-gray-400 flex-shrink-0 transition-all duration-200 ${
-                            isExpanded ? 'rotate-90' : ''
-                          }`}
-                          aria-hidden="true"
-                        />
+                        <>
+                          {isExpanded ? (
+                            <CaretUpIcon
+                              className="ml-2 h-4 w-4 text-gray-400 flex-shrink-0 transition-all duration-200"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <CaretDownIcon
+                              className="ml-2 h-4 w-4 text-gray-400 flex-shrink-0 transition-all duration-200"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </>
                       )}
                     </button>
                     {item.children && (
@@ -433,8 +426,9 @@ export function NavigationSidebarDemo({
       </nav>
 
       {/* User Profile */}
-      <div className="border-t border-gray-200 p-4">
-        <div className="flex items-center space-x-3">
+      <div className="p-4">
+        <div className="border border-gray-200 rounded-lg p-3 hover:hover-only:bg-gray-100 transition-immediate group cursor-pointer">
+          <div className="flex items-center space-x-3">
           <Image
             className="h-10 w-10 rounded-full object-cover"
             src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
@@ -453,8 +447,9 @@ export function NavigationSidebarDemo({
             aria-label="User settings"
             title="Settings"
           >
-            <GearIcon className="w-4 h-4 text-gray-400" aria-hidden="true" />
+            <GearIcon className="w-4 h-4 text-gray-400 group-hover:hover-only:text-gray-600 transition-immediate" aria-hidden="true" />
           </button>
+          </div>
         </div>
       </div>
     </div>
