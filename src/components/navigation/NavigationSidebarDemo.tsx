@@ -252,7 +252,7 @@ const navigationData: NavigationSection[] = [
       },
       {
         id: 'cost-management',
-        label: 'Cost Management (TCO)',
+        label: 'Cost Management',
         icon: CurrencyDollarIcon,
       },
       {
