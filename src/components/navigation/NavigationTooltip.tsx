@@ -126,16 +126,6 @@ export function NavigationTooltip({
         </div>
       </div>
       
-      {/* Tooltip arrow */}
-      <div 
-        className="absolute w-3 h-3 bg-gray-900 border-l border-b border-gray-700 transform rotate-45"
-        style={{
-          left: left > anchorRect.right ? '100%' : '-6px',
-          top: '50%',
-          marginTop: '-6px',
-          marginLeft: left > anchorRect.right ? '-6px' : '0',
-        }}
-      />
     </div>
   );
 
