@@ -3,17 +3,13 @@
 import { useState } from 'react';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import { NavigationSidebarDemo } from '@/components/navigation/NavigationSidebarDemo';
-import { useNavigation } from '@/contexts/NavigationContext';
 
 function NavigationDemoContent() {
-  const { sidebarCollapsed, toggleSidebar } = useNavigation();
   const [activeItem, setActiveItem] = useState<{id: string, label: string} | null>({ id: 'live-map', label: 'Live map' });
 
   return (
     <div className="w-full h-screen flex">
       <NavigationSidebarDemo
-        isCollapsed={sidebarCollapsed}
-        onToggleCollapse={toggleSidebar}
         onActiveItemChange={setActiveItem}
       />
       <main className="flex-1 overflow-hidden h-full min-h-0">

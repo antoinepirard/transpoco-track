@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useLayoutEffect } from 'react';
 import Image from 'next/image';
+import { Menu } from '@base-ui-components/react';
 import { useNavigation } from '@/contexts/NavigationContext';
 import {
   BellIcon,
@@ -241,6 +242,42 @@ export function NavigationSidebarDemo({
   const { toggleExpandedItem, isItemExpanded } = useNavigation();
   // Local active state just for demo purposes (no routing)
   const [activeItemId, setActiveItemId] = useState<string>('live-map');
+  // Brand selection state
+  const [selectedBrand, setSelectedBrand] = useState<'transpoco' | 'safely'>('transpoco');
+  // Menu hover state
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Measure trigger width to match popup width
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const [menuWidth, setMenuWidth] = useState<number>(0);
+
+  useLayoutEffect(() => {
+    const update = () => {
+      const w = triggerRef.current?.getBoundingClientRect().width ?? 0;
+      setMenuWidth(w);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  const handleMenuEnter = useCallback(() => {
+    if (menuTimeoutRef.current) {
+      clearTimeout(menuTimeoutRef.current);
+    }
+    menuTimeoutRef.current = setTimeout(() => {
+      setMenuOpen(true);
+    }, 100);
+  }, []);
+
+  const handleMenuLeave = useCallback(() => {
+    if (menuTimeoutRef.current) {
+      clearTimeout(menuTimeoutRef.current);
+    }
+    menuTimeoutRef.current = setTimeout(() => {
+      setMenuOpen(false);
+    }, 150);
+  }, []);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent, itemId: string) => {
@@ -273,23 +310,56 @@ export function NavigationSidebarDemo({
     <div className="w-68 bg-white shadow-lg border-r border-gray-200 flex flex-col h-full">
       {/* Header */}
       <div className="p-4">
-        <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
-          <div className="flex items-center flex-1">
-            <Image
-              src="/transpoco-logo.svg"
-              alt="Transpoco logo"
-              width={111}
-              height={26}
-              className="h-6 w-auto"
-            />
-          </div>
-          <button
-            className="p-1 hover:hover-only:bg-gray-100 rounded transition-immediate focus-ring"
-            title="Toggle navigation"
-            aria-label="Toggle navigation"
-          >
-            <CaretDownIcon className="w-4 h-4 text-gray-600" />
-          </button>
+        <div 
+          onMouseEnter={handleMenuEnter}
+          onMouseLeave={handleMenuLeave}
+        >
+          <Menu.Root open={menuOpen} onOpenChange={setMenuOpen}>
+            <Menu.Trigger
+              ref={triggerRef}
+              className="w-full bg-gray-50 rounded-lg p-3 flex items-center justify-between cursor-pointer hover:hover-only:bg-gray-100 transition-immediate"
+            >
+              <div className="flex items-center flex-1">
+                <Image
+                  src={selectedBrand === 'transpoco' ? '/transpoco-logo.svg' : '/safely-logo.svg'}
+                  alt={`${selectedBrand === 'transpoco' ? 'Transpoco' : 'Safely'} logo`}
+                  width={111}
+                  height={26}
+                  className="h-6 w-auto"
+                />
+              </div>
+              <div className="p-1">
+                <CaretDownIcon className="w-4 h-4 text-gray-600" />
+              </div>
+            </Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner
+                onMouseEnter={handleMenuEnter}
+                onMouseLeave={handleMenuLeave}
+                className="z-50"
+              >
+                <Menu.Popup
+                  onMouseEnter={handleMenuEnter}
+                  onMouseLeave={handleMenuLeave}
+                  style={{ width: menuWidth || undefined }}
+                  className={`bg-white rounded-lg shadow-lg border border-gray-200 p-1 mt-2 transition-all duration-200 ease-out ${menuOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
+                >
+                  <Menu.Item
+                    className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer transition-colors duration-150"
+                    onClick={() => setSelectedBrand('transpoco')}
+                  >
+                    Transpoco
+                  </Menu.Item>
+                  <Menu.Item
+                    className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer transition-colors duration-150"
+                    onClick={() => setSelectedBrand('safely')}
+                  >
+                    Safely
+                  </Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
         </div>
       </div>
 
