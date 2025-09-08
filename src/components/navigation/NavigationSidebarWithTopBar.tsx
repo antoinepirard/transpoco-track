@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useRef, useState, useMemo } from 'react';
-import Image from 'next/image';
 import { useNavigation } from '@/contexts/NavigationContext';
 import {
   BellIcon,
@@ -20,7 +19,6 @@ import {
   SteeringWheelIcon,
   CameraIcon,
   ShieldIcon,
-  CaretDownIcon,
   SlidersIcon,
   TruckIcon,
   ChartLineIcon,
@@ -42,6 +40,7 @@ import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
 import { NavigationTooltip } from './NavigationTooltip';
 import { SettingsNavigationMenu } from './SettingsNavigationMenu';
 import { UserAvatarDropdown } from './UserAvatarDropdown';
+import { BrandSwitcher } from './BrandSwitcher';
 import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
@@ -437,19 +436,36 @@ export function NavigationSidebarWithTopBar({
     <div className="w-full h-screen flex flex-col">
       {/* Top Bar */}
       <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4">
-        {/* Left side - Brand/Logo */}
+        {/* Left side - Brand Switcher */}
         <div className="flex items-center space-x-3">
-          <Image
-            src={selectedBrand === 'transpoco' ? '/transpoco-logo.svg' : '/safely-logo.svg'}
-            alt={`${selectedBrand === 'transpoco' ? 'Transpoco' : 'Safely'} logo`}
-            width={111}
-            height={26}
-            className="h-7 w-auto"
+          <BrandSwitcher
+            selectedBrand={selectedBrand}
+            onBrandChange={setSelectedBrand}
           />
         </div>
 
-        {/* Right side - Notifications, Messages, Settings, User Avatar */}
+        {/* Right side - Settings, Messages, Notifications, User Avatar */}
         <div className="flex items-center space-x-1">
+          {/* Settings Navigation Menu */}
+          <SettingsNavigationMenu
+            onItemClick={(item) => {
+              setActiveItemId(''); // Clear main nav active state
+              setActiveSettingsItemId(item.id);
+              onActiveItemChange?.(item);
+            }}
+          />
+
+          {/* Divider */}
+          <div className="mx-4 h-6 w-px bg-gray-200"></div>
+
+          {/* Messages */}
+          <button
+            onClick={() => handleTopBarItemClick('messages')}
+            className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900"
+          >
+            <ChatCircleIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
+          </button>
+
           {/* Notifications */}
           <button
             onClick={() => handleTopBarItemClick('notifications')}
@@ -461,34 +477,18 @@ export function NavigationSidebarWithTopBar({
             </span>
           </button>
 
-          {/* Messages */}
-          <button
-            onClick={() => handleTopBarItemClick('messages')}
-            className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900"
-          >
-            <ChatCircleIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
-          </button>
-
-          {/* Settings Navigation Menu */}
-          <SettingsNavigationMenu
-            onItemClick={(item) => {
-              setActiveItemId(''); // Clear main nav active state
-              setActiveSettingsItemId(item.id);
-              onActiveItemChange?.(item);
-            }}
-          />
+          {/* Divider */}
+          <div className="mx-4 h-6 w-px bg-gray-200"></div>
 
           {/* User Avatar Dropdown */}
-          <div className="ml-3 pl-3 border-l border-gray-200">
-            <UserAvatarDropdown
-              userName="John Doe"
-              userEmail="john.doe@transpoco.com"
-              onLogout={() => {
-                console.log('[Demo] User logout initiated');
-                // Add logout logic here
-              }}
-            />
-          </div>
+          <UserAvatarDropdown
+            userName="John Doe"
+            userEmail="john.doe@transpoco.com"
+            onLogout={() => {
+              console.log('[Demo] User logout initiated');
+              // Add logout logic here
+            }}
+          />
         </div>
       </div>
 
