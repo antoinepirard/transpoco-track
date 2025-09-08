@@ -456,7 +456,7 @@ export function NavigationSidebarWithTopBar({
           />
 
           {/* Divider */}
-          <div className="mx-4 h-6 w-px bg-gray-200"></div>
+          <div className="mx-6 h-6 w-px bg-gray-200"></div>
 
           {/* Messages */}
           <button
@@ -478,7 +478,7 @@ export function NavigationSidebarWithTopBar({
           </button>
 
           {/* Divider */}
-          <div className="mx-4 h-6 w-px bg-gray-200"></div>
+          <div className="mx-6 h-6 w-px bg-gray-200"></div>
 
           {/* User Avatar Dropdown */}
           <UserAvatarDropdown
