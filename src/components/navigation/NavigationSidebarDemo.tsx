@@ -23,6 +23,7 @@ import {
   ShieldIcon,
   CaretDownIcon,
   GearIcon,
+  SlidersIcon,
   TruckIcon,
   ChartLineIcon,
   NavigationArrowIcon,
@@ -31,20 +32,8 @@ import {
   TargetIcon,
   CheckCircleIcon,
   WarningIcon,
-  UsersIcon,
-  UserCircleIcon,
-  ShieldCheckIcon,
-  ClockClockwiseIcon,
-  PlusIcon,
-  ReceiptIcon,
-  CreditCardIcon,
-  BookOpenIcon,
-  KeyIcon,
-  DownloadIcon,
-  CloudArrowDownIcon,
-  UserPlusIcon,
-  ArrowLeftIcon,
   QuestionIcon,
+  BookOpenIcon,
   EnvelopeIcon,
   FileTextIcon,
   NewspaperIcon,
@@ -53,6 +42,7 @@ import {
 } from '@phosphor-icons/react';
 import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
 import { NavigationTooltip } from './NavigationTooltip';
+import { SettingsOverlay } from './SettingsOverlay';
 import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
@@ -95,6 +85,11 @@ const navigationData: NavigationSection[] = [
         id: 'messages',
         label: 'Messages',
         icon: ChatCircleIcon,
+      },
+      {
+        id: 'settings',
+        label: 'Settings',
+        icon: GearIcon,
       },
     ],
   },
@@ -183,7 +178,7 @@ const navigationData: NavigationSection[] = [
       {
         id: 'setup',
         label: 'Setup',
-        icon: GearIcon,
+        icon: SlidersIcon,
         children: [
           {
             id: 'locations',
@@ -299,103 +294,6 @@ const navigationData: NavigationSection[] = [
   },
 ];
 
-const settingsNavigationData: NavigationSection[] = [
-  {
-    id: 'users-permissions',
-    title: 'Users & Permissions',
-    items: [
-      {
-        id: 'users',
-        label: 'Users',
-        icon: UsersIcon,
-      },
-      {
-        id: 'profiles',
-        label: 'Profiles',
-        icon: UserCircleIcon,
-      },
-      {
-        id: 'security-settings',
-        label: 'Security Settings',
-        icon: ShieldCheckIcon,
-      },
-    ],
-  },
-  {
-    id: 'company-details',
-    title: 'Company Details',
-    items: [
-      {
-        id: 'audit-logs',
-        label: 'Audit logs',
-        icon: ClockClockwiseIcon,
-      },
-      {
-        id: 'shift-time',
-        label: 'Shift Time',
-        icon: ClockIcon,
-      },
-    ],
-  },
-  {
-    id: 'orders-billing',
-    title: 'Orders & Billing',
-    items: [
-      {
-        id: 'add-new-vehicles',
-        label: 'Add New Vehicles',
-        icon: PlusIcon,
-      },
-      {
-        id: 'view-orders',
-        label: 'View Orders',
-        icon: ReceiptIcon,
-      },
-      {
-        id: 'subscriptions',
-        label: 'Subscriptions',
-        icon: CreditCardIcon,
-      },
-    ],
-  },
-  {
-    id: 'api-resources',
-    title: 'API Resources',
-    items: [
-      {
-        id: 'api-documentation',
-        label: 'API Documentation',
-        icon: BookOpenIcon,
-      },
-      {
-        id: 'request-api-access',
-        label: 'Request API Access',
-        icon: KeyIcon,
-      },
-    ],
-  },
-  {
-    id: 'import-wizard',
-    title: 'Import Wizard',
-    items: [
-      {
-        id: 'import-services',
-        label: 'Import Services',
-        icon: DownloadIcon,
-      },
-      {
-        id: 'import-drivers',
-        label: 'Import Drivers',
-        icon: UserPlusIcon,
-      },
-      {
-        id: 'import-purchases',
-        label: 'Import Purchases',
-        icon: CloudArrowDownIcon,
-      },
-    ],
-  },
-];
 
 export function NavigationSidebarDemo({
   onActiveItemChange,
@@ -404,7 +302,7 @@ export function NavigationSidebarDemo({
   const { toggleExpandedItem, isItemExpanded, showSettingsNav, toggleSettingsNav } = useNavigation();
   // Local active state just for demo purposes (no routing)
   const [activeItemId, setActiveItemId] = useState<string>('live-map');
-  const [settingsActiveItemId, setSettingsActiveItemId] = useState<string>('');
+  const [activeSettingsItemId, setActiveSettingsItemId] = useState<string>('');
   // Brand selection state
   const [selectedBrand, setSelectedBrand] = useState<'transpoco' | 'safely'>('transpoco');
   // Menu hover state
@@ -662,22 +560,12 @@ export function NavigationSidebarDemo({
         ref={navRef}
         className="flex-1 overflow-y-auto py-4 custom-scrollbar"
         role="navigation"
-        aria-label={showSettingsNav ? "Settings navigation" : "Main navigation"}
+        aria-label="Main navigation"
         onMouseEnter={handleNavigationMouseEnter}
         onMouseLeave={handleNavigationMouseLeave}
       >
         <div>
-          {showSettingsNav && (
-            <div className="px-4 mb-4">
-              <div className="flex items-center space-x-2 text-gray-800">
-                <GearIcon className="w-4 h-4" />
-                <h2 className="text-base font-semibold">Settings</h2>
-              </div>
-              <div className="mt-1 h-px bg-gray-100" />
-            </div>
-          )}
-          
-          {(showSettingsNav ? settingsNavigationData : navigationData).map((section) => (
+          {navigationData.map((section) => (
           <div key={section.id} className="mb-6">
             {section.title && (
               <div className="px-4 mb-2">
@@ -688,17 +576,23 @@ export function NavigationSidebarDemo({
             )}
             <div className="space-y-0.5 px-2">
               {section.items.map((item) => {
-                const currentActiveId = showSettingsNav ? settingsActiveItemId : activeItemId;
-                const isActive = currentActiveId === item.id;
+                const isActive = item.id === 'settings' ? false : (activeItemId === item.id && !activeSettingsItemId);
                 const isExpanded = isItemExpanded(item.id);
                 const isLocked = lockedItemIds.includes(item.id);
                 
                 const handleItemClick = (clickedItem: NavigationItem) => {
-                  if (showSettingsNav) {
-                    setSettingsActiveItemId(clickedItem.id);
-                  } else {
-                    setActiveItemId(clickedItem.id);
+                  if (clickedItem.id === 'settings') {
+                    toggleSettingsNav();
+                    return;
                   }
+                  
+                  // Close settings overlay if open when clicking other nav items
+                  if (showSettingsNav) {
+                    toggleSettingsNav();
+                  }
+                  
+                  setActiveItemId(clickedItem.id);
+                  setActiveSettingsItemId(''); // Clear settings active state
                   onActiveItemChange?.({ id: clickedItem.id, label: clickedItem.label });
                   console.log(`[Demo] Active item set to "${clickedItem.label}"`);
                 };
@@ -710,7 +604,7 @@ export function NavigationSidebarDemo({
                     isActive={isActive}
                     isExpanded={isExpanded}
                     isLocked={isLocked}
-                    activeItemId={currentActiveId}
+                    activeItemId={activeItemId}
                     lockedItemIds={lockedItemIds}
                     onItemClick={handleItemClick}
                     onExpandToggle={toggleExpandedItem}
@@ -786,27 +680,6 @@ export function NavigationSidebarDemo({
         </DropdownMenu>
       </div>
 
-      {/* Settings Button */}
-      <div className="p-4 pt-0">
-        <Button
-          onClick={toggleSettingsNav}
-          variant={showSettingsNav ? "default" : "outline"}
-          size="default"
-          className="w-full"
-        >
-          {showSettingsNav ? (
-            <>
-              <ArrowLeftIcon />
-              Back to Navigation
-            </>
-          ) : (
-            <>
-              <GearIcon />
-              Settings
-            </>
-          )}
-        </Button>
-      </div>
 
       {/* Global tooltip for locked items */}
       <AnimatePresence>
@@ -822,6 +695,18 @@ export function NavigationSidebarDemo({
           />
         )}
       </AnimatePresence>
+
+      {/* Settings Overlay */}
+      <SettingsOverlay
+        isOpen={showSettingsNav}
+        onClose={toggleSettingsNav}
+        activeItemId={activeSettingsItemId}
+        onItemClick={(item) => {
+          setActiveItemId(''); // Clear main nav active state
+          setActiveSettingsItemId(item.id);
+          onActiveItemChange?.(item);
+        }}
+      />
     </div>
   );
 }

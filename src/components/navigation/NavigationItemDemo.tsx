@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import {
   CaretUpIcon,
   CaretDownIcon,
+  CaretRightIcon,
   LockIcon,
   ArrowSquareOutIcon,
 } from '@phosphor-icons/react';
@@ -196,6 +197,14 @@ export function NavigationItemDemo({
             />
           )}
         </>
+      )}
+      
+      {/* Right caret for settings item to indicate sidebar expansion */}
+      {item.id === 'settings' && !isLocked && (
+        <CaretRightIcon
+          className={getCaretClassName()}
+          aria-hidden="true"
+        />
       )}
       </button>
       
