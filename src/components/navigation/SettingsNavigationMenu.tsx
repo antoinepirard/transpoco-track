@@ -53,14 +53,12 @@ const settingsMenuData = [
     ],
   },
   {
-    id: 'garage',
-    title: 'Garage',
+    id: 'orders-billing',
+    title: 'Orders & Billing',
     items: [
-      { id: 'vehicles', label: 'Vehicles', icon: TruckIcon },
-      { id: 'vehicle-groups', label: 'Vehicle Groups', icon: ListIcon },
-      { id: 'drivers', label: 'Drivers', icon: UsersIcon },
-      { id: 'driver-groups', label: 'Driver Groups', icon: UsersIcon },
-      { id: 'vehicle-driver-groups', label: 'Vehicle Driver Groups', icon: UsersIcon },
+      { id: 'add-new-vehicles', label: 'Add New Vehicles', icon: PlusIcon },
+      { id: 'view-orders', label: 'View Orders', icon: ReceiptIcon },
+      { id: 'subscriptions', label: 'Subscriptions', icon: CreditCardIcon },
     ],
   },
   {
@@ -69,15 +67,6 @@ const settingsMenuData = [
     items: [
       { id: 'manage-alerts', label: 'Manage Alerts', icon: WarningIcon },
       { id: 'alerts-log', label: 'Alerts Log', icon: ListIcon },
-    ],
-  },
-  {
-    id: 'orders-billing',
-    title: 'Orders & Billing',
-    items: [
-      { id: 'add-new-vehicles', label: 'Add New Vehicles', icon: PlusIcon },
-      { id: 'view-orders', label: 'View Orders', icon: ReceiptIcon },
-      { id: 'subscriptions', label: 'Subscriptions', icon: CreditCardIcon },
     ],
   },
   {
@@ -97,6 +86,17 @@ const settingsMenuData = [
       { id: 'import-purchases', label: 'Import Purchases', icon: CloudArrowDownIcon },
     ],
   },
+  {
+    id: 'garage',
+    title: 'Garage',
+    items: [
+      { id: 'vehicles', label: 'Vehicles', icon: TruckIcon },
+      { id: 'vehicle-groups', label: 'Vehicle Groups', icon: ListIcon },
+      { id: 'drivers', label: 'Drivers', icon: UsersIcon },
+      { id: 'driver-groups', label: 'Driver Groups', icon: UsersIcon },
+      { id: 'vehicle-driver-groups', label: 'Vehicle Driver Groups', icon: UsersIcon },
+    ],
+  },
 ];
 
 export function SettingsNavigationMenu({ onItemClick }: SettingsNavigationMenuProps) {
@@ -114,31 +114,34 @@ export function SettingsNavigationMenu({ onItemClick }: SettingsNavigationMenuPr
       <DropdownMenuContent 
         align="end" 
         side="bottom"
-        className="w-[320px] max-h-[80vh] overflow-y-auto"
+        className="w-[600px] max-h-[80vh] overflow-y-auto p-0"
         collisionPadding={10}
         avoidCollisions={true}
       >
-        {settingsMenuData.map((section, sectionIndex) => (
-          <div key={section.id}>
-            {sectionIndex > 0 && <DropdownMenuSeparator />}
-            <DropdownMenuLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {section.title}
-            </DropdownMenuLabel>
-            {section.items.map((item) => {
-              const Icon = item.icon;
-              return (
-                <DropdownMenuItem
-                  key={item.id}
-                  className="flex items-center gap-3 cursor-pointer"
-                  onClick={() => handleItemClick({ id: item.id, label: item.label })}
-                >
-                  <Icon className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm">{item.label}</span>
-                </DropdownMenuItem>
-              );
-            })}
-          </div>
-        ))}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4 p-4">
+          {settingsMenuData.map((section) => (
+            <div key={section.id} className="space-y-3">
+              <DropdownMenuLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider border-b pb-2">
+                {section.title}
+              </DropdownMenuLabel>
+              <div className="space-y-1">
+                {section.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <DropdownMenuItem
+                      key={item.id}
+                      className="flex items-center gap-3 cursor-pointer rounded-md p-2"
+                      onClick={() => handleItemClick({ id: item.id, label: item.label })}
+                    >
+                      <Icon className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      <span className="text-sm">{item.label}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
