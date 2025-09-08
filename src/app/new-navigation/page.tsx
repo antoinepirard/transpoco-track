@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import { NavigationSidebarDemo } from '@/components/navigation/NavigationSidebarDemo';
 import { NavigationSidebarWithTopBar } from '@/components/navigation/NavigationSidebarWithTopBar';
+import { NavigationSidebarWithDualTopBar } from '@/components/navigation/NavigationSidebarWithDualTopBar';
 
 // Define navigation variants
 interface NavigationVariant {
@@ -26,7 +27,12 @@ const navigationVariants: NavigationVariant[] = [
     description: 'Sidebar navigation with top bar containing settings, messages, and notifications',
     component: NavigationSidebarWithTopBar,
   },
-  // Future variants will be added here
+  {
+    id: 'sidebar-with-dual-topbar',
+    name: 'Sidebar with Dual Top Bar',
+    description: 'Main sidebar with primary top bar for categories and secondary top bar for sub-items',
+    component: NavigationSidebarWithDualTopBar,
+  },
 ];
 
 function NavigationDemoContent() {

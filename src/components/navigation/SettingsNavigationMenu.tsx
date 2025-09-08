@@ -73,8 +73,8 @@ const settingsMenuData = [
     id: 'api-resources',
     title: 'API Resources',
     items: [
-      { id: 'api-documentation', label: 'API Documentation', icon: BookOpenIcon },
-      { id: 'request-api-access', label: 'Request API Access', icon: KeyIcon },
+      { id: 'api-documentation', label: 'API Docs', icon: BookOpenIcon },
+      { id: 'request-api-access', label: 'API Access', icon: KeyIcon },
     ],
   },
   {
@@ -130,7 +130,7 @@ export function SettingsNavigationMenu({ onItemClick }: SettingsNavigationMenuPr
                   return (
                     <DropdownMenuItem
                       key={item.id}
-                      className="flex items-center gap-3 cursor-pointer rounded-md p-2"
+                      className="flex items-center gap-3 cursor-pointer"
                       onClick={() => handleItemClick({ id: item.id, label: item.label })}
                     >
                       <Icon className="h-4 w-4 text-gray-400 flex-shrink-0" />
