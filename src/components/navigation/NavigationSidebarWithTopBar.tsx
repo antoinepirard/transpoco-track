@@ -41,6 +41,7 @@ import {
 import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
 import { NavigationTooltip } from './NavigationTooltip';
 import { SettingsNavigationMenu } from './SettingsNavigationMenu';
+import { UserAvatarDropdown } from './UserAvatarDropdown';
 import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
@@ -447,7 +448,7 @@ export function NavigationSidebarWithTopBar({
           />
         </div>
 
-        {/* Right side - Settings, Messages, Notifications */}
+        {/* Right side - Notifications, Messages, Settings, User Avatar */}
         <div className="flex items-center space-x-1">
           {/* Notifications */}
           <button
@@ -476,6 +477,18 @@ export function NavigationSidebarWithTopBar({
               onActiveItemChange?.(item);
             }}
           />
+
+          {/* User Avatar Dropdown */}
+          <div className="ml-3 pl-3 border-l border-gray-200">
+            <UserAvatarDropdown
+              userName="John Doe"
+              userEmail="john.doe@transpoco.com"
+              onLogout={() => {
+                console.log('[Demo] User logout initiated');
+                // Add logout logic here
+              }}
+            />
+          </div>
         </div>
       </div>
 
