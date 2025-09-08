@@ -238,19 +238,10 @@ export function SettingsOverlayTopBar({ isOpen, onClose, activeItemId = '', onIt
 
   return (
     <>
-      {/* Light overlay and backdrop on content area only - positioned for top bar layout */}
-      <div
-        className={`absolute top-0 right-0 bottom-0 bg-gray-400/50 z-40 transition-opacity duration-200 ease-out ${
-          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
-        style={{ left: 'calc(17rem)' }} // Only sidebar width (no second sidebar in this variant)
-        onClick={onClose}
-      />
-
-      {/* Settings Overlay - positioned for top bar layout */}
+      {/* Settings Sidebar - positioned as a proper sidebar */}
       <div 
-        className={`absolute top-0 left-68 bottom-0 w-68 bg-white z-50 flex flex-col transition-opacity duration-200 ease-out ring-r ring-gray-300/30 ${
-          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        className={`absolute top-0 left-0 bottom-0 w-68 bg-white z-50 flex flex-col transition-transform duration-200 ease-out border-r border-gray-200 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{ 
           boxShadow: '2px 0 4px -1px rgb(0 0 0 / 0.1), 1px 0 2px -1px rgb(0 0 0 / 0.06)'

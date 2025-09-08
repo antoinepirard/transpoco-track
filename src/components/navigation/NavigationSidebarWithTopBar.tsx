@@ -21,7 +21,6 @@ import {
   CameraIcon,
   ShieldIcon,
   CaretDownIcon,
-  GearIcon,
   SlidersIcon,
   TruckIcon,
   ChartLineIcon,
@@ -41,7 +40,7 @@ import {
 } from '@phosphor-icons/react';
 import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
 import { NavigationTooltip } from './NavigationTooltip';
-import { SettingsOverlayTopBar } from './SettingsOverlayTopBar';
+import { SettingsNavigationMenu } from './SettingsNavigationMenu';
 import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
@@ -277,7 +276,7 @@ export function NavigationSidebarWithTopBar({
   onActiveItemChange,
 }: NavigationSidebarWithTopBarProps) {
   const navRef = useRef<HTMLElement>(null);
-  const { toggleExpandedItem, isItemExpanded, showSettingsNav, toggleSettingsNav } = useNavigation();
+  const { toggleExpandedItem, isItemExpanded } = useNavigation();
   
   // Local active state
   const [activeItemId, setActiveItemId] = useState<string>('live-map');
@@ -428,13 +427,9 @@ export function NavigationSidebarWithTopBar({
   }, []);
 
   const handleTopBarItemClick = (itemId: string) => {
-    if (itemId === 'settings') {
-      toggleSettingsNav();
-    } else {
-      // Handle messages and notifications
-      console.log(`[Demo] Top bar item clicked: ${itemId}`);
-      onActiveItemChange?.({ id: itemId, label: itemId === 'messages' ? 'Messages' : 'Notifications' });
-    }
+    // Handle messages and notifications
+    console.log(`[Demo] Top bar item clicked: ${itemId}`);
+    onActiveItemChange?.({ id: itemId, label: itemId === 'messages' ? 'Messages' : 'Notifications' });
   };
 
   return (
@@ -473,27 +468,21 @@ export function NavigationSidebarWithTopBar({
             <ChatCircleIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
           </button>
 
-          {/* Settings */}
-          <button
-            onClick={() => handleTopBarItemClick('settings')}
-            className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-immediate group focus-ring cursor-pointer ${
-              showSettingsNav
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900'
-            }`}
-          >
-            <GearIcon className={`mr-2 h-5 w-5 flex-shrink-0 transition-immediate ${
-              showSettingsNav ? 'text-white' : 'text-gray-400 group-hover:hover-only:text-gray-500'
-            }`} />
-            <span>Settings</span>
-          </button>
+          {/* Settings Navigation Menu */}
+          <SettingsNavigationMenu
+            onItemClick={(item) => {
+              setActiveItemId(''); // Clear main nav active state
+              setActiveSettingsItemId(item.id);
+              onActiveItemChange?.(item);
+            }}
+          />
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex min-h-0">
         {/* Sidebar */}
-        <div className="w-68 bg-white shadow-lg border-r border-gray-200 flex flex-col">
+        <div className="w-68 bg-white shadow-lg border-r border-gray-200 flex flex-col relative z-10">
           {/* Navigation */}
           <nav
             ref={navRef}
@@ -520,11 +509,6 @@ export function NavigationSidebarWithTopBar({
                       const isLocked = lockedItemIds.includes(item.id);
                       
                       const handleItemClick = (clickedItem: NavigationItem) => {
-                        // Close settings overlay if open when clicking other nav items
-                        if (showSettingsNav) {
-                          toggleSettingsNav();
-                        }
-                        
                         setActiveItemId(clickedItem.id);
                         setActiveSettingsItemId(''); // Clear settings active state
                         onActiveItemChange?.({ id: clickedItem.id, label: clickedItem.label });
@@ -596,17 +580,6 @@ export function NavigationSidebarWithTopBar({
 
         {/* Content Area */}
         <main className="flex-1 overflow-hidden h-full min-h-0 relative">
-          {/* Settings Overlay - positioned for top bar layout */}
-          <SettingsOverlayTopBar
-            isOpen={showSettingsNav}
-            onClose={toggleSettingsNav}
-            activeItemId={activeSettingsItemId}
-            onItemClick={(item) => {
-              setActiveItemId(''); // Clear main nav active state
-              setActiveSettingsItemId(item.id);
-              onActiveItemChange?.(item);
-            }}
-          />
 
           {/* Global tooltip for locked items */}
           <AnimatePresence>
