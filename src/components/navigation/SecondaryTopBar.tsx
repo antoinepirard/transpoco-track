@@ -102,7 +102,7 @@ export function SecondaryTopBar({
       {/* Category title and items */}
       <div className="flex items-center space-x-6">
         {/* Category title */}
-        <div className="text-sm font-medium text-gray-600">
+        <div className="text-sm font-semibold text-gray-900">
           {categoryDisplayName}
         </div>
 
