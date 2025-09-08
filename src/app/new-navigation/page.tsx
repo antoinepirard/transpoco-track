@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import { NavigationSidebarDemo } from '@/components/navigation/NavigationSidebarDemo';
+import { NavigationSidebarWithTopBar } from '@/components/navigation/NavigationSidebarWithTopBar';
 
 // Define navigation variants
 interface NavigationVariant {
@@ -18,6 +19,12 @@ const navigationVariants: NavigationVariant[] = [
     name: 'Sidebar with Settings Overlay',
     description: 'Main sidebar with expandable settings overlay panel',
     component: NavigationSidebarDemo,
+  },
+  {
+    id: 'sidebar-with-topbar',
+    name: 'Sidebar with Top Bar',
+    description: 'Sidebar navigation with top bar containing settings, messages, and notifications',
+    component: NavigationSidebarWithTopBar,
   },
   // Future variants will be added here
 ];
