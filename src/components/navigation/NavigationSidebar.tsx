@@ -314,7 +314,7 @@ export function NavigationSidebar({
           <div className="w-8 h-8 bg-black rounded-md flex items-center justify-center">
             <span className="text-white text-sm font-bold">T</span>
           </div>
-          <span className="text-lg font-semibold text-gray-900">Transpoco</span>
+          <span className="text-lg font-semibold text-[#0e0033]">Transpoco</span>
         </div>
         <button
           onClick={onToggleCollapse}

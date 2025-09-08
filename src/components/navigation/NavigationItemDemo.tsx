@@ -85,7 +85,7 @@ export function NavigationItemDemo({
         return `${baseClasses} ${childPadding} text-gray-600 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
       }
       if (isActive) {
-        return `${baseClasses} ${childPadding} bg-gray-900 text-white`;
+        return `${baseClasses} ${childPadding} bg-[#0e0033] text-white`;
       }
       return `${baseClasses} ${childPadding} text-gray-600 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
     }
@@ -96,7 +96,7 @@ export function NavigationItemDemo({
       return `${baseClasses} ${parentPadding} text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
     }
     if (isActive) {
-      return `${baseClasses} ${parentPadding} bg-gray-900 text-white`;
+      return `${baseClasses} ${parentPadding} bg-[#0e0033] text-white`;
     }
     return `${baseClasses} ${parentPadding} text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
   };
