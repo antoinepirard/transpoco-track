@@ -17,6 +17,9 @@ import {
   DownloadIcon,
   CloudArrowDownIcon,
   UserPlusIcon,
+  TruckIcon,
+  WarningIcon,
+  ListIcon,
 } from '@phosphor-icons/react';
 import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
 
@@ -77,6 +80,53 @@ const settingsNavigationData: NavigationSection[] = [
         id: 'shift-time',
         label: 'Shift Time',
         icon: ClockIcon,
+      },
+    ],
+  },
+  {
+    id: 'garage',
+    title: 'Garage',
+    items: [
+      {
+        id: 'vehicles',
+        label: 'Vehicles',
+        icon: TruckIcon,
+      },
+      {
+        id: 'vehicle-groups',
+        label: 'Vehicle Groups',
+        icon: ListIcon,
+      },
+      {
+        id: 'drivers',
+        label: 'Drivers',
+        icon: UsersIcon,
+      },
+      {
+        id: 'driver-groups',
+        label: 'Driver Groups',
+        icon: UsersIcon,
+      },
+      {
+        id: 'vehicle-driver-groups',
+        label: 'Vehicle Driver Groups',
+        icon: UsersIcon,
+      },
+    ],
+  },
+  {
+    id: 'alerts',
+    title: 'Alerts',
+    items: [
+      {
+        id: 'manage-alerts',
+        label: 'Manage Alerts',
+        icon: WarningIcon,
+      },
+      {
+        id: 'alerts-log',
+        label: 'Alerts Log',
+        icon: ListIcon,
       },
     ],
   },
@@ -190,7 +240,7 @@ export function SettingsOverlay({ isOpen, onClose, activeItemId = '', onItemClic
     <>
       {/* Light overlay and backdrop on content area only */}
       <div
-        className={`fixed top-0 right-0 bottom-0 bg-gray-400/10 z-40 transition-opacity duration-200 ease-out ${
+        className={`fixed top-0 right-0 bottom-0 bg-gray-400/50 z-40 transition-opacity duration-200 ease-out ${
           isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         style={{ left: 'calc(17rem + 17rem)' }} // 68 * 2 = 136 (two sidebars)
