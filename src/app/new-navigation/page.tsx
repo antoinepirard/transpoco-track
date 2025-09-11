@@ -5,6 +5,7 @@ import { NavigationProvider } from '@/contexts/NavigationContext';
 import { NavigationSidebarDemo } from '@/components/navigation/NavigationSidebarDemo';
 import { NavigationSidebarWithTopBar } from '@/components/navigation/NavigationSidebarWithTopBar';
 import { NavigationSidebarWithDualTopBar } from '@/components/navigation/NavigationSidebarWithDualTopBar';
+import { NavigationSidebarWithSubmenus } from '@/components/navigation/NavigationSidebarWithSubmenus';
 
 // Define navigation variants
 interface NavigationVariant {
@@ -32,6 +33,12 @@ const navigationVariants: NavigationVariant[] = [
     name: 'Sidebar with Dual Top Bar',
     description: 'Main sidebar with primary top bar for categories and secondary top bar for sub-items',
     component: NavigationSidebarWithDualTopBar,
+  },
+  {
+    id: 'sidebar-with-submenus',
+    name: 'Sidebar with Submenus',
+    description: 'Sidebar navigation with integrated settings dropdown submenus',
+    component: NavigationSidebarWithSubmenus,
   },
 ];
 
