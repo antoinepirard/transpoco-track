@@ -81,7 +81,7 @@ interface NavigationSection {
 }
 
 interface NavigationSidebarWithSubmenusProps {
-  onActiveItemChange?: (item: {id: string, label: string}) => void;
+  onActiveItemChange?: (item: { id: string; label: string }) => void;
 }
 
 // Settings submenu data for top bar dropdown
@@ -93,7 +93,11 @@ const settingsSubmenus = [
     items: [
       { id: 'users', label: 'Users', icon: UsersIcon },
       { id: 'profiles', label: 'Profiles', icon: UserCircleIcon },
-      { id: 'security-settings', label: 'Security Settings', icon: ShieldCheckIcon },
+      {
+        id: 'security-settings',
+        label: 'Security Settings',
+        icon: ShieldCheckIcon,
+      },
     ],
   },
   {
@@ -129,7 +133,11 @@ const settingsSubmenus = [
     title: 'API Resources',
     icon: BookOpenIcon,
     items: [
-      { id: 'api-documentation', label: 'API Documentation', icon: BookOpenIcon },
+      {
+        id: 'api-documentation',
+        label: 'API Documentation',
+        icon: BookOpenIcon,
+      },
       { id: 'request-api-access', label: 'Request API Access', icon: KeyIcon },
     ],
   },
@@ -140,7 +148,11 @@ const settingsSubmenus = [
     items: [
       { id: 'import-services', label: 'Import Services', icon: DownloadIcon },
       { id: 'import-drivers', label: 'Import Drivers', icon: UserPlusIcon },
-      { id: 'import-purchases', label: 'Import Purchases', icon: CloudArrowDownIcon },
+      {
+        id: 'import-purchases',
+        label: 'Import Purchases',
+        icon: CloudArrowDownIcon,
+      },
     ],
   },
 ];
@@ -378,46 +390,57 @@ export function NavigationSidebarWithSubmenus({
 }: NavigationSidebarWithSubmenusProps) {
   const navRef = useRef<HTMLElement>(null);
   const { toggleExpandedItem, isItemExpanded } = useNavigation();
-  
+
   // Local active state
   const [activeItemId, setActiveItemId] = useState<string>('live-map');
   const [activeSettingsItemId, setActiveSettingsItemId] = useState<string>('');
-  
+
   // Brand selection state (for sidebar branding)
-  const [selectedBrand, setSelectedBrand] = useState<'transpoco' | 'safely'>('transpoco');
+  const [selectedBrand, setSelectedBrand] = useState<'transpoco' | 'safely'>(
+    'transpoco'
+  );
 
   // Demo locked items (premium features) - memoized to prevent re-renders
-  const lockedItemIds = useMemo(() => ['bikly', 'cost-management', 'fuel-electric'], []);
-  
+  const lockedItemIds = useMemo(
+    () => ['bikly', 'cost-management', 'fuel-electric'],
+    []
+  );
+
   // Tooltip content for locked items - memoized to prevent re-renders
-  const tooltipContent = useMemo(() => ({
-    'bikly': {
-      title: 'Bikly',
-      description: 'Advanced safety and compliance monitoring for your fleet. Get real-time alerts, driver behavior insights, and comprehensive safety reporting to reduce incidents and improve driver performance.',
-      image: '/pointing at laptop screen with data on show.webp',
-    },
-    'cost-management': {
-      title: 'Cost Management',
-      description: 'Complete Total Cost of Ownership (TCO) analysis and financial optimization tools. Track all fleet expenses, identify cost-saving opportunities, and optimize your fleet budget with detailed analytics.',
-      image: '/vehicle-maintenance.webp',
-    },
-    'fuel-electric': {
-      title: 'Fuel/Electric Vehicles',
-      description: 'Comprehensive EV fleet management and fuel optimization. Monitor charging status, plan efficient routes for electric vehicles, and seamlessly manage mixed fuel and electric fleets.',
-      image: '/vans charging up at electrical charging points.webp',
-    },
-  }), []);
+  const tooltipContent = useMemo(
+    () => ({
+      bikly: {
+        title: 'Bikly',
+        description:
+          'Advanced safety and compliance monitoring for your fleet. Get real-time alerts, driver behavior insights, and comprehensive safety reporting to reduce incidents and improve driver performance.',
+        image: '/pointing at laptop screen with data on show.webp',
+      },
+      'cost-management': {
+        title: 'Cost Management',
+        description:
+          'Complete Total Cost of Ownership (TCO) analysis and financial optimization tools. Track all fleet expenses, identify cost-saving opportunities, and optimize your fleet budget with detailed analytics.',
+        image: '/vehicle-maintenance.webp',
+      },
+      'fuel-electric': {
+        title: 'Fuel/Electric Vehicles',
+        description:
+          'Comprehensive EV fleet management and fuel optimization. Monitor charging status, plan efficient routes for electric vehicles, and seamlessly manage mixed fuel and electric fleets.',
+        image: '/vans charging up at electrical charging points.webp',
+      },
+    }),
+    []
+  );
 
   // Timeout refs for tooltip management
   const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Global tooltip state
   const [globalTooltip, setGlobalTooltip] = useState<{
     isVisible: boolean;
     itemId: string | null;
     anchorRect: DOMRect | null;
     previousAnchorRect: DOMRect | null;
-    content: typeof tooltipContent[keyof typeof tooltipContent] | null;
+    content: (typeof tooltipContent)[keyof typeof tooltipContent] | null;
   }>({
     isVisible: false,
     itemId: null,
@@ -426,33 +449,40 @@ export function NavigationSidebarWithSubmenus({
     content: null,
   });
 
-  const handleItemHover = useCallback((itemId: string, anchorRect: DOMRect) => {
-    // Clear any pending hide timeout
-    if (tooltipTimeoutRef.current) {
-      clearTimeout(tooltipTimeoutRef.current);
-      tooltipTimeoutRef.current = null;
-    }
-    
-    if (lockedItemIds.includes(itemId) && tooltipContent[itemId as keyof typeof tooltipContent]) {
-      setGlobalTooltip(prev => ({
-        isVisible: true,
-        itemId,
-        anchorRect,
-        previousAnchorRect: prev.isVisible && prev.itemId !== itemId ? prev.anchorRect : null,
-        content: tooltipContent[itemId as keyof typeof tooltipContent],
-      }));
-    }
-  }, [lockedItemIds, tooltipContent]);
+  const handleItemHover = useCallback(
+    (itemId: string, anchorRect: DOMRect) => {
+      // Clear any pending hide timeout
+      if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+        tooltipTimeoutRef.current = null;
+      }
+
+      if (
+        lockedItemIds.includes(itemId) &&
+        tooltipContent[itemId as keyof typeof tooltipContent]
+      ) {
+        setGlobalTooltip((prev) => ({
+          isVisible: true,
+          itemId,
+          anchorRect,
+          previousAnchorRect:
+            prev.isVisible && prev.itemId !== itemId ? prev.anchorRect : null,
+          content: tooltipContent[itemId as keyof typeof tooltipContent],
+        }));
+      }
+    },
+    [lockedItemIds, tooltipContent]
+  );
 
   const handleItemLeave = useCallback(() => {
     // Clear any existing timeout
     if (tooltipTimeoutRef.current) {
       clearTimeout(tooltipTimeoutRef.current);
     }
-    
+
     // Add a delay before hiding to allow moving between items or to tooltip
     tooltipTimeoutRef.current = setTimeout(() => {
-      setGlobalTooltip(prev => ({
+      setGlobalTooltip((prev) => ({
         ...prev,
         isVisible: false,
       }));
@@ -475,7 +505,7 @@ export function NavigationSidebarWithSubmenus({
     if (tooltipTimeoutRef.current) {
       clearTimeout(tooltipTimeoutRef.current);
     }
-    
+
     // Hide tooltip when completely leaving the navigation area
     tooltipTimeoutRef.current = setTimeout(() => {
       setGlobalTooltip({
@@ -532,7 +562,10 @@ export function NavigationSidebarWithSubmenus({
     setActiveItemId(''); // Clear main nav active state
     setActiveSettingsItemId(''); // Clear settings active state
     console.log(`[Demo] Top bar item clicked: ${itemId}`);
-    onActiveItemChange?.({ id: itemId, label: itemId === 'messages' ? 'Messages' : 'Notifications' });
+    onActiveItemChange?.({
+      id: itemId,
+      label: itemId === 'messages' ? 'Messages' : 'Notifications',
+    });
   };
 
   return (
@@ -548,80 +581,93 @@ export function NavigationSidebarWithSubmenus({
         </div>
 
         {/* Right side - Settings, Messages, Notifications, User Avatar */}
-        <div className="flex items-center space-x-1">
-          {/* Settings Dropdown with Submenus */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-immediate group focus-ring cursor-pointer text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900 data-[state=open]:bg-gray-900 data-[state=open]:text-white outline-none">
-              <GearIcon className="mr-2 h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500 group-data-[state=open]:text-white" />
-              <span>Settings</span>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              align="end" 
-              side="bottom"
-              className="w-64 p-2"
-              collisionPadding={10}
-              avoidCollisions={true}
+        <div className="flex items-center">
+          {/* Settings Section */}
+          <div className="flex items-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-immediate group focus-ring cursor-pointer text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900 data-[state=open]:bg-gray-900 data-[state=open]:text-white outline-none">
+                <GearIcon className="mr-2 h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500 group-data-[state=open]:text-white" />
+                <span>Settings</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                side="bottom"
+                className="w-64 p-2"
+                collisionPadding={10}
+                avoidCollisions={true}
+              >
+                <div className="space-y-1">
+                  {settingsSubmenus.map((category) => {
+                    const CategoryIcon = category.icon;
+
+                    return (
+                      <DropdownMenuSub key={category.id}>
+                        <DropdownMenuSubTrigger className="flex items-center gap-3 cursor-pointer transition-immediate hover:bg-gray-50">
+                          <CategoryIcon className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                          <span className="text-sm font-medium">
+                            {category.title}
+                          </span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent className="w-56 p-1">
+                          {category.items.map((subItem) => {
+                            const SubIcon = subItem.icon;
+                            return (
+                              <DropdownMenuItem
+                                key={subItem.id}
+                                className="flex items-center gap-3 cursor-pointer transition-immediate hover:bg-gray-50"
+                                onClick={() => {
+                                  setActiveItemId(''); // Clear main nav active state
+                                  setActiveSettingsItemId(subItem.id);
+                                  onActiveItemChange?.({
+                                    id: subItem.id,
+                                    label: subItem.label,
+                                  });
+                                  console.log(
+                                    `[Demo] Settings item clicked: "${subItem.label}"`
+                                  );
+                                }}
+                              >
+                                <SubIcon className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                                <span className="text-sm">{subItem.label}</span>
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                    );
+                  })}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Divider */}
+          <div className="mx-4 h-6 w-px bg-gray-200"></div>
+
+          {/* Icons Section */}
+          <div className="flex items-center space-x-2">
+            {/* Messages */}
+            <button
+              onClick={() => handleTopBarItemClick('messages')}
+              className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900"
             >
-              <div className="space-y-1">
-                {settingsSubmenus.map((category) => {
-                  const CategoryIcon = category.icon;
-                  
-                  return (
-                    <DropdownMenuSub key={category.id}>
-                      <DropdownMenuSubTrigger className="flex items-center gap-3 cursor-pointer transition-immediate hover:bg-gray-50">
-                        <CategoryIcon className="h-4 w-4 flex-shrink-0 text-gray-400" />
-                        <span className="text-sm font-medium">{category.title}</span>
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent className="w-56 p-1">
-                        {category.items.map((subItem) => {
-                          const SubIcon = subItem.icon;
-                          return (
-                            <DropdownMenuItem
-                              key={subItem.id}
-                              className="flex items-center gap-3 cursor-pointer transition-immediate hover:bg-gray-50"
-                              onClick={() => {
-                                setActiveItemId(''); // Clear main nav active state
-                                setActiveSettingsItemId(subItem.id);
-                                onActiveItemChange?.({ id: subItem.id, label: subItem.label });
-                                console.log(`[Demo] Settings item clicked: "${subItem.label}"`);
-                              }}
-                            >
-                              <SubIcon className="h-4 w-4 flex-shrink-0 text-gray-400" />
-                              <span className="text-sm">{subItem.label}</span>
-                            </DropdownMenuItem>
-                          );
-                        })}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-                  );
-                })}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <ChatCircleIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
+            </button>
+
+            {/* Notifications */}
+            <button
+              onClick={() => handleTopBarItemClick('notifications')}
+              className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900"
+            >
+              <BellIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
+              <span className="ml-1 inline-flex items-center px-1.5 py-1 rounded-full text-xs font-medium bg-red-500 text-white tabular-nums">
+                42
+              </span>
+            </button>
+          </div>
 
           {/* Divider */}
-          <div className="mx-6 h-6 w-px bg-gray-200"></div>
-          {/* Messages */}
-          <button
-            onClick={() => handleTopBarItemClick('messages')}
-            className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900"
-          >
-            <ChatCircleIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
-          </button>
-
-          {/* Notifications */}
-          <button
-            onClick={() => handleTopBarItemClick('notifications')}
-            className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900"
-          >
-            <BellIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
-            <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 tabular-nums">
-              42
-            </span>
-          </button>
-
-          {/* Divider */}
-          <div className="mx-6 h-6 w-px bg-gray-200"></div>
+          <div className="mx-4 h-6 w-px bg-gray-200"></div>
 
           {/* User Avatar Dropdown */}
           <UserAvatarDropdown
@@ -660,17 +706,23 @@ export function NavigationSidebarWithSubmenus({
                   )}
                   <div className="space-y-0.5 px-2">
                     {section.items.map((item) => {
-                      const isActive = activeItemId === item.id && !activeSettingsItemId;
+                      const isActive =
+                        activeItemId === item.id && !activeSettingsItemId;
                       const isExpanded = isItemExpanded(item.id);
                       const isLocked = lockedItemIds.includes(item.id);
-                      
+
                       const handleItemClick = (clickedItem: NavigationItem) => {
                         setActiveItemId(clickedItem.id);
                         setActiveSettingsItemId(''); // Clear settings active state
-                        onActiveItemChange?.({ id: clickedItem.id, label: clickedItem.label });
-                        console.log(`[Demo] Active item set to "${clickedItem.label}"`);
+                        onActiveItemChange?.({
+                          id: clickedItem.id,
+                          label: clickedItem.label,
+                        });
+                        console.log(
+                          `[Demo] Active item set to "${clickedItem.label}"`
+                        );
                       };
-                      
+
                       return (
                         <NavigationItemGroupDemo
                           key={item.id}
@@ -699,33 +751,44 @@ export function NavigationSidebarWithSubmenus({
           <div className="px-4 pb-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="secondary"
-                  size="default"
-                  className="w-full"
-                >
+                <Button variant="secondary" size="default" className="w-full">
                   <QuestionIcon />
                   Feedback
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-64">
-                <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => window.open('#', '_blank')}
+                >
                   <EnvelopeIcon className="w-4 h-4 text-gray-400" />
                   Get in Touch
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => window.open('#', '_blank')}
+                >
                   <ShieldIcon className="w-4 h-4 text-gray-400" />
                   Terms & Privacy Policy
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => window.open('#', '_blank')}
+                >
                   <BookOpenIcon className="w-4 h-4 text-gray-400" />
                   Knowledge Base
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => window.open('#', '_blank')}
+                >
                   <FileTextIcon className="w-4 h-4 text-gray-400" />
                   User Manual
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => window.open('#', '_blank')}
+                >
                   <NewspaperIcon className="w-4 h-4 text-gray-400" />
                   Whats New?
                 </DropdownMenuItem>
@@ -736,20 +799,23 @@ export function NavigationSidebarWithSubmenus({
 
         {/* Content Area */}
         <main className="flex-1 overflow-hidden h-full min-h-0 relative">
-
           {/* Global tooltip for locked items */}
           <AnimatePresence>
-            {globalTooltip.isVisible && globalTooltip.content && globalTooltip.anchorRect && (
-              <NavigationTooltip
-                isVisible={globalTooltip.isVisible}
-                content={globalTooltip.content}
-                anchorRect={globalTooltip.anchorRect}
-                previousAnchorRect={globalTooltip.previousAnchorRect || undefined}
-                onClose={handleTooltipClose}
-                onMouseEnter={handleNavigationMouseEnter}
-                onMouseLeave={handleItemLeave}
-              />
-            )}
+            {globalTooltip.isVisible &&
+              globalTooltip.content &&
+              globalTooltip.anchorRect && (
+                <NavigationTooltip
+                  isVisible={globalTooltip.isVisible}
+                  content={globalTooltip.content}
+                  anchorRect={globalTooltip.anchorRect}
+                  previousAnchorRect={
+                    globalTooltip.previousAnchorRect || undefined
+                  }
+                  onClose={handleTooltipClose}
+                  onMouseEnter={handleNavigationMouseEnter}
+                  onMouseLeave={handleItemLeave}
+                />
+              )}
           </AnimatePresence>
         </main>
       </div>
