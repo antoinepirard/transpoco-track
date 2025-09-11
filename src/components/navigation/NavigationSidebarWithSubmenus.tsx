@@ -106,18 +106,6 @@ const settingsSubmenus = [
     ],
   },
   {
-    id: 'garage',
-    title: 'Garage',
-    icon: TruckIcon,
-    items: [
-      { id: 'vehicles', label: 'Vehicles', icon: TruckIcon },
-      { id: 'vehicle-groups', label: 'Vehicle Groups', icon: ListIcon },
-      { id: 'drivers', label: 'Drivers', icon: UsersIcon },
-      { id: 'driver-groups', label: 'Driver Groups', icon: UsersIcon },
-      { id: 'vehicle-driver-groups', label: 'Vehicle Driver Groups', icon: UsersIcon },
-    ],
-  },
-  {
     id: 'alerts',
     title: 'Alerts',
     icon: WarningIcon,
@@ -260,6 +248,31 @@ const sidebarNavigationData: NavigationSection[] = [
             id: 'scheduled-reports',
             label: 'Scheduled Reports',
             icon: ClockIcon,
+          },
+          {
+            id: 'vehicles',
+            label: 'Vehicles',
+            icon: TruckIcon,
+          },
+          {
+            id: 'vehicle-groups',
+            label: 'Vehicle Groups',
+            icon: ListIcon,
+          },
+          {
+            id: 'drivers',
+            label: 'Drivers',
+            icon: UsersIcon,
+          },
+          {
+            id: 'driver-groups',
+            label: 'Driver Groups',
+            icon: UsersIcon,
+          },
+          {
+            id: 'vehicle-driver-groups',
+            label: 'Vehicle Driver Groups',
+            icon: UsersIcon,
           },
         ],
       },
