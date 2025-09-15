@@ -762,7 +762,7 @@ export function NavigationSidebarWithTopBarSearch({
               onFocus={() => setIsSearchOpen(true)}
               onKeyDown={handleSearchKeyDown}
               className="block w-full pl-10 pr-10 py-2 bg-gray-500/30 text-white placeholder-gray-300 rounded-lg focus:outline-none focus:border-transparent text-sm"
-              placeholder="Search navigation pages..."
+              placeholder="Search pages..."
               autoComplete="off"
             />
             {searchQuery && (
