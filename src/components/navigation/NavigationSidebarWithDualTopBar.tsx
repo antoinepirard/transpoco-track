@@ -615,7 +615,6 @@ export function NavigationSidebarWithDualTopBar({
             </div>
           </nav>
 
-          {/* Feedback Button */}
           <div className="px-4 pb-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -625,7 +624,7 @@ export function NavigationSidebarWithDualTopBar({
                   className="w-full"
                 >
                   <QuestionIcon />
-                  Feedback
+                  Help
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-64">
@@ -654,7 +653,6 @@ export function NavigationSidebarWithDualTopBar({
           </div>
         </div>
 
-        {/* Content Area */}
         <main className="flex-1 overflow-hidden h-full min-h-0 relative flex flex-col">
           
           {/* Secondary Top Bar - positioned to the right of the sidebar */}
@@ -665,10 +663,8 @@ export function NavigationSidebarWithDualTopBar({
               onItemClick={handleSecondaryTopBarItemClick}
             />
           )}
-
-          {/* Main content */}
+          
           <div className="flex-1 overflow-hidden h-full min-h-0 relative">
-            {/* Global tooltip for locked items */}
             <AnimatePresence>
               {globalTooltip.isVisible && globalTooltip.content && globalTooltip.anchorRect && (
                 <NavigationTooltip

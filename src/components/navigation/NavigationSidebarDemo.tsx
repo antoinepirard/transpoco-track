@@ -642,7 +642,6 @@ export function NavigationSidebarDemo({
         </div>
       </div> */}
 
-      {/* Feedback Button */}
       <div className="px-4 pb-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -652,7 +651,7 @@ export function NavigationSidebarDemo({
               className="w-full"
             >
               <QuestionIcon />
-              Feedback
+              Help
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64">
@@ -680,8 +679,6 @@ export function NavigationSidebarDemo({
         </DropdownMenu>
       </div>
 
-
-      {/* Global tooltip for locked items */}
       <AnimatePresence>
         {globalTooltip.isVisible && globalTooltip.content && globalTooltip.anchorRect && (
           <NavigationTooltip
@@ -696,7 +693,6 @@ export function NavigationSidebarDemo({
         )}
       </AnimatePresence>
 
-      {/* Settings Overlay */}
       <SettingsOverlay
         isOpen={showSettingsNav}
         onClose={toggleSettingsNav}

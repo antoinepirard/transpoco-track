@@ -552,7 +552,6 @@ export function NavigationSidebarWithTopBar({
             </div>
           </nav>
 
-          {/* Feedback Button */}
           <div className="px-4 pb-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -562,7 +561,7 @@ export function NavigationSidebarWithTopBar({
                   className="w-full"
                 >
                   <QuestionIcon />
-                  Feedback
+                  Help
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-64">
@@ -591,10 +590,8 @@ export function NavigationSidebarWithTopBar({
           </div>
         </div>
 
-        {/* Content Area */}
         <main className="flex-1 overflow-hidden h-full min-h-0 relative">
 
-          {/* Global tooltip for locked items */}
           <AnimatePresence>
             {globalTooltip.isVisible && globalTooltip.content && globalTooltip.anchorRect && (
               <NavigationTooltip

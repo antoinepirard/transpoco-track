@@ -748,13 +748,12 @@ export function NavigationSidebarWithSubmenus({
             </div>
           </nav>
 
-          {/* Feedback Button */}
           <div className="px-4 pb-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="default" className="w-full">
                   <QuestionIcon />
-                  Feedback
+                  Help
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-64">
@@ -798,9 +797,7 @@ export function NavigationSidebarWithSubmenus({
           </div>
         </div>
 
-        {/* Content Area */}
         <main className="flex-1 overflow-hidden h-full min-h-0 relative">
-          {/* Global tooltip for locked items */}
           <AnimatePresence>
             {globalTooltip.isVisible &&
               globalTooltip.content &&
