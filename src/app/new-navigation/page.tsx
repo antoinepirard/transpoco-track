@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import { NavigationSidebarDemo } from '@/components/navigation/NavigationSidebarDemo';
@@ -119,7 +119,9 @@ function NavigationDemoContent() {
 export default function NavigationDemoPage() {
   return (
     <NavigationProvider>
-      <NavigationDemoContent />
+      <Suspense fallback={<div>Loading navigation variants...</div>}>
+        <NavigationDemoContent />
+      </Suspense>
     </NavigationProvider>
   );
 }
