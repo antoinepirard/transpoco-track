@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { NavigationProvider } from '@/contexts/NavigationContext';
 import { NavigationSidebarDemo } from '@/components/navigation/NavigationSidebarDemo';
 import { NavigationSidebarWithTopBar } from '@/components/navigation/NavigationSidebarWithTopBar';
@@ -43,25 +44,30 @@ const navigationVariants: NavigationVariant[] = [
 ];
 
 function NavigationDemoContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [activeItem, setActiveItem] = useState<{id: string, label: string} | null>({ id: 'live-map', label: 'Live map' });
-  const [selectedVariantId, setSelectedVariantId] = useState<string>('sidebar-overlay-settings');
+
+  // Get variant from URL params or default to first variant
+  const urlVariant = searchParams.get('variant');
+  const selectedVariantId = navigationVariants.find(v => v.id === urlVariant)?.id || navigationVariants[0].id;
 
   // Get the current variant
   const currentVariant = navigationVariants.find(v => v.id === selectedVariantId) || navigationVariants[0];
   const CurrentNavigationComponent = currentVariant.component;
 
-  // Load saved variant from localStorage
-  useEffect(() => {
-    const savedVariant = localStorage.getItem('navigation-demo-variant');
-    if (savedVariant && navigationVariants.find(v => v.id === savedVariant)) {
-      setSelectedVariantId(savedVariant);
+  // Handle variant change by updating URL
+  const handleVariantChange = useCallback((variantId: string) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    if (variantId === navigationVariants[0].id) {
+      // Remove variant param if it's the default variant
+      newSearchParams.delete('variant');
+    } else {
+      newSearchParams.set('variant', variantId);
     }
-  }, []);
-
-  // Save variant to localStorage when changed
-  useEffect(() => {
-    localStorage.setItem('navigation-demo-variant', selectedVariantId);
-  }, [selectedVariantId]);
+    const newUrl = newSearchParams.toString() ? `?${newSearchParams.toString()}` : '';
+    router.push(`/new-navigation${newUrl}`, { scroll: false });
+  }, [searchParams, router]);
 
   return (
     <div className="w-full h-screen flex relative">
@@ -91,7 +97,7 @@ function NavigationDemoContent() {
             <select
               id="variant-select"
               value={selectedVariantId}
-              onChange={(e) => setSelectedVariantId(e.target.value)}
+              onChange={(e) => handleVariantChange(e.target.value)}
               className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[200px]"
             >
               {navigationVariants.map((variant) => (
