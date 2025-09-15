@@ -50,7 +50,7 @@ export function UserAvatarDropdown({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center space-x-3 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all hover:opacity-80">
+      <DropdownMenuTrigger className="flex items-center space-x-3 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-all hover:hover-only:bg-gray-300/20">
         <Avatar className="h-8 w-8">
           {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} />}
           <AvatarFallback className="bg-gray-600 text-white text-sm font-medium">

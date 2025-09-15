@@ -16,6 +16,7 @@ import {
 interface BrandSwitcherProps {
   selectedBrand: 'transpoco' | 'safely';
   onBrandChange: (brand: 'transpoco' | 'safely') => void;
+  variant?: 'light' | 'dark';
 }
 
 const brands = [
@@ -33,7 +34,7 @@ const brands = [
   },
 ];
 
-export function BrandSwitcher({ selectedBrand, onBrandChange }: BrandSwitcherProps) {
+export function BrandSwitcher({ selectedBrand, onBrandChange, variant = 'light' }: BrandSwitcherProps) {
   const currentBrand = brands.find(brand => brand.id === selectedBrand) || brands[0];
 
   const handleBrandSelect = (brandId: 'transpoco' | 'safely') => {
@@ -43,15 +44,23 @@ export function BrandSwitcher({ selectedBrand, onBrandChange }: BrandSwitcherPro
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center space-x-2 rounded-md p-1 hover:bg-gray-50 transition-colors outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+      <DropdownMenuTrigger className={`flex items-center space-x-2 rounded-md p-1 transition-colors outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+        variant === 'dark'
+          ? 'hover:hover-only:bg-gray-300/20'
+          : 'hover:hover-only:bg-gray-100'
+      }`}>
         <Image
           src={currentBrand.logo}
           alt={`${currentBrand.name} logo`}
           width={111}
           height={26}
-          className="h-7 w-auto"
+          className={`h-7 w-auto ${
+            variant === 'dark' && currentBrand.id === 'transpoco'
+              ? 'brightness-0 invert'
+              : ''
+          }`}
         />
-        <CaretDownIcon className="h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+        <CaretDownIcon className="h-4 w-4 text-gray-300 transition-transform duration-200 group-data-[state=open]:rotate-180" />
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="start" 

@@ -571,12 +571,13 @@ export function NavigationSidebarWithSubmenus({
   return (
     <div className="w-full h-screen flex flex-col">
       {/* Top Bar */}
-      <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4">
+      <div className="h-14 bg-[#0e0033] border-b border-gray-600 flex items-center justify-between px-4">
         {/* Left side - Brand Switcher */}
         <div className="flex items-center space-x-3">
           <BrandSwitcher
             selectedBrand={selectedBrand}
             onBrandChange={setSelectedBrand}
+            variant="dark"
           />
         </div>
 
@@ -585,8 +586,8 @@ export function NavigationSidebarWithSubmenus({
           {/* Settings Section */}
           <div className="flex items-center">
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-immediate group focus-ring cursor-pointer text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900 data-[state=open]:bg-gray-900 data-[state=open]:text-white outline-none">
-                <GearIcon className="mr-2 h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500 group-data-[state=open]:text-white" />
+              <DropdownMenuTrigger className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-immediate group focus-ring cursor-pointer text-gray-200 hover:hover-only:bg-gray-300/20 hover:hover-only:text-white data-[state=open]:bg-[#3D88C5] data-[state=open]:text-white outline-none">
+                <GearIcon className="mr-2 h-5 w-5 flex-shrink-0 transition-immediate text-gray-300 group-hover:hover-only:text-white group-data-[state=open]:text-white" />
                 <span>Settings</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -642,24 +643,24 @@ export function NavigationSidebarWithSubmenus({
           </div>
 
           {/* Divider */}
-          <div className="mx-4 h-6 w-px bg-gray-200"></div>
+          <div className="mx-4 h-6 w-px bg-gray-600"></div>
 
           {/* Icons Section */}
           <div className="flex items-center space-x-2">
             {/* Messages */}
             <button
               onClick={() => handleTopBarItemClick('messages')}
-              className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900"
+              className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-200 hover:hover-only:bg-gray-300/20 hover:hover-only:text-white"
             >
-              <ChatCircleIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
+              <ChatCircleIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-300 group-hover:hover-only:text-white" />
             </button>
 
             {/* Notifications */}
             <button
               onClick={() => handleTopBarItemClick('notifications')}
-              className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900"
+              className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-200 hover:hover-only:bg-gray-300/20 hover:hover-only:text-white"
             >
-              <BellIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
+              <BellIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-300 group-hover:hover-only:text-white" />
               <span className="ml-1 inline-flex items-center px-1.5 py-1 rounded-full text-xs font-medium bg-red-500 text-white tabular-nums">
                 42
               </span>
@@ -667,7 +668,7 @@ export function NavigationSidebarWithSubmenus({
           </div>
 
           {/* Divider */}
-          <div className="mx-4 h-6 w-px bg-gray-200"></div>
+          <div className="mx-4 h-6 w-px bg-gray-600"></div>
 
           {/* User Avatar Dropdown */}
           <UserAvatarDropdown

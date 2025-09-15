@@ -99,12 +99,32 @@ html {
     background-color: rgb(243 244 246);
   }
 
+  .hover\:hover-only\:bg-gray-300\/20:hover {
+    background-color: rgb(209 213 219 / 0.2);
+  }
+
+  .hover\:hover-only\:bg-gray-700:hover {
+    background-color: rgb(55 65 81);
+  }
+
+  .hover\:hover-only\:bg-gray-800:hover {
+    background-color: rgb(31 41 55);
+  }
+
   .hover\:hover-only\:text-gray-500:hover {
     color: rgb(107 114 128);
   }
 
   .hover\:hover-only\:text-gray-900:hover {
     color: rgb(17 24 39);
+  }
+
+  .hover\:hover-only\:text-white:hover {
+    color: rgb(255 255 255);
+  }
+
+  .group-hover\:hover-only\:text-white:hover {
+    color: rgb(255 255 255);
   }
 }
 
