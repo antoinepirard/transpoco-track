@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationItemDemo } from './NavigationItemDemo';
 
 interface NavigationItem {
@@ -41,13 +41,21 @@ export function NavigationItemGroupDemo({
   onItemHover,
   onItemLeave,
 }: NavigationItemGroupDemoProps) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // During SSR and initial hydration, always render as collapsed
+  const safeIsExpanded = isClient ? isExpanded : false;
   return (
     <div>
       {/* Parent Item */}
       <NavigationItemDemo
         item={item}
         isActive={isActive}
-        isExpanded={isExpanded}
+        isExpanded={safeIsExpanded}
         isLocked={isLocked}
         level="parent"
         onItemClick={onItemClick}
@@ -62,7 +70,7 @@ export function NavigationItemGroupDemo({
       {item.children && (
         <div 
           className={`ml-4 overflow-hidden transition-all duration-200 ease-out ${
-            isExpanded ? 'max-h-96 mt-1' : 'max-h-0'
+            safeIsExpanded ? 'max-h-96 mt-1' : 'max-h-0'
           }`}
         >
           <div className="space-y-0.5 relative">

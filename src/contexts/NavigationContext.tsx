@@ -33,10 +33,16 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [showSettingsNav, setShowSettingsNav] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Mark as hydrated on client
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Initialize state from localStorage
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !isHydrated) return;
 
     try {
       // Load sidebar collapsed state
@@ -73,7 +79,7 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
       console.warn('Failed to load navigation state from localStorage:', error);
       setIsInitialized(true);
     }
-  }, [pathname]);
+  }, [pathname, isHydrated]);
 
   // Save sidebar collapsed state to localStorage
   const saveSidebarState = useCallback((collapsed: boolean) => {
@@ -136,8 +142,10 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
   }, [saveExpandedItems]);
 
   const isItemExpanded = useCallback((itemId: string) => {
+    // During SSR, return false to ensure consistent initial state
+    if (!isHydrated) return false;
     return expandedItems.includes(itemId);
-  }, [expandedItems]);
+  }, [expandedItems, isHydrated]);
 
   // Save settings navigation state to localStorage
   const saveSettingsNavState = useCallback((show: boolean) => {

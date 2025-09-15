@@ -7,6 +7,7 @@ import { NavigationSidebarDemo } from '@/components/navigation/NavigationSidebar
 import { NavigationSidebarWithTopBar } from '@/components/navigation/NavigationSidebarWithTopBar';
 import { NavigationSidebarWithDualTopBar } from '@/components/navigation/NavigationSidebarWithDualTopBar';
 import { NavigationSidebarWithSubmenus } from '@/components/navigation/NavigationSidebarWithSubmenus';
+import { NavigationSidebarWithTopBarSearch } from '@/components/navigation/NavigationSidebarWithTopBarSearch';
 
 // Define navigation variants
 interface NavigationVariant {
@@ -40,6 +41,12 @@ const navigationVariants: NavigationVariant[] = [
     name: 'Sidebar with Submenus',
     description: 'Sidebar navigation with integrated settings dropdown submenus',
     component: NavigationSidebarWithSubmenus,
+  },
+  {
+    id: 'topbar-with-search',
+    name: 'Topbar with Search',
+    description: 'Sidebar navigation with top bar containing integrated search, settings, messages, and notifications',
+    component: NavigationSidebarWithTopBarSearch,
   },
 ];
 
