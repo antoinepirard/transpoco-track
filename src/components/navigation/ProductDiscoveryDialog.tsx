@@ -62,7 +62,7 @@ export function ProductDiscoveryDialog({ open, onOpenChange }: ProductDiscoveryD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="!max-w-4xl !w-[90vw] max-h-[80vh] overflow-y-auto z-[60]">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Discover New Products</DialogTitle>
           <DialogDescription className="text-gray-600">
