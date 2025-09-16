@@ -25,6 +25,13 @@ interface ProductDiscoveryDialogProps {
 
 const newProducts: Product[] = [
   {
+    id: 'transpoco',
+    name: 'Transpoco',
+    logo: '/transpoco-logo.svg',
+    description: 'Comprehensive fleet management platform providing real-time tracking, route optimization, and operational insights for modern fleet operations.',
+    category: 'Fleet Management',
+  },
+  {
     id: 'safely',
     name: 'Safely',
     logo: '/safelylogo.png',
@@ -44,13 +51,6 @@ const newProducts: Product[] = [
     logo: '/transpoco-logo.svg', // Using transpoco logo as placeholder
     description: 'Simplify Benefit‑in‑Kind (BIK) compliance and communication for fleets and drivers by turning complex tax rules into clear calculations and guidance, helping organizations reduce admin overhead and policy friction.',
     category: 'Tax & Compliance',
-  },
-  {
-    id: 'transpoco',
-    name: 'Transpoco',
-    logo: '/transpoco-logo.svg',
-    description: 'Comprehensive fleet management platform providing real-time tracking, route optimization, and operational insights for modern fleet operations.',
-    category: 'Fleet Management',
   },
 ];
 
@@ -78,10 +78,10 @@ export function ProductDiscoveryDialog({ open, onOpenChange }: ProductDiscoveryD
               <div
                 key={product.id}
                 onClick={() => handleProductClick(product)}
-                className={`border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer text-center flex flex-col h-full ${
+                className={`border rounded-lg p-4 text-center flex flex-col h-full ${
                   isActivated
-                    ? 'border-green-200 bg-green-50/50 hover:bg-green-50'
-                    : 'border-gray-200 bg-white hover:bg-gray-50'
+                    ? 'border-green-400 bg-green-50/50 cursor-default'
+                    : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md transition-shadow cursor-pointer'
                 }`}
               >
                 {/* Logo at the top */}
