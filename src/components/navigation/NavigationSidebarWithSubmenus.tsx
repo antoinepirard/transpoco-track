@@ -48,6 +48,7 @@ import {
   CloudArrowDownIcon,
   UserPlusIcon,
   ListIcon,
+  XIcon,
 } from '@phosphor-icons/react';
 import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
 import { NavigationTooltip } from './NavigationTooltip';
@@ -400,6 +401,9 @@ export function NavigationSidebarWithSubmenus({
     'transpoco'
   );
 
+  // Mobile sidebar state
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
   // Demo locked items (premium features) - memoized to prevent re-renders
   const lockedItemIds = useMemo(
     () => ['bikly', 'cost-management', 'fuel-electric'],
@@ -572,13 +576,25 @@ export function NavigationSidebarWithSubmenus({
     <div className="w-full h-screen flex flex-col">
       {/* Top Bar */}
       <div className="h-14 bg-[#0e0033] border-b border-gray-600 flex items-center justify-between px-4">
-        {/* Left side - Brand Switcher */}
+        {/* Left side - Mobile Menu + Brand Switcher */}
         <div className="flex items-center space-x-3">
-          <BrandSwitcher
-            selectedBrand={selectedBrand}
-            onBrandChange={setSelectedBrand}
-            variant="dark"
-          />
+          {/* Mobile hamburger menu */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="md:hidden flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-200 hover:hover-only:bg-gray-300/20 hover:hover-only:text-white"
+            aria-label="Open navigation menu"
+          >
+            <ListIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-300 group-hover:hover-only:text-white" />
+          </button>
+
+          {/* Brand Switcher - hidden on mobile */}
+          <div className="hidden md:block">
+            <BrandSwitcher
+              selectedBrand={selectedBrand}
+              onBrandChange={setSelectedBrand}
+              variant="dark"
+            />
+          </div>
         </div>
 
         {/* Right side - Settings, Messages, Notifications, User Avatar */}
@@ -588,7 +604,7 @@ export function NavigationSidebarWithSubmenus({
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-immediate group focus-ring cursor-pointer text-gray-200 hover:hover-only:bg-gray-300/20 hover:hover-only:text-white data-[state=open]:bg-[#3D88C5] data-[state=open]:text-white outline-none">
                 <GearIcon className="mr-2 h-5 w-5 flex-shrink-0 transition-immediate text-gray-300 group-hover:hover-only:text-white group-data-[state=open]:text-white" />
-                <span>Settings</span>
+                <span className="hidden sm:inline">Settings</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
@@ -642,8 +658,8 @@ export function NavigationSidebarWithSubmenus({
             </DropdownMenu>
           </div>
 
-          {/* Divider */}
-          <div className="mx-4 h-6 w-px bg-gray-600"></div>
+          {/* Divider - Hidden on mobile */}
+          <div className="hidden sm:block mx-4 h-6 w-px bg-gray-600"></div>
 
           {/* Icons Section */}
           <div className="flex items-center space-x-2">
@@ -667,8 +683,8 @@ export function NavigationSidebarWithSubmenus({
             </button>
           </div>
 
-          {/* Divider */}
-          <div className="mx-4 h-6 w-px bg-gray-600"></div>
+          {/* Divider - Hidden on mobile */}
+          <div className="hidden sm:block mx-4 h-6 w-px bg-gray-600"></div>
 
           {/* User Avatar Dropdown */}
           <UserAvatarDropdown
@@ -684,8 +700,8 @@ export function NavigationSidebarWithSubmenus({
 
       {/* Main Content Area */}
       <div className="flex-1 flex min-h-0">
-        {/* Sidebar */}
-        <div className="w-68 bg-white shadow-lg border-r border-gray-200 flex flex-col relative z-10">
+        {/* Desktop Sidebar */}
+        <div className="hidden md:flex w-68 bg-white shadow-lg border-r border-gray-200 flex-col relative z-10">
           {/* Navigation */}
           <nav
             ref={navRef}
@@ -796,6 +812,147 @@ export function NavigationSidebarWithSubmenus({
             </DropdownMenu>
           </div>
         </div>
+
+        {/* Mobile Sidebar Overlay */}
+        {isMobileSidebarOpen && (
+          <div className="md:hidden fixed inset-0 z-50">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setIsMobileSidebarOpen(false)}
+            />
+
+            {/* Sidebar */}
+            <div className="absolute left-0 top-0 h-full w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
+              {/* Mobile Sidebar Header */}
+              <div className="h-14 bg-[#0e0033] border-b border-gray-600 flex items-center justify-between px-4">
+                <BrandSwitcher
+                  selectedBrand={selectedBrand}
+                  onBrandChange={setSelectedBrand}
+                  variant="dark"
+                />
+                <button
+                  onClick={() => setIsMobileSidebarOpen(false)}
+                  className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-200 hover:hover-only:bg-gray-300/20 hover:hover-only:text-white"
+                  aria-label="Close navigation menu"
+                >
+                  <XIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-300 group-hover:hover-only:text-white" />
+                </button>
+              </div>
+
+              {/* Mobile Navigation */}
+              <nav
+                className="flex-1 overflow-y-auto py-4 custom-scrollbar"
+                role="navigation"
+                aria-label="Main navigation"
+                onMouseEnter={handleNavigationMouseEnter}
+                onMouseLeave={handleNavigationMouseLeave}
+              >
+                <div>
+                  {sidebarNavigationData.map((section) => (
+                    <div key={section.id} className="mb-6">
+                      {section.title && (
+                        <div className="px-4 mb-2">
+                          <h3 className="text-xs font-medium text-gray-500">
+                            {section.title}
+                          </h3>
+                        </div>
+                      )}
+                      <div className="space-y-0.5 px-2">
+                        {section.items.map((item) => {
+                          const isActive =
+                            activeItemId === item.id && !activeSettingsItemId;
+                          const isExpanded = isItemExpanded(item.id);
+                          const isLocked = lockedItemIds.includes(item.id);
+
+                          const handleItemClick = (clickedItem: NavigationItem) => {
+                            setActiveItemId(clickedItem.id);
+                            setActiveSettingsItemId('');
+                            setIsMobileSidebarOpen(false); // Close mobile sidebar
+                            onActiveItemChange?.({
+                              id: clickedItem.id,
+                              label: clickedItem.label,
+                            });
+                            console.log(
+                              `[Demo] Active item set to "${clickedItem.label}"`
+                            );
+                          };
+
+                          return (
+                            <NavigationItemGroupDemo
+                              key={item.id}
+                              item={item}
+                              isActive={isActive}
+                              isExpanded={isExpanded}
+                              isLocked={isLocked}
+                              activeItemId={activeItemId}
+                              lockedItemIds={lockedItemIds}
+                              onItemClick={handleItemClick}
+                              onExpandToggle={toggleExpandedItem}
+                              onLearnMore={handleLearnMore}
+                              onKeyDown={handleKeyDown}
+                              onItemHover={handleItemHover}
+                              onItemLeave={handleItemLeave}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </nav>
+
+              {/* Mobile Help Button */}
+              <div className="px-4 pb-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" size="default" className="w-full">
+                      <QuestionIcon />
+                      Help
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64">
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => window.open('#', '_blank')}
+                    >
+                      <EnvelopeIcon className="w-4 h-4 text-gray-400" />
+                      Get in Touch
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => window.open('#', '_blank')}
+                    >
+                      <ShieldIcon className="w-4 h-4 text-gray-400" />
+                      Terms & Privacy Policy
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => window.open('#', '_blank')}
+                    >
+                      <BookOpenIcon className="w-4 h-4 text-gray-400" />
+                      Knowledge Base
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => window.open('#', '_blank')}
+                    >
+                      <FileTextIcon className="w-4 h-4 text-gray-400" />
+                      User Manual
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => window.open('#', '_blank')}
+                    >
+                      <NewspaperIcon className="w-4 h-4 text-gray-400" />
+                      Whats New?
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </div>
+        )}
 
         <main className="flex-1 overflow-hidden h-full min-h-0 relative">
           <AnimatePresence>
