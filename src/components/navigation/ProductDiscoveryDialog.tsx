@@ -78,31 +78,31 @@ export function ProductDiscoveryDialog({ open, onOpenChange }: ProductDiscoveryD
               <div
                 key={product.id}
                 onClick={() => handleProductClick(product)}
-                className={`border rounded-lg p-4 text-center flex flex-col h-full ${
+                className={`border rounded-lg p-4 flex flex-col h-full ${
                   isActivated
                     ? 'border-green-400 bg-green-50/50 cursor-default'
                     : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md transition-shadow cursor-pointer'
                 }`}
               >
-                {/* Logo at the top */}
-                <div className="flex justify-center mb-2">
-                  <Image
-                    src={product.logo}
-                    alt={`${product.name} logo`}
-                    width={48}
-                    height={48}
-                    className="w-12 h-12 object-contain"
-                  />
-                </div>
-
-                {/* Product name and category */}
-                <div className="mb-2">
-                  <h3 className="text-sm font-medium text-gray-900 mb-1">
-                    {product.name}
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    {product.category}
-                  </p>
+                {/* Header: Product name/category and logo */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 text-left">
+                    <h3 className="text-sm font-medium text-gray-900 mb-1">
+                      {product.name}
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                      {product.category}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 ml-3">
+                    <Image
+                      src={product.logo}
+                      alt={`${product.name} logo`}
+                      width={48}
+                      height={48}
+                      className="w-12 h-12 object-contain"
+                    />
+                  </div>
                 </div>
 
                 {/* Description */}
