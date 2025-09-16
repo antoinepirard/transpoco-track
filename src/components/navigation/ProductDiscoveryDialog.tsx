@@ -125,10 +125,19 @@ export function ProductDiscoveryDialog({ open, onOpenChange }: ProductDiscoveryD
           })}
         </div>
 
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <p className="text-sm text-gray-500 text-center">
-            More products coming soon. Stay tuned for exciting updates!
+        <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+          <p className="text-sm text-gray-600 mb-2">
+            Want to learn more about our products or need a custom solution?
           </p>
+          <button
+            onClick={() => {
+              console.log('[Demo] Chat with sales team clicked');
+              // Here you would typically open a chat widget, redirect to contact page, etc.
+            }}
+            className="text-sm font-medium text-[#95B148] hover:text-[#7a9138] transition-colors underline"
+          >
+            Chat with our sales team →
+          </button>
         </div>
       </DialogContent>
     </Dialog>
