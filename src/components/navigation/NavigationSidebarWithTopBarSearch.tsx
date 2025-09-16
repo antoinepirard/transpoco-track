@@ -116,15 +116,6 @@ const settingsSubmenus = [
     ],
   },
   {
-    id: 'alerts',
-    title: 'Alerts',
-    icon: WarningIcon,
-    items: [
-      { id: 'manage-alerts', label: 'Manage Alerts', icon: WarningIcon },
-      { id: 'alerts-log', label: 'Alerts Log', icon: ListIcon },
-    ],
-  },
-  {
     id: 'orders-billing',
     title: 'Orders & Billing',
     icon: CreditCardIcon,
@@ -234,11 +225,28 @@ const sidebarNavigationData: NavigationSection[] = [
             icon: CheckCircleIcon,
             href: '/reports/route-completion-summary',
           },
+        ],
+      },
+      {
+        id: 'alerts',
+        label: 'Alerts',
+        icon: WarningIcon,
+        children: [
           {
-            id: 'alerts',
-            label: 'Alerts',
+            id: 'alerts-report',
+            label: 'Report',
             icon: WarningIcon,
             href: '/reports/alerts',
+          },
+          {
+            id: 'alerts-logs',
+            label: 'Logs',
+            icon: ListIcon,
+          },
+          {
+            id: 'alerts-manage',
+            label: 'Manage',
+            icon: WarningIcon,
           },
         ],
       },
