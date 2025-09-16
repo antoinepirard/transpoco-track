@@ -1,0 +1,138 @@
+'use client';
+
+import React from 'react';
+import Image from 'next/image';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+
+interface Product {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  category: string;
+}
+
+interface ProductDiscoveryDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const newProducts: Product[] = [
+  {
+    id: 'safely',
+    name: 'Safely',
+    logo: '/safelylogo.png',
+    description: 'Advanced safety and compliance monitoring for your fleet. Get real-time alerts, driver behavior insights, and comprehensive safety reporting.',
+    category: 'Safety & Compliance',
+  },
+  {
+    id: 'bitly',
+    name: 'Bitly',
+    logo: '/transpoco-logo.svg', // Using transpoco logo as placeholder for demo
+    description: 'Link management and analytics platform. Create, share, and track shortened URLs to measure your marketing performance.',
+    category: 'Analytics & Marketing',
+  },
+  {
+    id: 'fleet-optimizer',
+    name: 'Fleet Optimizer',
+    logo: '/transpoco-logo.svg', // Using transpoco logo as placeholder
+    description: 'AI-powered route optimization and fuel efficiency monitoring. Reduce costs and improve delivery times.',
+    category: 'Optimization',
+  },
+  {
+    id: 'driver-wellness',
+    name: 'Driver Wellness',
+    logo: '/safelylogo.png', // Using safely logo as placeholder
+    description: 'Comprehensive driver health and wellness tracking. Monitor fatigue, stress levels, and provide wellness recommendations.',
+    category: 'Driver Management',
+  },
+  {
+    id: 'eco-tracker',
+    name: 'Eco Tracker',
+    logo: '/transpoco-logo.svg', // Using transpoco logo as placeholder
+    description: 'Environmental impact monitoring and carbon footprint tracking for sustainable fleet management.',
+    category: 'Sustainability',
+  },
+  {
+    id: 'maintenance-pro',
+    name: 'Maintenance Pro',
+    logo: '/safelylogo.png', // Using safely logo as placeholder
+    description: 'Predictive maintenance scheduling and vehicle health monitoring. Prevent breakdowns before they happen.',
+    category: 'Maintenance',
+  },
+];
+
+export function ProductDiscoveryDialog({ open, onOpenChange }: ProductDiscoveryDialogProps) {
+  const handleProductClick = (product: Product) => {
+    console.log(`[Demo] Product clicked: ${product.name}`);
+    // Here you would typically navigate to the product page or initiate setup
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold">Discover New Products</DialogTitle>
+          <DialogDescription className="text-gray-600">
+            Explore our latest products and integrations to enhance your fleet management experience.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+          {newProducts.map((product) => (
+            <div
+              key={product.id}
+              onClick={() => handleProductClick(product)}
+              className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer bg-white hover:bg-gray-50 text-center"
+            >
+              {/* Logo at the top */}
+              <div className="flex justify-center mb-2">
+                <Image
+                  src={product.logo}
+                  alt={`${product.name} logo`}
+                  width={48}
+                  height={48}
+                  className="w-12 h-12 object-contain"
+                />
+              </div>
+
+              {/* Product name and category */}
+              <div className="mb-2">
+                <h3 className="text-sm font-medium text-gray-900 mb-1">
+                  {product.name}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {product.category}
+                </p>
+              </div>
+
+              {/* Description */}
+              <p className="text-sm text-gray-600 leading-relaxed mb-3">
+                {product.description}
+              </p>
+
+              {/* Learn More button */}
+              <div className="pt-2 border-t border-gray-100">
+                <button className="text-xs font-medium text-[#95B148] hover:text-[#7a9138] transition-colors">
+                  Learn More →
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <p className="text-sm text-gray-500 text-center">
+            More products coming soon. Stay tuned for exciting updates!
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

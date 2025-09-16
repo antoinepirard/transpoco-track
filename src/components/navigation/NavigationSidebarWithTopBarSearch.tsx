@@ -56,6 +56,7 @@ import { BrandSwitcher } from './BrandSwitcher';
 import { MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react';
 import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { ProductDiscoveryDialog } from './ProductDiscoveryDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -314,11 +315,6 @@ const sidebarNavigationData: NavigationSection[] = [
         label: 'Walkaround',
         icon: ListChecksIcon,
       },
-      {
-        id: 'bikly',
-        label: 'Bikly',
-        icon: ShieldIcon,
-      },
     ],
   },
   {
@@ -415,6 +411,9 @@ export function NavigationSidebarWithTopBarSearch({
   const [highlightedSearchIndex, setHighlightedSearchIndex] = useState(-1);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Product discovery dialog state
+  const [isProductDiscoveryOpen, setIsProductDiscoveryOpen] = useState(false);
+
   // Collect all navigation items for search
   const allNavigationItems = useMemo(() => {
     const items: NavigationItemWithSection[] = [];
@@ -475,19 +474,13 @@ export function NavigationSidebarWithTopBarSearch({
 
   // Demo locked items (premium features) - memoized to prevent re-renders
   const lockedItemIds = useMemo(
-    () => ['bikly', 'cost-management', 'fuel-electric'],
+    () => ['cost-management', 'fuel-electric'],
     []
   );
 
   // Tooltip content for locked items - memoized to prevent re-renders
   const tooltipContent = useMemo(
     () => ({
-      bikly: {
-        title: 'Bikly',
-        description:
-          'Advanced safety and compliance monitoring for your fleet. Get real-time alerts, driver behavior insights, and comprehensive safety reporting to reduce incidents and improve driver performance.',
-        image: '/pointing at laptop screen with data on show.webp',
-      },
       'cost-management': {
         title: 'Cost Management',
         description:
@@ -992,7 +985,16 @@ export function NavigationSidebarWithTopBarSearch({
             </div>
           </nav>
 
-          <div className="px-4 pb-2">
+          <div className="px-4 pb-2 space-y-2">
+            <Button
+              onClick={() => setIsProductDiscoveryOpen(true)}
+              size="default"
+              className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
+            >
+              <PackageIcon />
+              Discover new products
+            </Button>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="default" className="w-full">
@@ -1130,8 +1132,17 @@ export function NavigationSidebarWithTopBarSearch({
                 </div>
               </nav>
 
-              {/* Mobile Help Button */}
-              <div className="px-4 pb-2">
+              {/* Mobile Product Discovery and Help Buttons */}
+              <div className="px-4 pb-2 space-y-2">
+                <Button
+                  onClick={() => setIsProductDiscoveryOpen(true)}
+                  size="default"
+                  className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
+                >
+                  <PackageIcon />
+                  Discover new products
+                </Button>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="secondary" size="default" className="w-full">
@@ -1202,6 +1213,12 @@ export function NavigationSidebarWithTopBarSearch({
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Product Discovery Dialog */}
+      <ProductDiscoveryDialog
+        open={isProductDiscoveryOpen}
+        onOpenChange={setIsProductDiscoveryOpen}
+      />
     </div>
   );
 }
