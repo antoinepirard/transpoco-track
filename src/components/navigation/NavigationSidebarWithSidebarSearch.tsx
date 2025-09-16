@@ -1070,7 +1070,7 @@ export function NavigationSidebarWithSidebarSearch({
       </div>
 
       {/* Command Menu Dialog */}
-      <CommandDialog open={isCommandOpen} onOpenChange={setIsCommandOpen}>
+      <CommandDialog open={isCommandOpen} onOpenChange={setIsCommandOpen} className="z-[55]">
         <CommandInput placeholder="Search pages..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
