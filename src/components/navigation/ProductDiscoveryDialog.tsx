@@ -71,46 +71,58 @@ export function ProductDiscoveryDialog({ open, onOpenChange }: ProductDiscoveryD
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-4 mt-6">
-          {newProducts.map((product) => (
-            <div
-              key={product.id}
-              onClick={() => handleProductClick(product)}
-              className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer bg-white hover:bg-gray-50 text-center"
-            >
-              {/* Logo at the top */}
-              <div className="flex justify-center mb-2">
-                <Image
-                  src={product.logo}
-                  alt={`${product.name} logo`}
-                  width={48}
-                  height={48}
-                  className="w-12 h-12 object-contain"
-                />
-              </div>
+          {newProducts.map((product) => {
+            const isActivated = product.id === 'transpoco' || product.id === 'safely';
 
-              {/* Product name and category */}
-              <div className="mb-2">
-                <h3 className="text-sm font-medium text-gray-900 mb-1">
-                  {product.name}
-                </h3>
-                <p className="text-xs text-gray-500">
-                  {product.category}
+            return (
+              <div
+                key={product.id}
+                onClick={() => handleProductClick(product)}
+                className={`border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer text-center flex flex-col h-full ${
+                  isActivated
+                    ? 'border-green-200 bg-green-50/50 hover:bg-green-50'
+                    : 'border-gray-200 bg-white hover:bg-gray-50'
+                }`}
+              >
+                {/* Logo at the top */}
+                <div className="flex justify-center mb-2">
+                  <Image
+                    src={product.logo}
+                    alt={`${product.name} logo`}
+                    width={48}
+                    height={48}
+                    className="w-12 h-12 object-contain"
+                  />
+                </div>
+
+                {/* Product name and category */}
+                <div className="mb-2">
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">
+                    {product.name}
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    {product.category}
+                  </p>
+                </div>
+
+                {/* Description */}
+                <p className="text-sm text-gray-600 leading-relaxed mb-3 flex-1">
+                  {product.description}
                 </p>
-              </div>
 
-              {/* Description */}
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                {product.description}
-              </p>
-
-              {/* Learn More button */}
-              <div className="pt-2 border-t border-gray-100">
-                <button className="text-xs font-medium text-[#95B148] hover:text-[#7a9138] transition-colors">
-                  Learn More →
-                </button>
+                {/* Action button */}
+                <div className={`pt-2 mt-auto ${isActivated ? 'border-t border-green-200' : 'border-t border-gray-100'}`}>
+                  <button className={`text-xs font-medium transition-colors ${
+                    isActivated
+                      ? 'text-green-700 hover:text-green-800'
+                      : 'text-[#95B148] hover:text-[#7a9138]'
+                  }`}>
+                    {isActivated ? 'Activated ✓' : 'Learn More →'}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-6 pt-4 border-t border-gray-200">
