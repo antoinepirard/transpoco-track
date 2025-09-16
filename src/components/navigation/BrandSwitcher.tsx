@@ -6,6 +6,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -17,6 +18,7 @@ interface BrandSwitcherProps {
   selectedBrand: 'transpoco' | 'safely';
   onBrandChange: (brand: 'transpoco' | 'safely') => void;
   variant?: 'light' | 'dark';
+  onAddNewProduct?: () => void;
 }
 
 const brands = [
@@ -34,7 +36,7 @@ const brands = [
   },
 ];
 
-export function BrandSwitcher({ selectedBrand, onBrandChange, variant = 'light' }: BrandSwitcherProps) {
+export function BrandSwitcher({ selectedBrand, onBrandChange, variant = 'light', onAddNewProduct }: BrandSwitcherProps) {
   const currentBrand = brands.find(brand => brand.id === selectedBrand) || brands[0];
 
   const handleBrandSelect = (brandId: 'transpoco' | 'safely') => {
@@ -92,6 +94,20 @@ export function BrandSwitcher({ selectedBrand, onBrandChange, variant = 'light' 
             )}
           </DropdownMenuItem>
         ))}
+
+        {onAddNewProduct && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="flex items-center justify-center cursor-pointer p-3 text-[#95B148] hover:text-[#7a9138] hover:bg-gray-50"
+              onClick={onAddNewProduct}
+            >
+              <div className="text-sm font-medium">
+                + Add new product
+              </div>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -748,6 +748,7 @@ export function NavigationSidebarWithTopBarSearch({
               selectedBrand={selectedBrand}
               onBrandChange={setSelectedBrand}
               variant="dark"
+              onAddNewProduct={() => setIsProductDiscoveryOpen(true)}
             />
           </div>
         </div>
@@ -1060,6 +1061,7 @@ export function NavigationSidebarWithTopBarSearch({
                   selectedBrand={selectedBrand}
                   onBrandChange={setSelectedBrand}
                   variant="dark"
+                  onAddNewProduct={() => setIsProductDiscoveryOpen(true)}
                 />
                 <button
                   onClick={() => setIsMobileSidebarOpen(false)}

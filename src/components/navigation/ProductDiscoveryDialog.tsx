@@ -28,43 +28,29 @@ const newProducts: Product[] = [
     id: 'safely',
     name: 'Safely',
     logo: '/safelylogo.png',
-    description: 'Advanced safety and compliance monitoring for your fleet. Get real-time alerts, driver behavior insights, and comprehensive safety reporting.',
-    category: 'Safety & Compliance',
+    description: 'Turn raw telematics into safer driving and fewer incidents with vendor‑agnostic analytics, leaderboards, and behavior change workflows that coach drivers and build a safety culture without ripping and replacing your current stack.',
+    category: 'Safety & Analytics',
   },
   {
-    id: 'bitly',
-    name: 'Bitly',
-    logo: '/transpoco-logo.svg', // Using transpoco logo as placeholder for demo
-    description: 'Link management and analytics platform. Create, share, and track shortened URLs to measure your marketing performance.',
-    category: 'Analytics & Marketing',
-  },
-  {
-    id: 'fleet-optimizer',
-    name: 'Fleet Optimizer',
-    logo: '/transpoco-logo.svg', // Using transpoco logo as placeholder
-    description: 'AI-powered route optimization and fuel efficiency monitoring. Reduce costs and improve delivery times.',
-    category: 'Optimization',
-  },
-  {
-    id: 'driver-wellness',
-    name: 'Driver Wellness',
+    id: 'maintainly',
+    name: 'Maintainly',
     logo: '/safelylogo.png', // Using safely logo as placeholder
-    description: 'Comprehensive driver health and wellness tracking. Monitor fatigue, stress levels, and provide wellness recommendations.',
-    category: 'Driver Management',
+    description: 'Keep vehicles compliant and on the road with maintenance workflows that tie daily checks and defects to service actions, with an AI‑assisted layer emerging to reduce admin and surface what needs attention next.',
+    category: 'Maintenance & Compliance',
   },
   {
-    id: 'eco-tracker',
-    name: 'Eco Tracker',
+    id: 'bikly',
+    name: 'Bikly',
     logo: '/transpoco-logo.svg', // Using transpoco logo as placeholder
-    description: 'Environmental impact monitoring and carbon footprint tracking for sustainable fleet management.',
-    category: 'Sustainability',
+    description: 'Simplify Benefit‑in‑Kind (BIK) compliance and communication for fleets and drivers by turning complex tax rules into clear calculations and guidance, helping organizations reduce admin overhead and policy friction.',
+    category: 'Tax & Compliance',
   },
   {
-    id: 'maintenance-pro',
-    name: 'Maintenance Pro',
-    logo: '/safelylogo.png', // Using safely logo as placeholder
-    description: 'Predictive maintenance scheduling and vehicle health monitoring. Prevent breakdowns before they happen.',
-    category: 'Maintenance',
+    id: 'transpoco',
+    name: 'Transpoco',
+    logo: '/transpoco-logo.svg',
+    description: 'Comprehensive fleet management platform providing real-time tracking, route optimization, and operational insights for modern fleet operations.',
+    category: 'Fleet Management',
   },
 ];
 
@@ -84,7 +70,7 @@ export function ProductDiscoveryDialog({ open, onOpenChange }: ProductDiscoveryD
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+        <div className="grid grid-cols-2 gap-4 mt-6">
           {newProducts.map((product) => (
             <div
               key={product.id}
