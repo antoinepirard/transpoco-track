@@ -172,6 +172,12 @@ const sidebarNavigationData: NavigationSection[] = [
         icon: ChartBarIcon,
         children: [
           {
+            id: 'journeys',
+            label: 'Journeys',
+            icon: NavigationArrowIcon,
+            href: '/reports/journeys',
+          },
+          {
             id: 'last-location',
             label: 'Last Location',
             icon: MapPinIcon,
@@ -188,12 +194,6 @@ const sidebarNavigationData: NavigationSection[] = [
             label: 'Summary',
             icon: ChartLineIcon,
             href: '/reports/summary',
-          },
-          {
-            id: 'journeys',
-            label: 'Journeys',
-            icon: NavigationArrowIcon,
-            href: '/reports/journeys',
           },
           {
             id: 'idling',
