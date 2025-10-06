@@ -11,6 +11,9 @@ import {
   TruckIcon,
   BellIcon,
   QuestionIcon,
+  EnvelopeIcon,
+  PaperPlaneIcon,
+  PlusIcon,
 } from '@phosphor-icons/react';
 import {
   DropdownMenu,
@@ -18,6 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
 interface SecondaryTopBarItem {
   id: string;
@@ -29,10 +33,19 @@ interface SubPageSecondaryTopBarProps {
   pageId: string;
   activeTabId?: string;
   onTabClick?: (tab: { id: string; label: string }) => void;
+  showActionButton?: boolean;
+  actionButtonLabel?: string;
+  onActionButtonClick?: () => void;
 }
 
 // Tabs organized by sub-page
 const subPageTabs: Record<string, SecondaryTopBarItem[]> = {
+  // Messages page
+  'messages': [
+    { id: 'messages', label: 'Messages', icon: EnvelopeIcon },
+    { id: 'sent-messages', label: 'Sent Messages', icon: PaperPlaneIcon },
+  ],
+
   // Walkaround sub-pages
   'all-checks': [
     { id: 'weekly', label: 'Weekly', icon: CalendarIcon },
@@ -62,7 +75,10 @@ const subPageTabs: Record<string, SecondaryTopBarItem[]> = {
 export function SubPageSecondaryTopBar({
   pageId,
   activeTabId = '',
-  onTabClick
+  onTabClick,
+  showActionButton = false,
+  actionButtonLabel = '',
+  onActionButtonClick
 }: SubPageSecondaryTopBarProps) {
   const tabs = subPageTabs[pageId] || [];
 
@@ -105,27 +121,38 @@ export function SubPageSecondaryTopBar({
         })}
       </div>
 
-      {/* Right side - Help menu */}
+      {/* Right side - Action button or Help menu */}
       <div className="flex items-center">
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-600 hover:hover-only:bg-white hover:hover-only:text-gray-900 outline-none">
-            <QuestionIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => console.log('[Demo] Get started clicked')}
-            >
-              Get started
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => console.log('[Demo] Manual clicked')}
-            >
-              Manual
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {showActionButton ? (
+          <Button
+            onClick={onActionButtonClick}
+            size="sm"
+            className="bg-[#3D88C5] hover:bg-[#2d6a9a] text-white"
+          >
+            <PlusIcon className="mr-2 h-4 w-4" />
+            {actionButtonLabel}
+          </Button>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-600 hover:hover-only:bg-white hover:hover-only:text-gray-900 outline-none">
+              <QuestionIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => console.log('[Demo] Get started clicked')}
+              >
+                Get started
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => console.log('[Demo] Manual clicked')}
+              >
+                Manual
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   );

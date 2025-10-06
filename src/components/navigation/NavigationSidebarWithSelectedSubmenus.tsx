@@ -632,7 +632,7 @@ export function NavigationSidebarWithSelectedSubmenus({
 
   const handleTopBarItemClick = (itemId: string) => {
     // Handle messages and notifications
-    setActiveItemId(''); // Clear main nav active state
+    setActiveItemId(itemId); // Set active to messages or notifications
     setActiveSettingsItemId(''); // Clear settings active state
     console.log(`[Demo] Top bar item clicked: ${itemId}`);
     onActiveItemChange?.({
@@ -659,10 +659,18 @@ export function NavigationSidebarWithSelectedSubmenus({
     console.log(`[Demo] Sub-page tab clicked: "${tab.label}"`);
   }, []);
 
+  // New Message button click handler
+  const handleNewMessageClick = useCallback(() => {
+    console.log('[Demo] New Message button clicked');
+    // Add logic to open new message dialog/modal
+  }, []);
+
   // Auto-select first tab when sub-page is selected
   useEffect(() => {
     // Default tabs for each sub-page
     const defaultTabs: Record<string, string> = {
+      // Messages page
+      'messages': 'messages',
       // Walkaround sub-pages
       'all-checks': 'weekly',
       'driven-without-checks': 'per-driver',
@@ -1131,6 +1139,8 @@ export function NavigationSidebarWithSelectedSubmenus({
         <main className="flex-1 overflow-hidden h-full min-h-0 relative flex flex-col">
           {/* Sub-page Secondary Top Bar - positioned to the right of the sidebar */}
           {(
+            // Messages page
+            activeItemId === 'messages' ||
             // Walkaround sub-pages
             activeItemId === 'all-checks' ||
             activeItemId === 'driven-without-checks' ||
@@ -1147,6 +1157,9 @@ export function NavigationSidebarWithSelectedSubmenus({
               pageId={activeItemId}
               activeTabId={activeSubPageTabId}
               onTabClick={handleSubPageTabClick}
+              showActionButton={activeItemId === 'messages'}
+              actionButtonLabel="New Message"
+              onActionButtonClick={handleNewMessageClick}
             />
           )}
 
