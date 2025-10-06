@@ -93,7 +93,7 @@ export function SubPageSecondaryTopBar({
   return (
     <div className="h-12 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 relative z-20">
       {/* Left side - Tab items */}
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center space-x-1 h-full">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTabId === tab.id;
@@ -102,20 +102,23 @@ export function SubPageSecondaryTopBar({
             <button
               key={tab.id}
               onClick={() => handleTabClick(tab)}
-              className={`flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-immediate group focus-ring cursor-pointer ${
+              className={`flex items-center px-3 h-full text-sm font-medium rounded-t-md transition-immediate group focus-ring cursor-pointer relative ${
                 isActive
-                  ? 'bg-[#3D88C5] text-white'
+                  ? 'bg-blue-50 text-[#3D88C5]'
                   : 'text-gray-600 hover:hover-only:bg-white hover:hover-only:text-gray-900'
               }`}
             >
               {Icon && (
                 <Icon className={`mr-2 h-4 w-4 flex-shrink-0 transition-immediate ${
                   isActive
-                    ? 'text-white'
+                    ? 'text-[#3D88C5]'
                     : 'text-gray-400 group-hover:hover-only:text-gray-500'
                 }`} />
               )}
               <span>{tab.label}</span>
+              {isActive && (
+                <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#3D88C5]" />
+              )}
             </button>
           );
         })}
