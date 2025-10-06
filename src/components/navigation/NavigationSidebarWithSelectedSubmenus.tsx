@@ -61,6 +61,7 @@ import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ProductDiscoveryDialog } from './ProductDiscoveryDialog';
 import { SubPageSecondaryTopBar } from './SubPageSecondaryTopBar';
+import { SecondaryTopBar } from './SecondaryTopBar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -415,6 +416,57 @@ const sidebarNavigationData: NavigationSection[] = [
         id: 'fuel-electric',
         label: 'Fuel/Electric Vehicles',
         icon: BatteryHighIcon,
+        children: [
+          {
+            id: 'fuel-transactions',
+            label: 'Fuel Transactions',
+            icon: ListIcon,
+          },
+          {
+            id: 'fuel-consumption',
+            label: 'Fuel Consumption',
+            icon: GaugeIcon,
+          },
+          {
+            id: 'fuel-consumption-summary',
+            label: 'Fuel Consumption Summary',
+            icon: ChartLineIcon,
+          },
+          {
+            id: 'fuel-purchase-summary',
+            label: 'Fuel Purchase Summary',
+            icon: CurrencyDollarIcon,
+          },
+          {
+            id: 'fuel-transactions-gps-verified',
+            label: 'Fuel Transactions Gps Verified',
+            icon: CheckCircleIcon,
+          },
+          {
+            id: 'carbon-footprint-calculations',
+            label: 'Carbon Footprint Calculations',
+            icon: ChartBarIcon,
+          },
+          {
+            id: 'canbus-fuel-used',
+            label: 'Canbus Fuel Used',
+            icon: GaugeIcon,
+          },
+          {
+            id: 'canbus-plant-utilisation',
+            label: 'Canbus Plant Utilisation',
+            icon: ListIcon,
+          },
+          { id: 'ev-suitability', label: 'EV Suitability', icon: TruckIcon },
+          { id: 'ev-charging', label: 'EV Charging', icon: BatteryHighIcon },
+          { id: 'fuel-accounts', label: 'Fuel Accounts', icon: ListIcon },
+          { id: 'fuel-cards', label: 'Fuel Cards', icon: CreditCardIcon },
+          {
+            id: 'ev-suitability-settings',
+            label: 'EV Suitability Settings',
+            icon: GearIcon,
+          },
+        ],
       },
       {
         id: 'temperature',
@@ -484,10 +536,20 @@ export function NavigationSidebarWithSelectedSubmenus({
   // Sub-page secondary top bar state (for walkaround, driving style, etc.)
   const [activeSubPageTabId, setActiveSubPageTabId] = useState<string>('');
 
+  // Detect if active item is a Fuel/Electric child to show the top bar
+  const fuelElectricChildIds = useMemo(() => {
+    for (const section of sidebarNavigationData) {
+      const parent = section.items.find((it) => it.id === 'fuel-electric');
+      if (parent && parent.children) {
+        return new Set(parent.children.map((c) => c.id));
+      }
+    }
+    return new Set<string>();
+  }, []);
+
   // Demo locked items (premium features) - memoized to prevent re-renders
   const lockedItemIds = useMemo(
-    () =>
-      mounted && showLockedItems ? ['cost-management', 'fuel-electric'] : [],
+    () => (mounted && showLockedItems ? ['cost-management'] : []),
     [mounted, showLockedItems]
   );
 
@@ -689,15 +751,42 @@ export function NavigationSidebarWithSelectedSubmenus({
       'walkaround-settings': 'alerts',
       // Driving Style sub-pages
       'speed-summary': 'per-vehicle',
+      'speed-trend': 'per-vehicle',
+      'speed-improvement': 'per-vehicle',
       'driving-summary': 'per-vehicle',
+      'driver-mileage-summary': 'per-vehicle',
+      'driving-style-settings': 'alerts',
+      // Fuel/Electric module
+      'fuel-electric': 'fuel',
     };
 
-    if (activeItemId in defaultTabs) {
+    // If a Fuel/Electric child is active, map to the appropriate tab
+    if (
+      activeItemId === 'fuel-electric' ||
+      fuelElectricChildIds.has(activeItemId)
+    ) {
+      const fuelChildrenToTab: Record<string, string> = {
+        'fuel-transactions': 'fuel',
+        'fuel-consumption': 'fuel',
+        'fuel-consumption-summary': 'fuel',
+        'fuel-purchase-summary': 'fuel',
+        'fuel-transactions-gps-verified': 'fuel',
+        'carbon-footprint-calculations': 'fuel',
+        'canbus-fuel-used': 'fuel',
+        'canbus-plant-utilisation': 'fuel',
+        'ev-suitability': 'electric-vehicles',
+        'ev-charging': 'electric-vehicles',
+        'fuel-accounts': 'settings',
+        'fuel-cards': 'settings',
+        'ev-suitability-settings': 'settings',
+      };
+      setActiveSubPageTabId(fuelChildrenToTab[activeItemId] || 'fuel');
+    } else if (activeItemId in defaultTabs) {
       setActiveSubPageTabId(defaultTabs[activeItemId]);
     } else {
       setActiveSubPageTabId('');
     }
-  }, [activeItemId]);
+  }, [activeItemId, fuelElectricChildIds]);
 
   // Handle Cmd+K keyboard shortcut to open command menu
   useEffect(() => {
@@ -1159,28 +1248,150 @@ export function NavigationSidebarWithSelectedSubmenus({
         )}
 
         <main className="flex-1 overflow-hidden h-full min-h-0 relative flex flex-col">
-          {/* Sub-page Secondary Top Bar - positioned to the right of the sidebar */}
-          {// Messages page
-          (activeItemId === 'messages' ||
-            // Walkaround sub-pages
-            activeItemId === 'all-checks' ||
-            activeItemId === 'driven-without-checks' ||
-            activeItemId === 'walkaround-settings' ||
-            // Driving Style sub-pages
-            activeItemId === 'speed-summary' ||
-            activeItemId === 'speed-trend' ||
-            activeItemId === 'speed-improvement' ||
-            activeItemId === 'driving-summary' ||
-            activeItemId === 'driver-mileage-summary' ||
-            activeItemId === 'driving-style-settings') && (
-            <SubPageSecondaryTopBar
-              pageId={activeItemId}
-              activeTabId={activeSubPageTabId}
-              onTabClick={handleSubPageTabClick}
-              showActionButton={activeItemId === 'messages'}
-              actionButtonLabel="New Message"
-              onActionButtonClick={handleNewMessageClick}
+          {/* Secondary top bars */}
+          {activeItemId === 'fuel-electric' ||
+          fuelElectricChildIds.has(activeItemId) ? (
+            <SecondaryTopBar
+              categoryId="fuel-electric"
+              activeItemId={activeSubPageTabId}
+              onItemClick={(item) => setActiveSubPageTabId(item.id)}
             />
+          ) : (
+            (activeItemId === 'messages' ||
+              activeItemId === 'all-checks' ||
+              activeItemId === 'driven-without-checks' ||
+              activeItemId === 'walkaround-settings' ||
+              activeItemId === 'speed-summary' ||
+              activeItemId === 'speed-trend' ||
+              activeItemId === 'speed-improvement' ||
+              activeItemId === 'driving-summary' ||
+              activeItemId === 'driver-mileage-summary' ||
+              activeItemId === 'driving-style-settings') && (
+              <SubPageSecondaryTopBar
+                pageId={activeItemId}
+                activeTabId={activeSubPageTabId}
+                onTabClick={handleSubPageTabClick}
+                showActionButton={activeItemId === 'messages'}
+                actionButtonLabel="New Message"
+                onActionButtonClick={handleNewMessageClick}
+              />
+            )
+          )}
+
+          {activeItemId === 'fuel-electric' && (
+            <div className="px-4 py-3 border-b border-gray-200 bg-white">
+              {(!activeSubPageTabId || activeSubPageTabId === 'fuel') && (
+                <div className="mb-4">
+                  <h3 className="text-xs font-medium text-gray-500 mb-2">
+                    Fuel
+                  </h3>
+                  <div className="grid grid-cols-1 gap-1">
+                    {[
+                      'Fuel Transactions',
+                      'Fuel Consumption',
+                      'Fuel Consumption Summary',
+                      'Fuel Purchase Summary',
+                      'Fuel Transactions Gps Verified',
+                      'Carbon Footprint Calculations',
+                      'Canbus Fuel Used',
+                      'Canbus Plant Utilisation',
+                    ].map((label) => (
+                      <button
+                        key={label}
+                        className="w-full text-left px-3 py-1.5 text-sm rounded-md transition-immediate hover:bg-gray-100 text-gray-700"
+                        onClick={() =>
+                          onActiveItemChange?.({
+                            id: label.toLowerCase().replace(/\s+/g, '-'),
+                            label,
+                          })
+                        }
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {activeSubPageTabId === 'electric-vehicles' && (
+                <div className="mb-4">
+                  <h3 className="text-xs font-medium text-gray-500 mb-2">
+                    Electric Vehicles
+                  </h3>
+                  <div className="grid grid-cols-1 gap-1">
+                    {['EV Suitability', 'EV Charging'].map((label) => (
+                      <button
+                        key={label}
+                        className="w-full text-left px-3 py-1.5 text-sm rounded-md transition-immediate hover:bg-gray-100 text-gray-700"
+                        onClick={() =>
+                          onActiveItemChange?.({
+                            id: label.toLowerCase().replace(/\s+/g, '-'),
+                            label,
+                          })
+                        }
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {activeSubPageTabId === 'settings' && (
+                <div className="mb-4">
+                  <h3 className="text-xs font-medium text-gray-500 mb-2">
+                    Settings
+                  </h3>
+                  <div className="grid grid-cols-1 gap-1">
+                    {[
+                      'Fuel Accounts',
+                      'Fuel Cards',
+                      'EV Suitability Settings',
+                    ].map((label) => (
+                      <button
+                        key={label}
+                        className="w-full text-left px-3 py-1.5 text-sm rounded-md transition-immediate hover:bg-gray-100 text-gray-700"
+                        onClick={() =>
+                          onActiveItemChange?.({
+                            id: label.toLowerCase().replace(/\s+/g, '-'),
+                            label,
+                          })
+                        }
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {activeSubPageTabId === 'getting-started' && (
+                <div>
+                  <h3 className="text-xs font-medium text-gray-500 mb-2">
+                    Getting started
+                  </h3>
+                  <a
+                    href="#"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-immediate hover:bg-gray-100 text-gray-700"
+                  >
+                    How to use the Fuel Modules
+                    <svg
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M18 13V6a2 2 0 0 0-2-2H9" />
+                      <path d="M15 3l6 6" />
+                      <path d="M10 14L21 3" />
+                      <path d="M5 8H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1" />
+                    </svg>
+                  </a>
+                </div>
+              )}
+            </div>
           )}
 
           <div className="flex-1 overflow-hidden h-full min-h-0 relative">

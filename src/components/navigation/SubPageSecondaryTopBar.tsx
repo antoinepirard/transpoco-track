@@ -3,7 +3,6 @@
 import React from 'react';
 import {
   CheckCircleIcon,
-  WarningIcon,
   GearIcon,
   ListIcon,
   CalendarIcon,
@@ -41,7 +40,7 @@ interface SubPageSecondaryTopBarProps {
 // Tabs organized by sub-page
 const subPageTabs: Record<string, SecondaryTopBarItem[]> = {
   // Messages page
-  'messages': [
+  messages: [
     { id: 'messages', label: 'Messages', icon: EnvelopeIcon },
     { id: 'sent-messages', label: 'Sent Messages', icon: PaperPlaneIcon },
   ],
@@ -70,6 +69,9 @@ const subPageTabs: Record<string, SecondaryTopBarItem[]> = {
     { id: 'per-vehicle', label: 'Per Vehicle', icon: TruckIcon },
     { id: 'per-driver', label: 'Per Driver', icon: UsersIcon },
   ],
+
+  // Fuel / Electric module (moved to sidebar submenus; keep empty for now)
+  'fuel-electric': [],
 };
 
 export function SubPageSecondaryTopBar({
@@ -78,7 +80,7 @@ export function SubPageSecondaryTopBar({
   onTabClick,
   showActionButton = false,
   actionButtonLabel = '',
-  onActionButtonClick
+  onActionButtonClick,
 }: SubPageSecondaryTopBarProps) {
   const tabs = subPageTabs[pageId] || [];
 
@@ -86,9 +88,7 @@ export function SubPageSecondaryTopBar({
     onTabClick?.({ id: tab.id, label: tab.label });
   };
 
-  if (tabs.length === 0) {
-    return null;
-  }
+  // Always render the bar so pages without tabs (e.g., Fuel/Electric) can still show the help menu
 
   return (
     <div className="h-12 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 relative z-20">
@@ -109,11 +109,13 @@ export function SubPageSecondaryTopBar({
               }`}
             >
               {Icon && (
-                <Icon className={`mr-2 h-4 w-4 flex-shrink-0 transition-immediate ${
-                  isActive
-                    ? 'text-[#3D88C5]'
-                    : 'text-gray-400 group-hover:hover-only:text-gray-500'
-                }`} />
+                <Icon
+                  className={`mr-2 h-4 w-4 flex-shrink-0 transition-immediate ${
+                    isActive
+                      ? 'text-[#3D88C5]'
+                      : 'text-gray-400 group-hover:hover-only:text-gray-500'
+                  }`}
+                />
               )}
               <span>{tab.label}</span>
               {isActive && (
