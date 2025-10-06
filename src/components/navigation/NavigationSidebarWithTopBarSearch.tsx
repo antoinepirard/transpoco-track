@@ -398,7 +398,16 @@ export function NavigationSidebarWithTopBarSearch({
   onActiveItemChange,
 }: NavigationSidebarWithTopBarSearchProps) {
   const navRef = useRef<HTMLElement>(null);
-  const { toggleExpandedItem, isItemExpanded } = useNavigation();
+  const {
+    toggleExpandedItem,
+    isItemExpanded,
+    showLockedItems,
+    showDiscoverButton,
+  } = useNavigation();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Local active state
   const [activeItemId, setActiveItemId] = useState<string>('live-map');
@@ -415,7 +424,9 @@ export function NavigationSidebarWithTopBarSearch({
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchResults, setSearchResults] = useState<NavigationItemWithSection[]>([]);
+  const [searchResults, setSearchResults] = useState<
+    NavigationItemWithSection[]
+  >([]);
   const [highlightedSearchIndex, setHighlightedSearchIndex] = useState(-1);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -427,30 +438,30 @@ export function NavigationSidebarWithTopBarSearch({
     const items: NavigationItemWithSection[] = [];
 
     // Add settings items
-    settingsSubmenus.forEach(category => {
-      category.items.forEach(item => {
+    settingsSubmenus.forEach((category) => {
+      category.items.forEach((item) => {
         items.push({
           ...item,
-          section: `Settings > ${category.title}`
+          section: `Settings > ${category.title}`,
         });
       });
     });
 
     // Add sidebar navigation items
-    sidebarNavigationData.forEach(section => {
-      section.items.forEach(item => {
+    sidebarNavigationData.forEach((section) => {
+      section.items.forEach((item) => {
         // Add the main item
         items.push({
           ...item,
-          section: section.title
+          section: section.title,
         });
 
         // Add children if they exist
         if (item.children) {
-          item.children.forEach(child => {
+          item.children.forEach((child) => {
             items.push({
               ...child,
-              section: `${section.title} > ${item.label}`
+              section: `${section.title} > ${item.label}`,
             });
           });
         }
@@ -466,9 +477,10 @@ export function NavigationSidebarWithTopBarSearch({
 
     const query = searchQuery.toLowerCase().trim();
     return allNavigationItems
-      .filter(item =>
-        item.label.toLowerCase().includes(query) ||
-        item.section?.toLowerCase().includes(query)
+      .filter(
+        (item) =>
+          item.label.toLowerCase().includes(query) ||
+          item.section?.toLowerCase().includes(query)
       )
       .slice(0, 8); // Limit results
   }, [searchQuery, allNavigationItems]);
@@ -482,8 +494,9 @@ export function NavigationSidebarWithTopBarSearch({
 
   // Demo locked items (premium features) - memoized to prevent re-renders
   const lockedItemIds = useMemo(
-    () => ['cost-management', 'fuel-electric'],
-    []
+    () =>
+      mounted && showLockedItems ? ['cost-management', 'fuel-electric'] : [],
+    [mounted, showLockedItems]
   );
 
   // Tooltip content for locked items - memoized to prevent re-renders
@@ -643,49 +656,58 @@ export function NavigationSidebarWithTopBarSearch({
   };
 
   // Search handlers
-  const handleSearchSelect = useCallback((item: NavigationItem) => {
-    setActiveItemId(item.id);
-    setActiveSettingsItemId('');
-    setSearchQuery('');
-    setIsSearchOpen(false);
-    setHighlightedSearchIndex(-1);
-    onActiveItemChange?.({
-      id: item.id,
-      label: item.label,
-    });
-    console.log(`[Demo] Search result selected: "${item.label}"`);
-    searchInputRef.current?.blur();
-  }, [onActiveItemChange]);
+  const handleSearchSelect = useCallback(
+    (item: NavigationItem) => {
+      setActiveItemId(item.id);
+      setActiveSettingsItemId('');
+      setSearchQuery('');
+      setIsSearchOpen(false);
+      setHighlightedSearchIndex(-1);
+      onActiveItemChange?.({
+        id: item.id,
+        label: item.label,
+      });
+      console.log(`[Demo] Search result selected: "${item.label}"`);
+      searchInputRef.current?.blur();
+    },
+    [onActiveItemChange]
+  );
 
-  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (!isSearchOpen) return;
+  const handleSearchKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!isSearchOpen) return;
 
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setHighlightedSearchIndex(prev =>
-          prev < searchResults.length - 1 ? prev + 1 : prev
-        );
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setHighlightedSearchIndex(prev => prev > 0 ? prev - 1 : prev);
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (highlightedSearchIndex >= 0 && searchResults[highlightedSearchIndex]) {
-          handleSearchSelect(searchResults[highlightedSearchIndex]);
-        }
-        break;
-      case 'Escape':
-        e.preventDefault();
-        setIsSearchOpen(false);
-        setSearchQuery('');
-        setHighlightedSearchIndex(-1);
-        searchInputRef.current?.blur();
-        break;
-    }
-  }, [isSearchOpen, searchResults, highlightedSearchIndex, handleSearchSelect]);
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setHighlightedSearchIndex((prev) =>
+            prev < searchResults.length - 1 ? prev + 1 : prev
+          );
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setHighlightedSearchIndex((prev) => (prev > 0 ? prev - 1 : prev));
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (
+            highlightedSearchIndex >= 0 &&
+            searchResults[highlightedSearchIndex]
+          ) {
+            handleSearchSelect(searchResults[highlightedSearchIndex]);
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          setIsSearchOpen(false);
+          setSearchQuery('');
+          setHighlightedSearchIndex(-1);
+          searchInputRef.current?.blur();
+          break;
+      }
+    },
+    [isSearchOpen, searchResults, highlightedSearchIndex, handleSearchSelect]
+  );
 
   const handleSearchClear = useCallback(() => {
     setSearchQuery('');
@@ -698,7 +720,10 @@ export function NavigationSidebarWithTopBarSearch({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (searchInputRef.current && !searchInputRef.current.closest('.relative')?.contains(target)) {
+      if (
+        searchInputRef.current &&
+        !searchInputRef.current.closest('.relative')?.contains(target)
+      ) {
         setIsSearchOpen(false);
         setHighlightedSearchIndex(-1);
       }
@@ -995,14 +1020,16 @@ export function NavigationSidebarWithTopBarSearch({
           </nav>
 
           <div className="px-4 pb-2 space-y-2">
-            <Button
-              onClick={() => setIsProductDiscoveryOpen(true)}
-              size="default"
-              className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
-            >
-              <PackageIcon />
-              Discover new products
-            </Button>
+            {mounted && showDiscoverButton && (
+              <Button
+                onClick={() => setIsProductDiscoveryOpen(true)}
+                size="default"
+                className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
+              >
+                <PackageIcon />
+                Discover new products
+              </Button>
+            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -1105,7 +1132,9 @@ export function NavigationSidebarWithTopBarSearch({
                           const isExpanded = isItemExpanded(item.id);
                           const isLocked = lockedItemIds.includes(item.id);
 
-                          const handleItemClick = (clickedItem: NavigationItem) => {
+                          const handleItemClick = (
+                            clickedItem: NavigationItem
+                          ) => {
                             setActiveItemId(clickedItem.id);
                             setActiveSettingsItemId('');
                             setIsMobileSidebarOpen(false); // Close mobile sidebar
@@ -1144,18 +1173,24 @@ export function NavigationSidebarWithTopBarSearch({
 
               {/* Mobile Product Discovery and Help Buttons */}
               <div className="px-4 pb-2 space-y-2">
-                <Button
-                  onClick={() => setIsProductDiscoveryOpen(true)}
-                  size="default"
-                  className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
-                >
-                  <PackageIcon />
-                  Discover new products
-                </Button>
+                {showDiscoverButton && (
+                  <Button
+                    onClick={() => setIsProductDiscoveryOpen(true)}
+                    size="default"
+                    className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
+                  >
+                    <PackageIcon />
+                    Discover new products
+                  </Button>
+                )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" size="default" className="w-full">
+                    <Button
+                      variant="secondary"
+                      size="default"
+                      className="w-full"
+                    >
                       <QuestionIcon />
                       Help
                     </Button>

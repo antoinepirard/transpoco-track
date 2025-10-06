@@ -94,7 +94,6 @@ interface NavigationSection {
   items: NavigationItem[];
 }
 
-
 interface NavigationSidebarWithSelectedSubmenusProps {
   onActiveItemChange?: (item: { id: string; label: string }) => void;
 }
@@ -434,11 +433,6 @@ const sidebarNavigationData: NavigationSection[] = [
     title: 'Addons',
     items: [
       {
-        id: 'marketplace',
-        label: 'Marketplace',
-        icon: StorefrontIcon,
-      },
-      {
         id: 'assets-tracking',
         label: 'Assets Tracking',
         icon: PackageIcon,
@@ -456,11 +450,22 @@ export function NavigationSidebarWithSelectedSubmenus({
   onActiveItemChange,
 }: NavigationSidebarWithSelectedSubmenusProps) {
   const navRef = useRef<HTMLElement>(null);
-  const { toggleExpandedItem, isItemExpanded } = useNavigation();
+  const {
+    toggleExpandedItem,
+    isItemExpanded,
+    showLockedItems,
+    showDiscoverButton,
+  } = useNavigation();
 
   // Local active state
   const [activeItemId, setActiveItemId] = useState<string>('live-map');
   const [activeSettingsItemId, setActiveSettingsItemId] = useState<string>('');
+
+  // Ensure SSR and first client render match to avoid hydration mismatches
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Brand selection state (for sidebar branding)
   const [selectedBrand, setSelectedBrand] = useState<'transpoco' | 'safely'>(
@@ -481,8 +486,9 @@ export function NavigationSidebarWithSelectedSubmenus({
 
   // Demo locked items (premium features) - memoized to prevent re-renders
   const lockedItemIds = useMemo(
-    () => ['cost-management', 'fuel-electric'],
-    []
+    () =>
+      mounted && showLockedItems ? ['cost-management', 'fuel-electric'] : [],
+    [mounted, showLockedItems]
   );
 
   // Tooltip content for locked items - memoized to prevent re-renders
@@ -642,22 +648,28 @@ export function NavigationSidebarWithSelectedSubmenus({
   };
 
   // Command menu handlers
-  const handleCommandSelect = useCallback((item: NavigationItem) => {
-    setActiveItemId(item.id);
-    setActiveSettingsItemId('');
-    setIsCommandOpen(false);
-    onActiveItemChange?.({
-      id: item.id,
-      label: item.label,
-    });
-    console.log(`[Demo] Command item selected: "${item.label}"`);
-  }, [onActiveItemChange]);
+  const handleCommandSelect = useCallback(
+    (item: NavigationItem) => {
+      setActiveItemId(item.id);
+      setActiveSettingsItemId('');
+      setIsCommandOpen(false);
+      onActiveItemChange?.({
+        id: item.id,
+        label: item.label,
+      });
+      console.log(`[Demo] Command item selected: "${item.label}"`);
+    },
+    [onActiveItemChange]
+  );
 
   // Sub-page secondary top bar tab click handler
-  const handleSubPageTabClick = useCallback((tab: { id: string; label: string }) => {
-    setActiveSubPageTabId(tab.id);
-    console.log(`[Demo] Sub-page tab clicked: "${tab.label}"`);
-  }, []);
+  const handleSubPageTabClick = useCallback(
+    (tab: { id: string; label: string }) => {
+      setActiveSubPageTabId(tab.id);
+      console.log(`[Demo] Sub-page tab clicked: "${tab.label}"`);
+    },
+    []
+  );
 
   // New Message button click handler
   const handleNewMessageClick = useCallback(() => {
@@ -670,7 +682,7 @@ export function NavigationSidebarWithSelectedSubmenus({
     // Default tabs for each sub-page
     const defaultTabs: Record<string, string> = {
       // Messages page
-      'messages': 'messages',
+      messages: 'messages',
       // Walkaround sub-pages
       'all-checks': 'weekly',
       'driven-without-checks': 'per-driver',
@@ -913,14 +925,16 @@ export function NavigationSidebarWithSelectedSubmenus({
           </nav>
 
           <div className="px-4 pb-2 space-y-2">
-            <Button
-              onClick={() => setIsProductDiscoveryOpen(true)}
-              size="default"
-              className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
-            >
-              <PackageIcon />
-              Discover new products
-            </Button>
+            {mounted && showDiscoverButton && (
+              <Button
+                onClick={() => setIsProductDiscoveryOpen(true)}
+                size="default"
+                className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
+              >
+                <PackageIcon />
+                Discover new products
+              </Button>
+            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -1038,7 +1052,9 @@ export function NavigationSidebarWithSelectedSubmenus({
                           const isExpanded = isItemExpanded(item.id);
                           const isLocked = lockedItemIds.includes(item.id);
 
-                          const handleItemClick = (clickedItem: NavigationItem) => {
+                          const handleItemClick = (
+                            clickedItem: NavigationItem
+                          ) => {
                             setActiveItemId(clickedItem.id);
                             setActiveSettingsItemId('');
                             setIsMobileSidebarOpen(false); // Close mobile sidebar
@@ -1077,18 +1093,24 @@ export function NavigationSidebarWithSelectedSubmenus({
 
               {/* Mobile Product Discovery and Help Buttons */}
               <div className="px-4 pb-2 space-y-2">
-                <Button
-                  onClick={() => setIsProductDiscoveryOpen(true)}
-                  size="default"
-                  className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
-                >
-                  <PackageIcon />
-                  Discover new products
-                </Button>
+                {showDiscoverButton && (
+                  <Button
+                    onClick={() => setIsProductDiscoveryOpen(true)}
+                    size="default"
+                    className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
+                  >
+                    <PackageIcon />
+                    Discover new products
+                  </Button>
+                )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" size="default" className="w-full">
+                    <Button
+                      variant="secondary"
+                      size="default"
+                      className="w-full"
+                    >
                       <QuestionIcon />
                       Help
                     </Button>
@@ -1138,9 +1160,8 @@ export function NavigationSidebarWithSelectedSubmenus({
 
         <main className="flex-1 overflow-hidden h-full min-h-0 relative flex flex-col">
           {/* Sub-page Secondary Top Bar - positioned to the right of the sidebar */}
-          {(
-            // Messages page
-            activeItemId === 'messages' ||
+          {// Messages page
+          (activeItemId === 'messages' ||
             // Walkaround sub-pages
             activeItemId === 'all-checks' ||
             activeItemId === 'driven-without-checks' ||
@@ -1151,8 +1172,7 @@ export function NavigationSidebarWithSelectedSubmenus({
             activeItemId === 'speed-improvement' ||
             activeItemId === 'driving-summary' ||
             activeItemId === 'driver-mileage-summary' ||
-            activeItemId === 'driving-style-settings'
-          ) && (
+            activeItemId === 'driving-style-settings') && (
             <SubPageSecondaryTopBar
               pageId={activeItemId}
               activeTabId={activeSubPageTabId}
@@ -1186,14 +1206,21 @@ export function NavigationSidebarWithSelectedSubmenus({
       </div>
 
       {/* Command Menu Dialog */}
-      <CommandDialog open={isCommandOpen} onOpenChange={setIsCommandOpen} className="z-[55]">
+      <CommandDialog
+        open={isCommandOpen}
+        onOpenChange={setIsCommandOpen}
+        className="z-[55]"
+      >
         <CommandInput placeholder="Search pages..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
 
           {/* Settings Group */}
           {settingsSubmenus.map((category) => (
-            <CommandGroup key={category.id} heading={`Settings > ${category.title}`}>
+            <CommandGroup
+              key={category.id}
+              heading={`Settings > ${category.title}`}
+            >
               {category.items.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -1208,7 +1235,9 @@ export function NavigationSidebarWithSelectedSubmenus({
                         id: item.id,
                         label: item.label,
                       });
-                      console.log(`[Demo] Settings item selected: "${item.label}"`);
+                      console.log(
+                        `[Demo] Settings item selected: "${item.label}"`
+                      );
                     }}
                   >
                     <Icon className="mr-2 h-4 w-4" />
@@ -1238,9 +1267,9 @@ export function NavigationSidebarWithSelectedSubmenus({
 
               {/* Child items */}
               {section.items
-                .filter(item => item.children && item.children.length > 0)
-                .map(item =>
-                  item.children?.map(child => {
+                .filter((item) => item.children && item.children.length > 0)
+                .map((item) =>
+                  item.children?.map((child) => {
                     const ChildIcon = child.icon;
                     return (
                       <CommandItem
@@ -1253,8 +1282,7 @@ export function NavigationSidebarWithSelectedSubmenus({
                       </CommandItem>
                     );
                   })
-                )
-              }
+                )}
             </CommandGroup>
           ))}
         </CommandList>

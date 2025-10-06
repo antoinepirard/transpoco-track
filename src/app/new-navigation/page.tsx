@@ -2,7 +2,10 @@
 
 import { useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { NavigationProvider } from '@/contexts/NavigationContext';
+import {
+  NavigationProvider,
+  useNavigation,
+} from '@/contexts/NavigationContext';
 import { NavigationSidebarDemo } from '@/components/navigation/NavigationSidebarDemo';
 import { NavigationSidebarWithTopBar } from '@/components/navigation/NavigationSidebarWithTopBar';
 import { NavigationSidebarWithDualTopBar } from '@/components/navigation/NavigationSidebarWithDualTopBar';
@@ -17,7 +20,9 @@ interface NavigationVariant {
   id: string;
   name: string;
   description: string;
-  component: React.ComponentType<{ onActiveItemChange: (item: {id: string, label: string} | null) => void }>;
+  component: React.ComponentType<{
+    onActiveItemChange: (item: { id: string; label: string } | null) => void;
+  }>;
 }
 
 const navigationVariants: NavigationVariant[] = [
@@ -30,37 +35,43 @@ const navigationVariants: NavigationVariant[] = [
   {
     id: 'sidebar-with-topbar',
     name: 'Sidebar with Top Bar',
-    description: 'Sidebar navigation with top bar containing settings, messages, and notifications',
+    description:
+      'Sidebar navigation with top bar containing settings, messages, and notifications',
     component: NavigationSidebarWithTopBar,
   },
   {
     id: 'sidebar-with-dual-topbar',
     name: 'Sidebar with Dual Top Bar',
-    description: 'Main sidebar with primary top bar for categories and secondary top bar for sub-items',
+    description:
+      'Main sidebar with primary top bar for categories and secondary top bar for sub-items',
     component: NavigationSidebarWithDualTopBar,
   },
   {
     id: 'sidebar-with-submenus',
     name: 'Sidebar with Submenus',
-    description: 'Sidebar navigation with integrated settings dropdown submenus',
+    description:
+      'Sidebar navigation with integrated settings dropdown submenus',
     component: NavigationSidebarWithSubmenus,
   },
   {
     id: 'topbar-with-search',
     name: 'Topbar with Search',
-    description: 'Sidebar navigation with top bar containing integrated search, settings, messages, and notifications',
+    description:
+      'Sidebar navigation with top bar containing integrated search, settings, messages, and notifications',
     component: NavigationSidebarWithTopBarSearch,
   },
   {
     id: 'sidebar-with-search',
     name: 'Sidebar with Search',
-    description: 'Sidebar navigation with integrated search at the top of the sidebar, and top bar containing settings, messages, and notifications',
+    description:
+      'Sidebar navigation with integrated search at the top of the sidebar, and top bar containing settings, messages, and notifications',
     component: NavigationSidebarWithSidebarSearch,
   },
   {
     id: 'selected-sidebar-submenus',
     name: 'Selected Sidebar + SubMenus',
-    description: 'Sidebar navigation with integrated search, selected items highlighting, and expanded submenu functionality',
+    description:
+      'Sidebar navigation with integrated search, selected items highlighting, and expanded submenu functionality',
     component: NavigationSidebarWithSelectedSubmenus,
   },
 ];
@@ -68,28 +79,46 @@ const navigationVariants: NavigationVariant[] = [
 function NavigationDemoContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [activeItem, setActiveItem] = useState<{id: string, label: string} | null>({ id: 'live-map', label: 'Live map' });
+  const {
+    showLockedItems,
+    setShowLockedItems,
+    showDiscoverButton,
+    setShowDiscoverButton,
+  } = useNavigation();
+  const [activeItem, setActiveItem] = useState<{
+    id: string;
+    label: string;
+  } | null>({ id: 'live-map', label: 'Live map' });
 
   // Get variant from URL params or default to first variant
   const urlVariant = searchParams.get('variant');
-  const selectedVariantId = navigationVariants.find(v => v.id === urlVariant)?.id || navigationVariants[0].id;
+  const selectedVariantId =
+    navigationVariants.find((v) => v.id === urlVariant)?.id ||
+    navigationVariants[0].id;
 
   // Get the current variant
-  const currentVariant = navigationVariants.find(v => v.id === selectedVariantId) || navigationVariants[0];
+  const currentVariant =
+    navigationVariants.find((v) => v.id === selectedVariantId) ||
+    navigationVariants[0];
   const CurrentNavigationComponent = currentVariant.component;
 
   // Handle variant change by updating URL
-  const handleVariantChange = useCallback((variantId: string) => {
-    const newSearchParams = new URLSearchParams(searchParams.toString());
-    if (variantId === navigationVariants[0].id) {
-      // Remove variant param if it's the default variant
-      newSearchParams.delete('variant');
-    } else {
-      newSearchParams.set('variant', variantId);
-    }
-    const newUrl = newSearchParams.toString() ? `?${newSearchParams.toString()}` : '';
-    router.push(`/new-navigation${newUrl}`, { scroll: false });
-  }, [searchParams, router]);
+  const handleVariantChange = useCallback(
+    (variantId: string) => {
+      const newSearchParams = new URLSearchParams(searchParams.toString());
+      if (variantId === navigationVariants[0].id) {
+        // Remove variant param if it's the default variant
+        newSearchParams.delete('variant');
+      } else {
+        newSearchParams.set('variant', variantId);
+      }
+      const newUrl = newSearchParams.toString()
+        ? `?${newSearchParams.toString()}`
+        : '';
+      router.push(`/new-navigation${newUrl}`, { scroll: false });
+    },
+    [searchParams, router]
+  );
 
   return (
     <div className="w-full h-screen flex relative">
@@ -98,7 +127,8 @@ function NavigationDemoContent() {
         <div className="h-full min-h-0 w-full flex items-center justify-center">
           <div className="text-center">
             <div className="text-gray-600 mb-2">
-              Current variant: <span className="font-medium">{currentVariant.name}</span>
+              Current variant:{' '}
+              <span className="font-medium">{currentVariant.name}</span>
             </div>
             {activeItem && (
               <div className="text-lg font-medium text-gray-900">
@@ -112,9 +142,45 @@ function NavigationDemoContent() {
       {/* Resolution Metadata & Variant Selector - Bottom Right */}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-3">
         <ResolutionMetadata />
+
+        {/* Demo Settings */}
+        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3">
+          <div className="flex flex-col space-y-3">
+            <label className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+              Demo Settings
+            </label>
+            <div className="flex flex-col space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showLockedItems}
+                  onChange={(e) => setShowLockedItems(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">Show locked items</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showDiscoverButton}
+                  onChange={(e) => setShowDiscoverButton(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">
+                  Show discover products button
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Variant Selector */}
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3">
           <div className="flex flex-col space-y-2">
-            <label htmlFor="variant-select" className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+            <label
+              htmlFor="variant-select"
+              className="text-xs font-medium text-gray-600 uppercase tracking-wider"
+            >
               Navigation Variant
             </label>
             <select

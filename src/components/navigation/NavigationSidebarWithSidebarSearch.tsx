@@ -90,7 +90,6 @@ interface NavigationSection {
   items: NavigationItem[];
 }
 
-
 interface NavigationSidebarWithSidebarSearchProps {
   onActiveItemChange?: (item: { id: string; label: string }) => void;
 }
@@ -403,7 +402,16 @@ export function NavigationSidebarWithSidebarSearch({
   onActiveItemChange,
 }: NavigationSidebarWithSidebarSearchProps) {
   const navRef = useRef<HTMLElement>(null);
-  const { toggleExpandedItem, isItemExpanded } = useNavigation();
+  const {
+    toggleExpandedItem,
+    isItemExpanded,
+    showLockedItems,
+    showDiscoverButton,
+  } = useNavigation();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Local active state
   const [activeItemId, setActiveItemId] = useState<string>('live-map');
@@ -423,12 +431,11 @@ export function NavigationSidebarWithSidebarSearch({
   // Product discovery dialog state
   const [isProductDiscoveryOpen, setIsProductDiscoveryOpen] = useState(false);
 
-
-
   // Demo locked items (premium features) - memoized to prevent re-renders
   const lockedItemIds = useMemo(
-    () => ['cost-management', 'fuel-electric'],
-    []
+    () =>
+      mounted && showLockedItems ? ['cost-management', 'fuel-electric'] : [],
+    [mounted, showLockedItems]
   );
 
   // Tooltip content for locked items - memoized to prevent re-renders
@@ -588,16 +595,19 @@ export function NavigationSidebarWithSidebarSearch({
   };
 
   // Command menu handlers
-  const handleCommandSelect = useCallback((item: NavigationItem) => {
-    setActiveItemId(item.id);
-    setActiveSettingsItemId('');
-    setIsCommandOpen(false);
-    onActiveItemChange?.({
-      id: item.id,
-      label: item.label,
-    });
-    console.log(`[Demo] Command item selected: "${item.label}"`);
-  }, [onActiveItemChange]);
+  const handleCommandSelect = useCallback(
+    (item: NavigationItem) => {
+      setActiveItemId(item.id);
+      setActiveSettingsItemId('');
+      setIsCommandOpen(false);
+      onActiveItemChange?.({
+        id: item.id,
+        label: item.label,
+      });
+      console.log(`[Demo] Command item selected: "${item.label}"`);
+    },
+    [onActiveItemChange]
+  );
 
   // Handle Cmd+K keyboard shortcut to open command menu
   useEffect(() => {
@@ -825,14 +835,16 @@ export function NavigationSidebarWithSidebarSearch({
           </nav>
 
           <div className="px-4 pb-2 space-y-2">
-            <Button
-              onClick={() => setIsProductDiscoveryOpen(true)}
-              size="default"
-              className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
-            >
-              <PackageIcon />
-              Discover new products
-            </Button>
+            {mounted && showDiscoverButton && (
+              <Button
+                onClick={() => setIsProductDiscoveryOpen(true)}
+                size="default"
+                className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
+              >
+                <PackageIcon />
+                Discover new products
+              </Button>
+            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -950,7 +962,9 @@ export function NavigationSidebarWithSidebarSearch({
                           const isExpanded = isItemExpanded(item.id);
                           const isLocked = lockedItemIds.includes(item.id);
 
-                          const handleItemClick = (clickedItem: NavigationItem) => {
+                          const handleItemClick = (
+                            clickedItem: NavigationItem
+                          ) => {
                             setActiveItemId(clickedItem.id);
                             setActiveSettingsItemId('');
                             setIsMobileSidebarOpen(false); // Close mobile sidebar
@@ -989,18 +1003,24 @@ export function NavigationSidebarWithSidebarSearch({
 
               {/* Mobile Product Discovery and Help Buttons */}
               <div className="px-4 pb-2 space-y-2">
-                <Button
-                  onClick={() => setIsProductDiscoveryOpen(true)}
-                  size="default"
-                  className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
-                >
-                  <PackageIcon />
-                  Discover new products
-                </Button>
+                {showDiscoverButton && (
+                  <Button
+                    onClick={() => setIsProductDiscoveryOpen(true)}
+                    size="default"
+                    className="w-full bg-[#95B148] hover:bg-[#7a9138] text-white"
+                  >
+                    <PackageIcon />
+                    Discover new products
+                  </Button>
+                )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" size="default" className="w-full">
+                    <Button
+                      variant="secondary"
+                      size="default"
+                      className="w-full"
+                    >
                       <QuestionIcon />
                       Help
                     </Button>
@@ -1070,14 +1090,21 @@ export function NavigationSidebarWithSidebarSearch({
       </div>
 
       {/* Command Menu Dialog */}
-      <CommandDialog open={isCommandOpen} onOpenChange={setIsCommandOpen} className="z-[55]">
+      <CommandDialog
+        open={isCommandOpen}
+        onOpenChange={setIsCommandOpen}
+        className="z-[55]"
+      >
         <CommandInput placeholder="Search pages..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
 
           {/* Settings Group */}
           {settingsSubmenus.map((category) => (
-            <CommandGroup key={category.id} heading={`Settings > ${category.title}`}>
+            <CommandGroup
+              key={category.id}
+              heading={`Settings > ${category.title}`}
+            >
               {category.items.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -1092,7 +1119,9 @@ export function NavigationSidebarWithSidebarSearch({
                         id: item.id,
                         label: item.label,
                       });
-                      console.log(`[Demo] Settings item selected: "${item.label}"`);
+                      console.log(
+                        `[Demo] Settings item selected: "${item.label}"`
+                      );
                     }}
                   >
                     <Icon className="mr-2 h-4 w-4" />
@@ -1122,9 +1151,9 @@ export function NavigationSidebarWithSidebarSearch({
 
               {/* Child items */}
               {section.items
-                .filter(item => item.children && item.children.length > 0)
-                .map(item =>
-                  item.children?.map(child => {
+                .filter((item) => item.children && item.children.length > 0)
+                .map((item) =>
+                  item.children?.map((child) => {
                     const ChildIcon = child.icon;
                     return (
                       <CommandItem
@@ -1137,8 +1166,7 @@ export function NavigationSidebarWithSidebarSearch({
                       </CommandItem>
                     );
                   })
-                )
-              }
+                )}
             </CommandGroup>
           ))}
         </CommandList>

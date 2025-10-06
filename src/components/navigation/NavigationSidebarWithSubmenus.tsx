@@ -390,7 +390,7 @@ export function NavigationSidebarWithSubmenus({
   onActiveItemChange,
 }: NavigationSidebarWithSubmenusProps) {
   const navRef = useRef<HTMLElement>(null);
-  const { toggleExpandedItem, isItemExpanded } = useNavigation();
+  const { toggleExpandedItem, isItemExpanded, showLockedItems } = useNavigation();
 
   // Local active state
   const [activeItemId, setActiveItemId] = useState<string>('live-map');
@@ -406,8 +406,8 @@ export function NavigationSidebarWithSubmenus({
 
   // Demo locked items (premium features) - memoized to prevent re-renders
   const lockedItemIds = useMemo(
-    () => ['bikly', 'cost-management', 'fuel-electric'],
-    []
+    () => showLockedItems ? ['bikly', 'cost-management', 'fuel-electric'] : [],
+    [showLockedItems]
   );
 
   // Tooltip content for locked items - memoized to prevent re-renders

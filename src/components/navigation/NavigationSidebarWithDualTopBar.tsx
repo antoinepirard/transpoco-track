@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState, useMemo } from 'react';
+import { useCallback, useRef, useState, useMemo, useEffect } from 'react';
 import { useNavigation } from '@/contexts/NavigationContext';
 import {
   BellIcon,
@@ -67,7 +67,7 @@ interface NavigationSection {
 }
 
 interface NavigationSidebarWithDualTopBarProps {
-  onActiveItemChange?: (item: {id: string, label: string}) => void;
+  onActiveItemChange?: (item: { id: string; label: string }) => void;
 }
 
 // Main navigation data (same as existing)
@@ -277,48 +277,68 @@ export function NavigationSidebarWithDualTopBar({
   onActiveItemChange,
 }: NavigationSidebarWithDualTopBarProps) {
   const navRef = useRef<HTMLElement>(null);
-  const { toggleExpandedItem, isItemExpanded } = useNavigation();
-  
+  const { toggleExpandedItem, isItemExpanded, showLockedItems } =
+    useNavigation();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Local active state
   const [activeItemId, setActiveItemId] = useState<string>('live-map');
   const [activeSettingsItemId, setActiveSettingsItemId] = useState<string>('');
-  const [selectedSettingsCategory, setSelectedSettingsCategory] = useState<string>('');
-  
+  const [selectedSettingsCategory, setSelectedSettingsCategory] =
+    useState<string>('');
+
   // Brand selection state (for sidebar branding)
-  const [selectedBrand, setSelectedBrand] = useState<'transpoco' | 'safely'>('transpoco');
+  const [selectedBrand, setSelectedBrand] = useState<'transpoco' | 'safely'>(
+    'transpoco'
+  );
 
   // Demo locked items (premium features) - memoized to prevent re-renders
-  const lockedItemIds = useMemo(() => ['bikly', 'cost-management', 'fuel-electric'], []);
-  
+  const lockedItemIds = useMemo(
+    () =>
+      mounted && showLockedItems
+        ? ['bikly', 'cost-management', 'fuel-electric']
+        : [],
+    [mounted, showLockedItems]
+  );
+
   // Tooltip content for locked items - memoized to prevent re-renders
-  const tooltipContent = useMemo(() => ({
-    'bikly': {
-      title: 'Bikly',
-      description: 'Advanced safety and compliance monitoring for your fleet. Get real-time alerts, driver behavior insights, and comprehensive safety reporting to reduce incidents and improve driver performance.',
-      image: '/pointing at laptop screen with data on show.webp',
-    },
-    'cost-management': {
-      title: 'Cost Management',
-      description: 'Complete Total Cost of Ownership (TCO) analysis and financial optimization tools. Track all fleet expenses, identify cost-saving opportunities, and optimize your fleet budget with detailed analytics.',
-      image: '/vehicle-maintenance.webp',
-    },
-    'fuel-electric': {
-      title: 'Fuel/Electric Vehicles',
-      description: 'Comprehensive EV fleet management and fuel optimization. Monitor charging status, plan efficient routes for electric vehicles, and seamlessly manage mixed fuel and electric fleets.',
-      image: '/vans charging up at electrical charging points.webp',
-    },
-  }), []);
+  const tooltipContent = useMemo(
+    () => ({
+      bikly: {
+        title: 'Bikly',
+        description:
+          'Advanced safety and compliance monitoring for your fleet. Get real-time alerts, driver behavior insights, and comprehensive safety reporting to reduce incidents and improve driver performance.',
+        image: '/pointing at laptop screen with data on show.webp',
+      },
+      'cost-management': {
+        title: 'Cost Management',
+        description:
+          'Complete Total Cost of Ownership (TCO) analysis and financial optimization tools. Track all fleet expenses, identify cost-saving opportunities, and optimize your fleet budget with detailed analytics.',
+        image: '/vehicle-maintenance.webp',
+      },
+      'fuel-electric': {
+        title: 'Fuel/Electric Vehicles',
+        description:
+          'Comprehensive EV fleet management and fuel optimization. Monitor charging status, plan efficient routes for electric vehicles, and seamlessly manage mixed fuel and electric fleets.',
+        image: '/vans charging up at electrical charging points.webp',
+      },
+    }),
+    []
+  );
 
   // Timeout refs for tooltip management
   const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Global tooltip state
   const [globalTooltip, setGlobalTooltip] = useState<{
     isVisible: boolean;
     itemId: string | null;
     anchorRect: DOMRect | null;
     previousAnchorRect: DOMRect | null;
-    content: typeof tooltipContent[keyof typeof tooltipContent] | null;
+    content: (typeof tooltipContent)[keyof typeof tooltipContent] | null;
   }>({
     isVisible: false,
     itemId: null,
@@ -327,33 +347,40 @@ export function NavigationSidebarWithDualTopBar({
     content: null,
   });
 
-  const handleItemHover = useCallback((itemId: string, anchorRect: DOMRect) => {
-    // Clear any pending hide timeout
-    if (tooltipTimeoutRef.current) {
-      clearTimeout(tooltipTimeoutRef.current);
-      tooltipTimeoutRef.current = null;
-    }
-    
-    if (lockedItemIds.includes(itemId) && tooltipContent[itemId as keyof typeof tooltipContent]) {
-      setGlobalTooltip(prev => ({
-        isVisible: true,
-        itemId,
-        anchorRect,
-        previousAnchorRect: prev.isVisible && prev.itemId !== itemId ? prev.anchorRect : null,
-        content: tooltipContent[itemId as keyof typeof tooltipContent],
-      }));
-    }
-  }, [lockedItemIds, tooltipContent]);
+  const handleItemHover = useCallback(
+    (itemId: string, anchorRect: DOMRect) => {
+      // Clear any pending hide timeout
+      if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+        tooltipTimeoutRef.current = null;
+      }
+
+      if (
+        lockedItemIds.includes(itemId) &&
+        tooltipContent[itemId as keyof typeof tooltipContent]
+      ) {
+        setGlobalTooltip((prev) => ({
+          isVisible: true,
+          itemId,
+          anchorRect,
+          previousAnchorRect:
+            prev.isVisible && prev.itemId !== itemId ? prev.anchorRect : null,
+          content: tooltipContent[itemId as keyof typeof tooltipContent],
+        }));
+      }
+    },
+    [lockedItemIds, tooltipContent]
+  );
 
   const handleItemLeave = useCallback(() => {
     // Clear any existing timeout
     if (tooltipTimeoutRef.current) {
       clearTimeout(tooltipTimeoutRef.current);
     }
-    
+
     // Add a delay before hiding to allow moving between items or to tooltip
     tooltipTimeoutRef.current = setTimeout(() => {
-      setGlobalTooltip(prev => ({
+      setGlobalTooltip((prev) => ({
         ...prev,
         isVisible: false,
       }));
@@ -376,7 +403,7 @@ export function NavigationSidebarWithDualTopBar({
     if (tooltipTimeoutRef.current) {
       clearTimeout(tooltipTimeoutRef.current);
     }
-    
+
     // Hide tooltip when completely leaving the navigation area
     tooltipTimeoutRef.current = setTimeout(() => {
       setGlobalTooltip({
@@ -431,26 +458,35 @@ export function NavigationSidebarWithDualTopBar({
   const handleTopBarItemClick = (itemId: string) => {
     // Handle messages and notifications
     console.log(`[Demo] Top bar item clicked: ${itemId}`);
-    onActiveItemChange?.({ id: itemId, label: itemId === 'messages' ? 'Messages' : 'Notifications' });
+    onActiveItemChange?.({
+      id: itemId,
+      label: itemId === 'messages' ? 'Messages' : 'Notifications',
+    });
   };
 
   const handleSettingsCategoryClick = (categoryId: string) => {
     setSelectedSettingsCategory(categoryId);
     setActiveItemId(''); // Clear main nav active state
-    
+
     // Auto-select the first item in the category
     const firstItem = getFirstItemInCategory(categoryId);
     if (firstItem) {
       setActiveSettingsItemId(firstItem.id);
       onActiveItemChange?.({ id: firstItem.id, label: firstItem.label });
     } else {
-      onActiveItemChange?.({ id: `settings-${categoryId}`, label: `Settings: ${categoryId}` });
+      onActiveItemChange?.({
+        id: `settings-${categoryId}`,
+        label: `Settings: ${categoryId}`,
+      });
     }
   };
 
   // Helper function to get the first item in a settings category
   const getFirstItemInCategory = (categoryId: string) => {
-    const settingsSubItems: Record<string, Array<{ id: string; label: string }>> = {
+    const settingsSubItems: Record<
+      string,
+      Array<{ id: string; label: string }>
+    > = {
       'users-permissions': [
         { id: 'users', label: 'Users' },
         { id: 'profiles', label: 'Profiles' },
@@ -460,14 +496,14 @@ export function NavigationSidebarWithDualTopBar({
         { id: 'audit-logs', label: 'Audit logs' },
         { id: 'shift-time', label: 'Shift Time' },
       ],
-      'garage': [
+      garage: [
         { id: 'vehicles', label: 'Vehicles' },
         { id: 'vehicle-groups', label: 'Vehicle Groups' },
         { id: 'drivers', label: 'Drivers' },
         { id: 'driver-groups', label: 'Driver Groups' },
         { id: 'vehicle-driver-groups', label: 'Vehicle Driver Groups' },
       ],
-      'alerts': [
+      alerts: [
         { id: 'manage-alerts', label: 'Manage Alerts' },
         { id: 'alerts-log', label: 'Alerts Log' },
       ],
@@ -491,7 +527,10 @@ export function NavigationSidebarWithDualTopBar({
     return items && items.length > 0 ? items[0] : null;
   };
 
-  const handleSecondaryTopBarItemClick = (item: { id: string; label: string }) => {
+  const handleSecondaryTopBarItemClick = (item: {
+    id: string;
+    label: string;
+  }) => {
     setActiveSettingsItemId(item.id);
     onActiveItemChange?.(item);
     console.log(`[Demo] Secondary top bar item clicked: "${item.label}"`);
@@ -579,18 +618,26 @@ export function NavigationSidebarWithDualTopBar({
                   )}
                   <div className="space-y-0.5 px-2">
                     {section.items.map((item) => {
-                      const isActive = activeItemId === item.id && !activeSettingsItemId && !selectedSettingsCategory;
+                      const isActive =
+                        activeItemId === item.id &&
+                        !activeSettingsItemId &&
+                        !selectedSettingsCategory;
                       const isExpanded = isItemExpanded(item.id);
                       const isLocked = lockedItemIds.includes(item.id);
-                      
+
                       const handleItemClick = (clickedItem: NavigationItem) => {
                         setActiveItemId(clickedItem.id);
                         setActiveSettingsItemId(''); // Clear settings active state
                         setSelectedSettingsCategory(''); // Clear settings category
-                        onActiveItemChange?.({ id: clickedItem.id, label: clickedItem.label });
-                        console.log(`[Demo] Active item set to "${clickedItem.label}"`);
+                        onActiveItemChange?.({
+                          id: clickedItem.id,
+                          label: clickedItem.label,
+                        });
+                        console.log(
+                          `[Demo] Active item set to "${clickedItem.label}"`
+                        );
                       };
-                      
+
                       return (
                         <NavigationItemGroupDemo
                           key={item.id}
@@ -618,33 +665,44 @@ export function NavigationSidebarWithDualTopBar({
           <div className="px-4 pb-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="secondary"
-                  size="default"
-                  className="w-full"
-                >
+                <Button variant="secondary" size="default" className="w-full">
                   <QuestionIcon />
                   Help
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-64">
-                <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => window.open('#', '_blank')}
+                >
                   <EnvelopeIcon className="w-4 h-4 text-gray-400" />
                   Get in Touch
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => window.open('#', '_blank')}
+                >
                   <ShieldIcon className="w-4 h-4 text-gray-400" />
                   Terms & Privacy Policy
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => window.open('#', '_blank')}
+                >
                   <BookOpenIcon className="w-4 h-4 text-gray-400" />
                   Knowledge Base
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => window.open('#', '_blank')}
+                >
                   <FileTextIcon className="w-4 h-4 text-gray-400" />
                   User Manual
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer" onClick={() => window.open('#', '_blank')}>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => window.open('#', '_blank')}
+                >
                   <NewspaperIcon className="w-4 h-4 text-gray-400" />
                   Whats New?
                 </DropdownMenuItem>
@@ -654,7 +712,6 @@ export function NavigationSidebarWithDualTopBar({
         </div>
 
         <main className="flex-1 overflow-hidden h-full min-h-0 relative flex flex-col">
-          
           {/* Secondary Top Bar - positioned to the right of the sidebar */}
           {selectedSettingsCategory && (
             <SecondaryTopBar
@@ -663,20 +720,24 @@ export function NavigationSidebarWithDualTopBar({
               onItemClick={handleSecondaryTopBarItemClick}
             />
           )}
-          
+
           <div className="flex-1 overflow-hidden h-full min-h-0 relative">
             <AnimatePresence>
-              {globalTooltip.isVisible && globalTooltip.content && globalTooltip.anchorRect && (
-                <NavigationTooltip
-                  isVisible={globalTooltip.isVisible}
-                  content={globalTooltip.content}
-                  anchorRect={globalTooltip.anchorRect}
-                  previousAnchorRect={globalTooltip.previousAnchorRect || undefined}
-                  onClose={handleTooltipClose}
-                  onMouseEnter={handleNavigationMouseEnter}
-                  onMouseLeave={handleItemLeave}
-                />
-              )}
+              {globalTooltip.isVisible &&
+                globalTooltip.content &&
+                globalTooltip.anchorRect && (
+                  <NavigationTooltip
+                    isVisible={globalTooltip.isVisible}
+                    content={globalTooltip.content}
+                    anchorRect={globalTooltip.anchorRect}
+                    previousAnchorRect={
+                      globalTooltip.previousAnchorRect || undefined
+                    }
+                    onClose={handleTooltipClose}
+                    onMouseEnter={handleNavigationMouseEnter}
+                    onMouseLeave={handleItemLeave}
+                  />
+                )}
             </AnimatePresence>
           </div>
         </main>
