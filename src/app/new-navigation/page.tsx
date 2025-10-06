@@ -9,6 +9,7 @@ import { NavigationSidebarWithDualTopBar } from '@/components/navigation/Navigat
 import { NavigationSidebarWithSubmenus } from '@/components/navigation/NavigationSidebarWithSubmenus';
 import { NavigationSidebarWithTopBarSearch } from '@/components/navigation/NavigationSidebarWithTopBarSearch';
 import { NavigationSidebarWithSidebarSearch } from '@/components/navigation/NavigationSidebarWithSidebarSearch';
+import { NavigationSidebarWithSelectedSubmenus } from '@/components/navigation/NavigationSidebarWithSelectedSubmenus';
 
 // Define navigation variants
 interface NavigationVariant {
@@ -54,6 +55,12 @@ const navigationVariants: NavigationVariant[] = [
     name: 'Sidebar with Search',
     description: 'Sidebar navigation with integrated search at the top of the sidebar, and top bar containing settings, messages, and notifications',
     component: NavigationSidebarWithSidebarSearch,
+  },
+  {
+    id: 'selected-sidebar-submenus',
+    name: 'Selected Sidebar + SubMenus',
+    description: 'Sidebar navigation with integrated search, selected items highlighting, and expanded submenu functionality',
+    component: NavigationSidebarWithSelectedSubmenus,
   },
 ];
 
