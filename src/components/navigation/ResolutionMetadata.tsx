@@ -48,6 +48,16 @@ const widthData: Record<number, number> = {
 // Calculate total width events
 const totalWidthEvents = Object.values(widthData).reduce((sum, count) => sum + count, 0);
 
+// Type for width bucket with percentage
+type WidthBucket = {
+  min: number;
+  max: number;
+  label: string;
+  category: string;
+  count: number;
+  percentage: number;
+};
+
 // Responsive breakpoint-based buckets
 const widthBreakpoints = [
   { min: 0, max: 639, label: 'Mobile', category: 'Mobile' },
@@ -84,7 +94,7 @@ const calculateBreakpointPercentages = () => {
 };
 
 // Get bucket for a specific width value
-const getBucketForWidth = (width: number, buckets: typeof widthBreakpoints) => {
+const getBucketForWidth = (width: number, buckets: WidthBucket[]) => {
   const bucket = buckets.find(b => width >= b.min && width <= b.max);
   return bucket || buckets[0]; // Default to first bucket if not found
 };
