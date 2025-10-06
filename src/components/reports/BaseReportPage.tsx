@@ -12,10 +12,10 @@ interface BaseReportPageProps {
   showJourneyTypeFilter?: boolean;
 }
 
-export default function BaseReportPage({ 
-  title, 
+export default function BaseReportPage({
+  title,
   defaultJourneyType = 'all',
-  showJourneyTypeFilter = true 
+  showJourneyTypeFilter = true
 }: BaseReportPageProps) {
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const mountedRef = useRef(false);
@@ -34,7 +34,7 @@ export default function BaseReportPage({
 
   const fetchData = useCallback(async () => {
     if (!mountedRef.current) return;
-    
+
     setLoading(true);
     try {
       const qs = new URLSearchParams(
@@ -42,7 +42,7 @@ export default function BaseReportPage({
       ).toString();
       const r = await fetch(`/api/reports?${qs}`, { cache: 'no-store' });
       const data = (await r.json()) as ReportRow[];
-      
+
       if (mountedRef.current) {
         setRows(data);
         if (!drivers.length) {
@@ -64,7 +64,7 @@ export default function BaseReportPage({
   // Component mounting and initialization
   useEffect(() => {
     mountedRef.current = true;
-    
+
     // Handle URL parameters safely
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);

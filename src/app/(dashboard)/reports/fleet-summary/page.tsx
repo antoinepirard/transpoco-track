@@ -2,7 +2,7 @@ import BaseReportPage from '@/components/reports/BaseReportPage';
 
 export default function FleetSummaryReportPage() {
   return (
-    <BaseReportPage 
+    <BaseReportPage
       title="Fleet Summary Report"
     />
   );

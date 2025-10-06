@@ -539,6 +539,17 @@ export function NavigationSidebarWithSelectedSubmenus({
     return new Set<string>();
   }, []);
 
+  // Detect if active item is a Reports child to show filters
+  const reportsChildIds = useMemo(() => {
+    for (const section of sidebarNavigationData) {
+      const parent = section.items.find((it) => it.id === 'reports');
+      if (parent && parent.children) {
+        return new Set(parent.children.map((c) => c.id));
+      }
+    }
+    return new Set<string>();
+  }, []);
+
   // Demo locked items (premium features) - memoized to prevent re-renders
   const lockedItemIds = useMemo(
     () => (mounted && showLockedItems ? ['cost-management'] : []),
@@ -1386,6 +1397,118 @@ export function NavigationSidebarWithSelectedSubmenus({
                   </a>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Reports Filters - Horizontal Layout */}
+          {reportsChildIds.has(activeItemId) && (
+            <div className="px-6 py-2 border-b border-gray-200 bg-white">
+              <form className="flex flex-wrap items-end gap-2">
+                {/* Vehicles */}
+                <div className="flex flex-col min-w-[160px]">
+                  <label className="mb-0.5 text-[11px] font-medium text-[#3D88C5]">
+                    Vehicles
+                  </label>
+                  <select className="h-8 rounded border border-gray-300 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#3D88C5] focus:border-transparent">
+                    <option value="all">All Vehicles</option>
+                  </select>
+                </div>
+
+                {/* Reports */}
+                <div className="flex flex-col min-w-[160px]">
+                  <label className="mb-0.5 text-[11px] font-medium text-[#3D88C5]">
+                    Reports
+                  </label>
+                  <select className="h-8 rounded border border-gray-300 px-2 text-xs bg-gray-50" disabled>
+                    <option>
+                      {activeItemId === 'journeys' && 'Journeys'}
+                      {activeItemId === 'last-location' && 'Last Location'}
+                      {activeItemId === 'fleet-summary' && 'Fleet Summary'}
+                      {activeItemId === 'summary' && 'Summary'}
+                      {activeItemId === 'idling' && 'Idling'}
+                      {activeItemId === 'stops' && 'Stops'}
+                      {activeItemId === 'stops-idling' && 'Stops/Idling'}
+                      {activeItemId === 'locations' && 'Locations'}
+                      {activeItemId === 'route-completion-summary' && 'Route Completion Summary'}
+                    </option>
+                  </select>
+                </div>
+
+                {/* Journey Type */}
+                {(activeItemId === 'journeys' || activeItemId === 'idling' || activeItemId === 'stops' || activeItemId === 'stops-idling') && (
+                  <div className="flex flex-col min-w-[120px]">
+                    <label className="mb-0.5 text-[11px] font-medium text-[#3D88C5]">
+                      Journey Type
+                    </label>
+                    <select className="h-8 rounded border border-gray-300 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#3D88C5] focus:border-transparent">
+                      <option value="all">All</option>
+                      <option value="journey">Journey</option>
+                      <option value="idle">Idle</option>
+                      <option value="stop">Stop</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Drivers */}
+                <div className="flex flex-col min-w-[160px]">
+                  <label className="mb-0.5 text-[11px] font-medium text-[#3D88C5]">
+                    Drivers
+                  </label>
+                  <select className="h-8 rounded border border-gray-300 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#3D88C5] focus:border-transparent">
+                    <option value="all">All Drivers</option>
+                  </select>
+                </div>
+
+                {/* Begin Date */}
+                <div className="flex flex-col min-w-[140px]">
+                  <label className="mb-0.5 text-[11px] font-medium text-[#3D88C5]">
+                    Begin:
+                  </label>
+                  <input
+                    type="date"
+                    defaultValue="2025-10-06"
+                    className="h-8 rounded border border-gray-300 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#3D88C5] focus:border-transparent"
+                  />
+                </div>
+
+                {/* End Date */}
+                <div className="flex flex-col min-w-[140px]">
+                  <label className="mb-0.5 text-[11px] font-medium text-[#3D88C5]">
+                    End :
+                  </label>
+                  <input
+                    type="date"
+                    defaultValue="2025-10-06"
+                    className="h-8 rounded border border-gray-300 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#3D88C5] focus:border-transparent"
+                  />
+                </div>
+
+                {/* Shift Time */}
+                <div className="flex flex-col min-w-[180px]">
+                  <label className="flex items-center mb-0.5 space-x-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="w-3.5 h-3.5 text-[#3D88C5] border-gray-300 rounded focus:ring-[#3D88C5]"
+                    />
+                    <span className="text-[11px] font-medium text-[#3D88C5]">limit by shift time:</span>
+                  </label>
+                  <select className="h-8 rounded border border-gray-300 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#3D88C5] focus:border-transparent">
+                    <option value="11:00 - 15:59">11:00 - 15:59</option>
+                    <option value="00:00 - 08:00">00:00 - 08:00</option>
+                    <option value="08:00 - 16:00">08:00 - 16:00</option>
+                    <option value="16:00 - 23:59">16:00 - 23:59</option>
+                  </select>
+                </div>
+
+                {/* View Report Button */}
+                <button
+                  type="button"
+                  className="h-8 px-4 rounded bg-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-400 focus:outline-none focus:ring-1 focus:ring-[#3D88C5] focus:ring-offset-1 transition-colors"
+                  onClick={() => console.log('[Demo] View Report clicked')}
+                >
+                  View Report
+                </button>
+              </form>
             </div>
           )}
 

@@ -2,7 +2,7 @@ import BaseReportPage from '@/components/reports/BaseReportPage';
 
 export default function JourneysReportPage() {
   return (
-    <BaseReportPage 
+    <BaseReportPage
       title="Journeys Report"
       defaultJourneyType="journey"
     />

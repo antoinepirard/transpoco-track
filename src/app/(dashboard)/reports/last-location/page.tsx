@@ -2,7 +2,7 @@ import BaseReportPage from '@/components/reports/BaseReportPage';
 
 export default function LastLocationReportPage() {
   return (
-    <BaseReportPage 
+    <BaseReportPage
       title="Last Location Report"
       showJourneyTypeFilter={false}
     />

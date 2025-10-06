@@ -2,7 +2,7 @@ import BaseReportPage from '@/components/reports/BaseReportPage';
 
 export default function StopsIdlingReportPage() {
   return (
-    <BaseReportPage 
+    <BaseReportPage
       title="Stops/Idling Report"
     />
   );

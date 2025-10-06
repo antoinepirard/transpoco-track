@@ -2,7 +2,7 @@ import BaseReportPage from '@/components/reports/BaseReportPage';
 
 export default function SummaryReportPage() {
   return (
-    <BaseReportPage 
+    <BaseReportPage
       title="Summary Report"
     />
   );

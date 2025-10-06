@@ -97,7 +97,7 @@ function generateMockReports(filters: {
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  
+
   const filters = {
     startDate: searchParams.get('startDate') || new Date().toISOString().slice(0, 10),
     endDate: searchParams.get('endDate') || new Date().toISOString().slice(0, 10),
