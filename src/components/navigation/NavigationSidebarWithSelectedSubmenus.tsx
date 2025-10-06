@@ -48,6 +48,9 @@ import {
   CloudArrowDownIcon,
   UserPlusIcon,
   ListIcon,
+  GaugeIcon,
+  TrendUpIcon,
+  RoadHorizonIcon,
 } from '@phosphor-icons/react';
 import { NavigationItemGroupDemo } from './NavigationItemGroupDemo';
 import { NavigationTooltip } from './NavigationTooltip';
@@ -57,6 +60,7 @@ import { MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react';
 import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ProductDiscoveryDialog } from './ProductDiscoveryDialog';
+import { SubPageSecondaryTopBar } from './SubPageSecondaryTopBar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -322,11 +326,60 @@ const sidebarNavigationData: NavigationSection[] = [
         id: 'driving-style',
         label: 'Driving Style',
         icon: SteeringWheelIcon,
+        children: [
+          {
+            id: 'speed-summary',
+            label: 'Speed Summary',
+            icon: GaugeIcon,
+          },
+          {
+            id: 'speed-trend',
+            label: 'Speed Trend',
+            icon: ChartLineIcon,
+          },
+          {
+            id: 'speed-improvement',
+            label: 'Speed Improvement',
+            icon: TrendUpIcon,
+          },
+          {
+            id: 'driving-summary',
+            label: 'Driving Summary',
+            icon: SteeringWheelIcon,
+          },
+          {
+            id: 'driver-mileage-summary',
+            label: 'Driver Mileage Summary',
+            icon: RoadHorizonIcon,
+          },
+          {
+            id: 'driving-style-settings',
+            label: 'Settings',
+            icon: GearIcon,
+          },
+        ],
       },
       {
         id: 'walkaround',
         label: 'Walkaround',
         icon: ListChecksIcon,
+        children: [
+          {
+            id: 'all-checks',
+            label: 'All Checks',
+            icon: CheckCircleIcon,
+          },
+          {
+            id: 'driven-without-checks',
+            label: 'Driven without Checks',
+            icon: WarningIcon,
+          },
+          {
+            id: 'walkaround-settings',
+            label: 'Settings',
+            icon: GearIcon,
+          },
+        ],
       },
     ],
   },
@@ -423,7 +476,8 @@ export function NavigationSidebarWithSelectedSubmenus({
   // Product discovery dialog state
   const [isProductDiscoveryOpen, setIsProductDiscoveryOpen] = useState(false);
 
-
+  // Sub-page secondary top bar state (for walkaround, driving style, etc.)
+  const [activeSubPageTabId, setActiveSubPageTabId] = useState<string>('');
 
   // Demo locked items (premium features) - memoized to prevent re-renders
   const lockedItemIds = useMemo(
@@ -598,6 +652,32 @@ export function NavigationSidebarWithSelectedSubmenus({
     });
     console.log(`[Demo] Command item selected: "${item.label}"`);
   }, [onActiveItemChange]);
+
+  // Sub-page secondary top bar tab click handler
+  const handleSubPageTabClick = useCallback((tab: { id: string; label: string }) => {
+    setActiveSubPageTabId(tab.id);
+    console.log(`[Demo] Sub-page tab clicked: "${tab.label}"`);
+  }, []);
+
+  // Auto-select first tab when sub-page is selected
+  useEffect(() => {
+    // Default tabs for each sub-page
+    const defaultTabs: Record<string, string> = {
+      // Walkaround sub-pages
+      'all-checks': 'weekly',
+      'driven-without-checks': 'per-driver',
+      'walkaround-settings': 'alerts',
+      // Driving Style sub-pages
+      'speed-summary': 'per-vehicle',
+      'driving-summary': 'per-vehicle',
+    };
+
+    if (activeItemId in defaultTabs) {
+      setActiveSubPageTabId(defaultTabs[activeItemId]);
+    } else {
+      setActiveSubPageTabId('');
+    }
+  }, [activeItemId]);
 
   // Handle Cmd+K keyboard shortcut to open command menu
   useEffect(() => {
@@ -1048,24 +1128,47 @@ export function NavigationSidebarWithSelectedSubmenus({
           </div>
         )}
 
-        <main className="flex-1 overflow-hidden h-full min-h-0 relative">
-          <AnimatePresence>
-            {globalTooltip.isVisible &&
-              globalTooltip.content &&
-              globalTooltip.anchorRect && (
-                <NavigationTooltip
-                  isVisible={globalTooltip.isVisible}
-                  content={globalTooltip.content}
-                  anchorRect={globalTooltip.anchorRect}
-                  previousAnchorRect={
-                    globalTooltip.previousAnchorRect || undefined
-                  }
-                  onClose={handleTooltipClose}
-                  onMouseEnter={handleNavigationMouseEnter}
-                  onMouseLeave={handleItemLeave}
-                />
-              )}
-          </AnimatePresence>
+        <main className="flex-1 overflow-hidden h-full min-h-0 relative flex flex-col">
+          {/* Sub-page Secondary Top Bar - positioned to the right of the sidebar */}
+          {(
+            // Walkaround sub-pages
+            activeItemId === 'all-checks' ||
+            activeItemId === 'driven-without-checks' ||
+            activeItemId === 'walkaround-settings' ||
+            // Driving Style sub-pages
+            activeItemId === 'speed-summary' ||
+            activeItemId === 'speed-trend' ||
+            activeItemId === 'speed-improvement' ||
+            activeItemId === 'driving-summary' ||
+            activeItemId === 'driver-mileage-summary' ||
+            activeItemId === 'driving-style-settings'
+          ) && (
+            <SubPageSecondaryTopBar
+              pageId={activeItemId}
+              activeTabId={activeSubPageTabId}
+              onTabClick={handleSubPageTabClick}
+            />
+          )}
+
+          <div className="flex-1 overflow-hidden h-full min-h-0 relative">
+            <AnimatePresence>
+              {globalTooltip.isVisible &&
+                globalTooltip.content &&
+                globalTooltip.anchorRect && (
+                  <NavigationTooltip
+                    isVisible={globalTooltip.isVisible}
+                    content={globalTooltip.content}
+                    anchorRect={globalTooltip.anchorRect}
+                    previousAnchorRect={
+                      globalTooltip.previousAnchorRect || undefined
+                    }
+                    onClose={handleTooltipClose}
+                    onMouseEnter={handleNavigationMouseEnter}
+                    onMouseLeave={handleItemLeave}
+                  />
+                )}
+            </AnimatePresence>
+          </div>
         </main>
       </div>
 

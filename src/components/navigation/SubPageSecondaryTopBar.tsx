@@ -1,0 +1,132 @@
+'use client';
+
+import React from 'react';
+import {
+  CheckCircleIcon,
+  WarningIcon,
+  GearIcon,
+  ListIcon,
+  CalendarIcon,
+  UsersIcon,
+  TruckIcon,
+  BellIcon,
+  QuestionIcon,
+} from '@phosphor-icons/react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+interface SecondaryTopBarItem {
+  id: string;
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+}
+
+interface SubPageSecondaryTopBarProps {
+  pageId: string;
+  activeTabId?: string;
+  onTabClick?: (tab: { id: string; label: string }) => void;
+}
+
+// Tabs organized by sub-page
+const subPageTabs: Record<string, SecondaryTopBarItem[]> = {
+  // Walkaround sub-pages
+  'all-checks': [
+    { id: 'weekly', label: 'Weekly', icon: CalendarIcon },
+    { id: 'list-view', label: 'List view', icon: ListIcon },
+  ],
+  'driven-without-checks': [
+    { id: 'per-driver', label: 'Per Driver', icon: UsersIcon },
+    { id: 'per-vehicle', label: 'Per Vehicle', icon: TruckIcon },
+  ],
+  'walkaround-settings': [
+    { id: 'alerts', label: 'Alerts', icon: BellIcon },
+    { id: 'checklist', label: 'Checklist', icon: CheckCircleIcon },
+    { id: 'settings-company', label: 'Settings Company', icon: GearIcon },
+  ],
+
+  // Driving Style sub-pages
+  'speed-summary': [
+    { id: 'per-vehicle', label: 'Per Vehicle', icon: TruckIcon },
+    { id: 'per-driver', label: 'Per Driver', icon: UsersIcon },
+  ],
+  'driving-summary': [
+    { id: 'per-vehicle', label: 'Per Vehicle', icon: TruckIcon },
+    { id: 'per-driver', label: 'Per Driver', icon: UsersIcon },
+  ],
+};
+
+export function SubPageSecondaryTopBar({
+  pageId,
+  activeTabId = '',
+  onTabClick
+}: SubPageSecondaryTopBarProps) {
+  const tabs = subPageTabs[pageId] || [];
+
+  const handleTabClick = (tab: SecondaryTopBarItem) => {
+    onTabClick?.({ id: tab.id, label: tab.label });
+  };
+
+  if (tabs.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="h-12 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 relative z-20">
+      {/* Left side - Tab items */}
+      <div className="flex items-center space-x-1">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTabId === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabClick(tab)}
+              className={`flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-immediate group focus-ring cursor-pointer ${
+                isActive
+                  ? 'bg-[#3D88C5] text-white'
+                  : 'text-gray-600 hover:hover-only:bg-white hover:hover-only:text-gray-900'
+              }`}
+            >
+              {Icon && (
+                <Icon className={`mr-2 h-4 w-4 flex-shrink-0 transition-immediate ${
+                  isActive
+                    ? 'text-white'
+                    : 'text-gray-400 group-hover:hover-only:text-gray-500'
+                }`} />
+              )}
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Right side - Help menu */}
+      <div className="flex items-center">
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-600 hover:hover-only:bg-white hover:hover-only:text-gray-900 outline-none">
+            <QuestionIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => console.log('[Demo] Get started clicked')}
+            >
+              Get started
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => console.log('[Demo] Manual clicked')}
+            >
+              Manual
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+}
