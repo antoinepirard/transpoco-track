@@ -10,6 +10,7 @@ import { NavigationSidebarWithSubmenus } from '@/components/navigation/Navigatio
 import { NavigationSidebarWithTopBarSearch } from '@/components/navigation/NavigationSidebarWithTopBarSearch';
 import { NavigationSidebarWithSidebarSearch } from '@/components/navigation/NavigationSidebarWithSidebarSearch';
 import { NavigationSidebarWithSelectedSubmenus } from '@/components/navigation/NavigationSidebarWithSelectedSubmenus';
+import { ResolutionMetadata } from '@/components/navigation/ResolutionMetadata';
 
 // Define navigation variants
 interface NavigationVariant {
@@ -108,8 +109,9 @@ function NavigationDemoContent() {
         </div>
       </main>
 
-      {/* Variant Selector - Bottom Right */}
-      <div className="fixed bottom-4 right-4 z-50">
+      {/* Resolution Metadata & Variant Selector - Bottom Right */}
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-3">
+        <ResolutionMetadata />
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3">
           <div className="flex flex-col space-y-2">
             <label htmlFor="variant-select" className="text-xs font-medium text-gray-600 uppercase tracking-wider">
