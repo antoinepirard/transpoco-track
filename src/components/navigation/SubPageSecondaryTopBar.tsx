@@ -70,6 +70,12 @@ const subPageTabs: Record<string, SecondaryTopBarItem[]> = {
     { id: 'per-driver', label: 'Per Driver', icon: UsersIcon },
   ],
 
+  // Reports: Journeys
+  journeys: [
+    { id: 'journeys', label: 'Journeys', icon: TruckIcon },
+    { id: 'off-road', label: 'Off road', icon: ListIcon },
+  ],
+
   // Fuel / Electric module (moved to sidebar submenus; keep empty for now)
   'fuel-electric': [],
 };

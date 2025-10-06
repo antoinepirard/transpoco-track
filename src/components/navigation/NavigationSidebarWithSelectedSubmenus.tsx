@@ -34,7 +34,6 @@ import {
   EnvelopeIcon,
   FileTextIcon,
   NewspaperIcon,
-  StorefrontIcon,
   PackageIcon,
   UsersIcon,
   UserCircleIcon,
@@ -459,13 +458,6 @@ const sidebarNavigationData: NavigationSection[] = [
           },
           { id: 'ev-suitability', label: 'EV Suitability', icon: TruckIcon },
           { id: 'ev-charging', label: 'EV Charging', icon: BatteryHighIcon },
-          { id: 'fuel-accounts', label: 'Fuel Accounts', icon: ListIcon },
-          { id: 'fuel-cards', label: 'Fuel Cards', icon: CreditCardIcon },
-          {
-            id: 'ev-suitability-settings',
-            label: 'EV Suitability Settings',
-            icon: GearIcon,
-          },
         ],
       },
       {
@@ -758,6 +750,8 @@ export function NavigationSidebarWithSelectedSubmenus({
       'driving-style-settings': 'alerts',
       // Fuel/Electric module
       'fuel-electric': 'fuel',
+      // Reports: Journeys
+      journeys: 'journeys',
     };
 
     // If a Fuel/Electric child is active, map to the appropriate tab
@@ -1261,6 +1255,7 @@ export function NavigationSidebarWithSelectedSubmenus({
               activeItemId === 'all-checks' ||
               activeItemId === 'driven-without-checks' ||
               activeItemId === 'walkaround-settings' ||
+              activeItemId === 'journeys' ||
               activeItemId === 'speed-summary' ||
               activeItemId === 'speed-trend' ||
               activeItemId === 'speed-improvement' ||
