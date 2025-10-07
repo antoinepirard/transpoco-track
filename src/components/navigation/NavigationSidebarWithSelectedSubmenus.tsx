@@ -186,6 +186,12 @@ const sidebarNavigationData: NavigationSection[] = [
             href: '/reports/journeys',
           },
           {
+            id: 'off-road',
+            label: 'Off Road Vehicles',
+            icon: RoadHorizonIcon,
+            href: '/reports/off-road',
+          },
+          {
             id: 'last-location',
             label: 'Last Location',
             icon: MapPinIcon,
@@ -269,12 +275,12 @@ const sidebarNavigationData: NavigationSection[] = [
         icon: SlidersIcon,
         children: [
           {
-            id: 'locations',
+            id: 'setup-locations',
             label: 'Locations',
             icon: MapPinIcon,
           },
           {
-            id: 'routes',
+            id: 'setup-routes',
             label: 'Routes',
             icon: PathIcon,
           },
@@ -1253,151 +1259,25 @@ export function NavigationSidebarWithSelectedSubmenus({
         )}
 
         <main className="flex-1 overflow-hidden h-full min-h-0 relative flex flex-col">
-          {/* Secondary top bars */}
-          {activeItemId === 'fuel-electric' ||
-          fuelElectricChildIds.has(activeItemId) ? (
-            <SecondaryTopBar
-              categoryId="fuel-electric"
-              activeItemId={activeSubPageTabId}
-              onItemClick={(item) => setActiveSubPageTabId(item.id)}
+          {/* Secondary top bar for Walkaround, Driving Style, Messages, etc. (NOT for Reports) */}
+          {(activeItemId === 'messages' ||
+            activeItemId === 'all-checks' ||
+            activeItemId === 'driven-without-checks' ||
+            activeItemId === 'walkaround-settings' ||
+            activeItemId === 'speed-summary' ||
+            activeItemId === 'speed-trend' ||
+            activeItemId === 'speed-improvement' ||
+            activeItemId === 'driving-summary' ||
+            activeItemId === 'driver-mileage-summary' ||
+            activeItemId === 'driving-style-settings') && (
+            <SubPageSecondaryTopBar
+              pageId={activeItemId}
+              activeTabId={activeSubPageTabId}
+              onTabClick={handleSubPageTabClick}
+              showActionButton={activeItemId === 'messages'}
+              actionButtonLabel="New Message"
+              onActionButtonClick={handleNewMessageClick}
             />
-          ) : (
-            (activeItemId === 'messages' ||
-              activeItemId === 'all-checks' ||
-              activeItemId === 'driven-without-checks' ||
-              activeItemId === 'walkaround-settings' ||
-              activeItemId === 'journeys' ||
-              activeItemId === 'speed-summary' ||
-              activeItemId === 'speed-trend' ||
-              activeItemId === 'speed-improvement' ||
-              activeItemId === 'driving-summary' ||
-              activeItemId === 'driver-mileage-summary' ||
-              activeItemId === 'driving-style-settings') && (
-              <SubPageSecondaryTopBar
-                pageId={activeItemId}
-                activeTabId={activeSubPageTabId}
-                onTabClick={handleSubPageTabClick}
-                showActionButton={activeItemId === 'messages'}
-                actionButtonLabel="New Message"
-                onActionButtonClick={handleNewMessageClick}
-              />
-            )
-          )}
-
-          {activeItemId === 'fuel-electric' && (
-            <div className="px-4 py-3 border-b border-gray-200 bg-white">
-              {(!activeSubPageTabId || activeSubPageTabId === 'fuel') && (
-                <div className="mb-4">
-                  <h3 className="text-xs font-medium text-gray-500 mb-2">
-                    Fuel
-                  </h3>
-                  <div className="grid grid-cols-1 gap-1">
-                    {[
-                      'Fuel Transactions',
-                      'Fuel Consumption',
-                      'Fuel Consumption Summary',
-                      'Fuel Purchase Summary',
-                      'Fuel Transactions Gps Verified',
-                      'Carbon Footprint Calculations',
-                      'Canbus Fuel Used',
-                      'Canbus Plant Utilisation',
-                    ].map((label) => (
-                      <button
-                        key={label}
-                        className="w-full text-left px-3 py-1.5 text-sm rounded-md transition-immediate hover:bg-gray-100 text-gray-700"
-                        onClick={() =>
-                          onActiveItemChange?.({
-                            id: label.toLowerCase().replace(/\s+/g, '-'),
-                            label,
-                          })
-                        }
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {activeSubPageTabId === 'electric-vehicles' && (
-                <div className="mb-4">
-                  <h3 className="text-xs font-medium text-gray-500 mb-2">
-                    Electric Vehicles
-                  </h3>
-                  <div className="grid grid-cols-1 gap-1">
-                    {['EV Suitability', 'EV Charging'].map((label) => (
-                      <button
-                        key={label}
-                        className="w-full text-left px-3 py-1.5 text-sm rounded-md transition-immediate hover:bg-gray-100 text-gray-700"
-                        onClick={() =>
-                          onActiveItemChange?.({
-                            id: label.toLowerCase().replace(/\s+/g, '-'),
-                            label,
-                          })
-                        }
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {activeSubPageTabId === 'settings' && (
-                <div className="mb-4">
-                  <h3 className="text-xs font-medium text-gray-500 mb-2">
-                    Settings
-                  </h3>
-                  <div className="grid grid-cols-1 gap-1">
-                    {[
-                      'Fuel Accounts',
-                      'Fuel Cards',
-                      'EV Suitability Settings',
-                    ].map((label) => (
-                      <button
-                        key={label}
-                        className="w-full text-left px-3 py-1.5 text-sm rounded-md transition-immediate hover:bg-gray-100 text-gray-700"
-                        onClick={() =>
-                          onActiveItemChange?.({
-                            id: label.toLowerCase().replace(/\s+/g, '-'),
-                            label,
-                          })
-                        }
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {activeSubPageTabId === 'getting-started' && (
-                <div>
-                  <h3 className="text-xs font-medium text-gray-500 mb-2">
-                    Getting started
-                  </h3>
-                  <a
-                    href="#"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-immediate hover:bg-gray-100 text-gray-700"
-                  >
-                    How to use the Fuel Modules
-                    <svg
-                      className="w-4 h-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M18 13V6a2 2 0 0 0-2-2H9" />
-                      <path d="M15 3l6 6" />
-                      <path d="M10 14L21 3" />
-                      <path d="M5 8H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1" />
-                    </svg>
-                  </a>
-                </div>
-              )}
-            </div>
           )}
 
           {/* Reports Filters - Horizontal Layout */}
@@ -1422,6 +1302,7 @@ export function NavigationSidebarWithSelectedSubmenus({
                   <select className="h-8 rounded border border-gray-300 px-2 text-xs bg-gray-50" disabled>
                     <option>
                       {activeItemId === 'journeys' && 'Journeys'}
+                      {activeItemId === 'off-road' && 'Off Road Vehicles'}
                       {activeItemId === 'last-location' && 'Last Location'}
                       {activeItemId === 'fleet-summary' && 'Fleet Summary'}
                       {activeItemId === 'summary' && 'Summary'}
