@@ -201,6 +201,7 @@ export interface OnTimeByHourData {
 
 export interface OnTimeByWeekData {
   week: string;
+  weekIndex?: number;
   weeklyPercent: number;
   sevenDayAvg: number;
   vehicles: Array<{
