@@ -50,11 +50,13 @@ export function ExceptionsTable({ jobs, risks, isLoading }: ExceptionsTableProps
     return 'secondary';
   };
 
-  // Get top 10 at-risk jobs
-  const atRiskJobs = risks.slice(0, 10).map((risk) => {
-    const job = jobs.find((j) => j.id === risk.jobId)!;
-    return { ...job, risk };
-  });
+  // Get top 10 at-risk jobs (skip risks with no matching job)
+  const atRiskJobs: Array<Job & { risk: JobRisk }> = risks
+    .slice(0, 10)
+    .flatMap((risk) => {
+      const job = jobs.find((j) => j.id === risk.jobId);
+      return job ? [{ ...job, risk }] : [];
+    });
 
   if (atRiskJobs.length === 0) {
     return (

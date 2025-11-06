@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { TrendingUp, Activity } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ReferenceLine, Scatter, ComposedChart, ZAxis, Cell } from 'recharts';
 import type { OnTimeByWeekData } from '@/types/fieldService';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface OnTimeByWeekChartProps {
   data: OnTimeByWeekData[];
@@ -50,8 +53,21 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
       week: weekData.week,
       onTimePercent: v.onTimePercent,
       vehicleId: v.vehicleId,
+      vehicleName: (v as any).vehicleName || v.vehicleId,
     }))
   );
+
+  // Derive breach/near lists (near = within +2% above SLA)
+  const breached = vehicleScatterData
+    .filter((pt) => pt.onTimePercent < SLA_TARGET)
+    .sort((a, b) => a.onTimePercent - b.onTimePercent);
+
+  const near = vehicleScatterData
+    .filter((pt) => pt.onTimePercent >= SLA_TARGET && pt.onTimePercent <= SLA_TARGET + 2)
+    .sort((a, b) => a.onTimePercent - b.onTimePercent);
+
+  const [activeFilter, setActiveFilter] = useState<'breached' | 'near'>('breached');
+  const [listExpanded, setListExpanded] = useState(false);
 
   // Calculate trend
   const firstWeek = data[0]?.weeklyPercent || 0;
@@ -135,25 +151,75 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
               fillOpacity={0.7}
             >
               {vehicleScatterData.map((pt, idx) => (
-                <Cell key={`pt-${idx}`} fill={pt.onTimePercent > SLA_TARGET ? '#ef4444' : 'var(--color-weeklyPercent)'} />
+                <Cell key={`pt-${idx}`} fill={pt.onTimePercent < SLA_TARGET ? '#ef4444' : 'var(--color-weeklyPercent)'} />
               ))}
             </Scatter>
           </ComposedChart>
         </ChartContainer>
-      </CardContent>
-      <CardFooter>
-        <div className="flex w-full items-start gap-2 text-sm">
-          <div className="grid gap-2">
-            <div className="flex items-center gap-2 leading-none font-medium">
-              {trendDirection ? 'Trending up' : 'Trending down'} by {Math.abs(parseFloat(trend))}% this month{' '}
-              <TrendingUp className={`h-4 w-4 ${!trendDirection && 'rotate-180'}`} />
+        {/* Single list with filter for Breached vs Near SLA */}
+        <div className="mt-3">
+          <div className="flex items-center justify-between">
+            <div className="inline-flex rounded-md border bg-card shadow-sm">
+              <button
+                type="button"
+                className={cn(
+                  'px-3 py-1.5 text-sm rounded-l-md transition-colors',
+                  activeFilter === 'breached' ? 'bg-muted font-medium' : 'hover:bg-muted/50'
+                )}
+                onClick={() => { setActiveFilter('breached'); setListExpanded(false); }}
+              >
+                Breached ({breached.length})
+              </button>
+              <button
+                type="button"
+                className={cn(
+                  'px-3 py-1.5 text-sm rounded-r-md transition-colors border-l',
+                  activeFilter === 'near' ? 'bg-muted font-medium' : 'hover:bg-muted/50'
+                )}
+                onClick={() => { setActiveFilter('near'); setListExpanded(false); }}
+              >
+                Near SLA ({near.length})
+              </button>
             </div>
-            <div className="text-muted-foreground flex items-center gap-2 leading-none">
-              Last 4 weeks • Dots show individual vehicle performance
-            </div>
+            <span className="text-xs text-muted-foreground">
+              {activeFilter === 'breached' ? breached.length : near.length} items
+            </span>
           </div>
+
+          {(() => {
+            const list = activeFilter === 'breached' ? breached : near;
+            const colorClass = activeFilter === 'breached' ? 'text-red-600' : 'text-amber-600';
+            const visible = listExpanded ? list : list.slice(0, 5);
+
+            if (list.length === 0) {
+              return (
+                <div className="mt-2 text-xs text-muted-foreground">No vehicles in this category for the selected period.</div>
+              );
+            }
+
+            return (
+              <div className="mt-2">
+                <div className="max-h-56 overflow-auto rounded-md border divide-y bg-card/50">
+                  {visible.map((v, i) => (
+                    <div key={`v-${activeFilter}-${v.vehicleId}-${v.weekIndex}-${i}`} className="flex items-center justify-between px-3 py-2 text-sm">
+                      <span className="truncate">{v.vehicleName} — {v.week}</span>
+                      <span className={`${colorClass} font-mono`}>{v.onTimePercent.toFixed(1)}%</span>
+                    </div>
+                  ))}
+                </div>
+                {list.length > 5 && (
+                  <div className="mt-2">
+                    <Button variant="outline" size="sm" className="h-7 px-3 text-xs" onClick={() => setListExpanded(!listExpanded)}>
+                      {listExpanded ? 'Show top 5' : `Load ${list.length - 5} more`}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
-      </CardFooter>
+      </CardContent>
+      {/* Footer removed per request */}
     </Card>
   );
 }
