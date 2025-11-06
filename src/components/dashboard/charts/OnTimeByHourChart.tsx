@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { TrendingUp, Activity } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -8,6 +8,8 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ReferenceLine, Scatter, C
 import type { OnTimeByWeekData } from '@/types/fieldService';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useWidgetSettings } from '@/hooks/useWidgetSettings';
+import { WidgetHoverChrome } from '@/components/dashboard/WidgetHoverChrome';
 
 interface OnTimeByWeekChartProps {
   data: OnTimeByWeekData[];
@@ -34,6 +36,71 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
   const [activeFilter, setActiveFilter] = useState<'breached' | 'near'>('breached');
   const [listExpanded, setListExpanded] = useState(false);
 
+  type DateRange = 'today' | '7d' | '28d';
+  const { settings, update, reset } = useWidgetSettings<{ slaTarget: number; dateRange: DateRange }>(
+    'onTimeByHour',
+    { slaTarget: 90, dateRange: '7d' }
+  );
+  
+  const filteredData = useMemo(() => {
+    if (!data || data.length === 0) return [] as OnTimeByWeekData[];
+    let sliced: OnTimeByWeekData[];
+    if (settings.dateRange === 'today') sliced = data.slice(-1);
+    else if (settings.dateRange === '7d') sliced = data.slice(-2);
+    else if (settings.dateRange === '28d') sliced = data.slice(-4);
+    else sliced = data;
+    
+    // Re-index the filtered data so weekIndex starts at 0
+    const reindexed = sliced.map((week, idx) => ({
+      ...week,
+      weekIndex: idx,
+      vehicles: week.vehicles.map(v => ({
+        ...v,
+        weekIndex: idx + (Math.random() - 0.5) * 0.3, // jitter for scatter
+      })),
+    }));
+    
+    // Add boundary points for step area to extend to edges
+    if (reindexed.length > 0) {
+      const first = reindexed[0];
+      const last = reindexed[reindexed.length - 1];
+      return [
+        { ...first, weekIndex: -0.5, week: '', vehicles: [] },
+        ...reindexed,
+        { ...last, weekIndex: reindexed.length - 0.5, week: '', vehicles: [] },
+      ];
+    }
+    return reindexed;
+  }, [data, settings.dateRange]);
+
+  // Flatten vehicle data for scatter plot
+  const vehicleScatterData = filteredData.flatMap((weekData) =>
+    weekData.vehicles.map((v) => ({
+      weekIndex: v.weekIndex,
+      week: weekData.week,
+      onTimePercent: v.onTimePercent,
+      vehicleId: v.vehicleId,
+      vehicleName: v.vehicleName || v.vehicleId,
+    }))
+  );
+
+  // Derive breach/near lists (near = within +2% above SLA)
+  const breached = vehicleScatterData
+    .filter((pt) => pt.onTimePercent < settings.slaTarget)
+    .sort((a, b) => a.onTimePercent - b.onTimePercent);
+
+  const near = vehicleScatterData
+    .filter((pt) => pt.onTimePercent >= settings.slaTarget && pt.onTimePercent <= settings.slaTarget + 2)
+    .sort((a, b) => a.onTimePercent - b.onTimePercent);
+
+  
+
+  // Calculate trend
+  const firstWeek = filteredData[0]?.weeklyPercent || 0;
+  const lastWeek = filteredData[filteredData.length - 1]?.weeklyPercent || 0;
+  const trend = ((lastWeek - firstWeek) / firstWeek * 100).toFixed(1);
+  const trendDirection = parseFloat(trend) >= 0;
+
   if (isLoading || !data || data.length === 0) {
     return (
       <Card>
@@ -46,39 +113,50 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
       </Card>
     );
   }
-  
-  const SLA_TARGET = 85; // move SLA down a bit from 90 to 85
-
-  // Flatten vehicle data for scatter plot (use each vehicle's jittered weekIndex)
-  const vehicleScatterData = data.flatMap((weekData) =>
-    weekData.vehicles.map((v) => ({
-      weekIndex: v.weekIndex,
-      week: weekData.week,
-      onTimePercent: v.onTimePercent,
-      vehicleId: v.vehicleId,
-      vehicleName: v.vehicleName || v.vehicleId,
-    }))
-  );
-
-  // Derive breach/near lists (near = within +2% above SLA)
-  const breached = vehicleScatterData
-    .filter((pt) => pt.onTimePercent < SLA_TARGET)
-    .sort((a, b) => a.onTimePercent - b.onTimePercent);
-
-  const near = vehicleScatterData
-    .filter((pt) => pt.onTimePercent >= SLA_TARGET && pt.onTimePercent <= SLA_TARGET + 2)
-    .sort((a, b) => a.onTimePercent - b.onTimePercent);
-
-  
-
-  // Calculate trend
-  const firstWeek = data[0]?.weeklyPercent || 0;
-  const lastWeek = data[data.length - 1]?.weeklyPercent || 0;
-  const trend = ((lastWeek - firstWeek) / firstWeek * 100).toFixed(1);
-  const trendDirection = parseFloat(trend) >= 0;
 
   return (
-    <Card>
+    <WidgetHoverChrome
+      popover={(
+        <div className="grid gap-3">
+          <div>
+            <div className="text-sm font-medium">On-Time by Week</div>
+            <p className="text-xs text-muted-foreground">SLA threshold and date range.</p>
+          </div>
+          <div className="grid gap-1.5">
+            <label className="text-xs font-medium" htmlFor="otbh-slaTarget">SLA target (%)</label>
+            <input
+              id="otbh-slaTarget"
+              type="number"
+              min={50}
+              max={100}
+              step={1}
+              value={settings.slaTarget}
+              onChange={(e) => update({ slaTarget: Number(e.target.value) })}
+              className="h-8 w-full rounded-md border bg-background px-2 text-sm"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <label className="text-xs font-medium" htmlFor="otbh-dateRange">Date range</label>
+            <select
+              id="otbh-dateRange"
+              value={settings.dateRange}
+              onChange={(e) => update({ dateRange: e.target.value as DateRange })}
+              className="h-8 w-full rounded-md border bg-background px-2 text-sm"
+            >
+              <option value="today">Today</option>
+              <option value="7d">Last 7 days</option>
+              <option value="28d">Last 28 days</option>
+            </select>
+          </div>
+          <div className="flex justify-end pt-1">
+            <Button variant="outline" size="sm" onClick={() => reset()}>
+              Reset
+            </Button>
+          </div>
+        </div>
+      )}
+    >
+      <Card>
       <CardHeader>
         <CardTitle>On-Time Arrival - Weekly</CardTitle>
         <CardDescription>
@@ -89,7 +167,7 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
         <ChartContainer config={chartConfig} className="h-64 w-full">
           <ComposedChart
             accessibilityLayer
-            data={data}
+            data={filteredData}
             margin={{
               left: 12,
               right: 12,
@@ -101,9 +179,12 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
             <XAxis
               type="number"
               dataKey="weekIndex"
-              domain={[0, data.length - 1]}
-              ticks={[0, 1, 2, 3]}
-              tickFormatter={(i) => data[i as number]?.week}
+              domain={[-0.5, Math.max(0, filteredData.length - 2.5)]}
+              ticks={Array.from({ length: filteredData.length - 2 }, (_, i) => i)}
+              tickFormatter={(i) => {
+                const item = filteredData.find(d => d.weekIndex === i);
+                return item?.week || '';
+              }}
               tickLine={false}
               axisLine={false}
               tickMargin={8}
@@ -129,10 +210,10 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
             
             {/* SLA Target Reference Line (solid, orange) */}
             <ReferenceLine
-              y={SLA_TARGET}
+              y={settings.slaTarget}
               stroke="orange"
               strokeWidth={1}
-              label={{ value: `SLA ${SLA_TARGET}%`, position: 'left', fill: 'orange', fontSize: 11 }}
+              label={{ value: `SLA ${settings.slaTarget}%`, position: 'left', fill: 'orange', fontSize: 11 }}
             />
             
             {/* Step Area for Weekly Aggregate */}
@@ -153,7 +234,7 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
               fillOpacity={0.7}
             >
               {vehicleScatterData.map((pt, idx) => (
-                <Cell key={`pt-${idx}`} fill={pt.onTimePercent < SLA_TARGET ? '#ef4444' : 'var(--color-weeklyPercent)'} />
+                <Cell key={`pt-${idx}`} fill={pt.onTimePercent < settings.slaTarget ? '#ef4444' : 'var(--color-weeklyPercent)'} />
               ))}
             </Scatter>
           </ComposedChart>
@@ -223,5 +304,6 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
       </CardContent>
       {/* Footer removed per request */}
     </Card>
+    </WidgetHoverChrome>
   );
 }
