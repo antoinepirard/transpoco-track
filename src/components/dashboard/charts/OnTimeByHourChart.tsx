@@ -3,7 +3,7 @@
 import { TrendingUp, Activity } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ReferenceLine, Line, Scatter, ComposedChart, ZAxis } from 'recharts';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ReferenceLine, Scatter, ComposedChart, ZAxis, Cell } from 'recharts';
 import type { OnTimeByWeekData } from '@/types/fieldService';
 
 interface OnTimeByWeekChartProps {
@@ -41,10 +41,12 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
     );
   }
   
-  // Flatten vehicle data for scatter plot
-  const vehicleScatterData = data.flatMap((weekData, weekIndex) => 
-    weekData.vehicles.map(v => ({
-      weekIndex,
+  const SLA_TARGET = 85; // move SLA down a bit from 90 to 85
+
+  // Flatten vehicle data for scatter plot (use each vehicle's jittered weekIndex)
+  const vehicleScatterData = data.flatMap((weekData) =>
+    weekData.vehicles.map((v) => ({
+      weekIndex: (v as any).weekIndex ?? (weekData as any).weekIndex,
       week: weekData.week,
       onTimePercent: v.onTimePercent,
       vehicleId: v.vehicleId,
@@ -107,23 +109,12 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
               />}
             />
             
-            {/* SLA Target Reference Line */}
+            {/* SLA Target Reference Line (solid, orange) */}
             <ReferenceLine
-              y={90}
-              stroke="var(--color-target)"
-              strokeDasharray="5 5"
-              strokeWidth={1.5}
-              label={{ value: 'SLA 90%', position: 'left', fill: 'var(--color-target)', fontSize: 11 }}
-            />
-            
-            {/* 7-Day Average Line */}
-            <Line
-              type="monotone"
-              dataKey="sevenDayAvg"
-              stroke="var(--color-sevenDayAvg)"
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              dot={false}
+              y={SLA_TARGET}
+              stroke="orange"
+              strokeWidth={1}
+              label={{ value: `SLA ${SLA_TARGET}%`, position: 'left', fill: 'orange', fontSize: 11 }}
             />
             
             {/* Step Area for Weekly Aggregate */}
@@ -142,7 +133,11 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
               dataKey="onTimePercent"
               fill="var(--color-weeklyPercent)"
               fillOpacity={0.7}
-            />
+            >
+              {vehicleScatterData.map((pt, idx) => (
+                <Cell key={`pt-${idx}`} fill={pt.onTimePercent > SLA_TARGET ? '#ef4444' : 'var(--color-weeklyPercent)'} />
+              ))}
+            </Scatter>
           </ComposedChart>
         </ChartContainer>
       </CardContent>

@@ -761,7 +761,7 @@ class FieldServiceDataGenerator {
       const sevenDayAvg = avgBaseline;
 
       // More dots (18-31), smaller, with horizontal jitter so they are not on a line
-      const vehicleCount = 18 + Math.floor(this.rnd() * 14);
+      const vehicleCount = 40 + Math.floor(this.rnd() * 30); // 40-69 dots per week
       const vehicles = Array.from({ length: vehicleCount }, (_, i) => {
         const tech = this.technicians[i % this.technicians.length];
         const variance = (this.rnd() * 20 - 10); // ±10%

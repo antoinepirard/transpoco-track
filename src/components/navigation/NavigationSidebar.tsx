@@ -4,7 +4,6 @@ import { useCallback, useRef, useState, useMemo, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useNavigation } from '@/contexts/NavigationContext';
 import {
-  BellIcon,
   ChatCircleIcon,
   GlobeIcon,
   ChartBarIcon,
@@ -174,6 +173,12 @@ const sidebarNavigationData: NavigationSection[] = [
         label: 'Dashboard',
         icon: SquaresFourIcon,
         href: '/dashboard',
+      },
+      {
+        id: 'inbox',
+        label: 'Inbox',
+        icon: EnvelopeIcon,
+        href: '/inbox',
       },
     ],
   },
@@ -964,17 +969,6 @@ export function NavigationSidebar({
               className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-200 hover:hover-only:bg-gray-300/20 hover:hover-only:text-white"
             >
               <ChatCircleIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-300 group-hover:hover-only:text-white" />
-            </button>
-
-            {/* Notifications */}
-            <button
-              onClick={() => handleTopBarItemClick('notifications')}
-              className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-200 hover:hover-only:bg-gray-300/20 hover:hover-only:text-white"
-            >
-              <BellIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-300 group-hover:hover-only:text-white" />
-              <span className="ml-1 inline-flex items-center px-1.5 py-1 rounded-full text-xs font-medium bg-red-500 text-white tabular-nums">
-                42
-              </span>
             </button>
           </div>
 
