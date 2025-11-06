@@ -6,7 +6,6 @@ import { MapView } from '@/components/map/MapView';
 import { MapFeatureControls } from '@/components/map/MapFeatureControls';
 import { MapStyleSwitcher } from '@/components/map/MapStyleSwitcher';
 import { MapErrorBoundary } from '@/components/map/MapErrorBoundary';
-import { Sidebar } from '@/components/sidebar/Sidebar';
 import { useFleetStore } from '@/stores/fleetStore';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useMapLayers } from '@/hooks/useMapLayers';
@@ -22,7 +21,6 @@ interface FleetMapProps {
   showTrails?: boolean;
   autoConnect?: boolean;
   demoMode?: boolean;
-  showSidebar?: boolean;
   centerOnLocation?: {latitude: number, longitude: number, zoom?: number} | null;
 }
 
@@ -34,7 +32,6 @@ export function FleetMap({
   showTrails = false,
   autoConnect = true,
   demoMode = false,
-  showSidebar = false,
   centerOnLocation = null,
 }: FleetMapProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
@@ -305,23 +302,6 @@ export function FleetMap({
 
   return (
     <div className="w-full h-full relative">
-      {/* Sidebar - conditionally render if needed */}
-      {showSidebar && (
-        <div className="absolute top-0 left-0 z-20 h-full">
-          <Sidebar
-            vehicles={vehicles}
-            selectedVehicle={selectedVehicle}
-            isConnected={isConnected}
-            showTrails={internalShowTrails}
-            onVehicleSelect={(vehicle) => {
-              setSelectedVehicle(vehicle);
-              selectVehicle(vehicle?.id || null);
-            }}
-            onToggleTrails={setInternalShowTrails}
-          />
-        </div>
-      )}
-
       {/* Map Container */}
       <div className="w-full h-full">
         <MapErrorBoundary>
