@@ -86,11 +86,13 @@ export function DashboardPresetDialog({
           <div className="flex items-center gap-2 pt-1">
             <span className="text-xs text-muted-foreground">Current:</span>
             <Badge variant="outline">
-              {MISSIONS.find((m) => m.value === mission)?.label || mission}
+              {MISSIONS.find((m) => m.value === selection.mission)?.label ||
+                selection.mission}
             </Badge>
             <Badge variant="secondary">
-              {presetsForMission(mission).find((p) => p.presetKey === presetKey)
-                ?.name || presetKey}
+              {presetsForMission(selection.mission).find(
+                (p) => p.presetKey === selection.presetKey
+              )?.name || selection.presetKey}
             </Badge>
           </div>
         </DialogHeader>
@@ -108,17 +110,13 @@ export function DashboardPresetDialog({
                     <CommandItem
                       key={m.value}
                       onSelect={() => setMission(m.value)}
-                      data-selected={mission === m.value}
                       className={
                         mission === m.value
-                          ? 'data-[selected=true]:bg-accent'
+                          ? 'bg-accent text-accent-foreground'
                           : ''
                       }
                     >
                       <span className="truncate">{m.label}</span>
-                      {mission === m.value ? (
-                        <Check className="ml-auto text-primary" />
-                      ) : null}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -154,7 +152,8 @@ export function DashboardPresetDialog({
                           {p.description}
                         </span>
                       </div>
-                      {presetKey === p.presetKey ? (
+                      {selection.mission === mission &&
+                      selection.presetKey === p.presetKey ? (
                         <Check className="ml-auto text-primary" />
                       ) : null}
                     </CommandItem>
