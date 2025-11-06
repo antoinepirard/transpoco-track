@@ -6,22 +6,37 @@ export type Mission =
   | 'passenger'
   | 'municipal';
 
-export type PresetType =
-  | 'today'
-  | 'reliability30d'
-  | 'costEfficiency'
-  | 'safetyCompliance'
-  | 'customerExperience';
+export type PresetKey =
+  // Field Service
+  | 'slaProductivity'
+  | 'repeatRiskQuality'
+  // Last-Mile
+  | 'promiseThroughput'
+  | 'costPerStop'
+  // Long-Haul
+  | 'complianceFirstOps'
+  | 'networkReliability'
+  // Construction
+  | 'siteControlUtilization'
+  | 'securityTheft'
+  // Passenger
+  | 'serviceAdherence'
+  | 'dutyOfCareSafety'
+  // Municipal
+  | 'coverageQuality'
+  | 'costProductivity';
 
 export interface DashboardPreset {
-  id: string; // `${mission}:${presetType}`
+  id: string; // `${mission}:${presetKey}`
   mission: Mission;
-  presetType: PresetType;
+  presetKey: PresetKey;
   name: string; // human label
+  description: string;
+  isDefault?: boolean;
   headerKpis: string[]; // identifiers for KPIs
   widgets: string[]; // identifiers for widgets
-  exceptions: string[];
-  quickActions: string[];
+  exceptions?: string[];
+  quickActions?: string[];
 }
 
 

@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { useEffect, useMemo, useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,21 +9,26 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/components/ui/dialog';
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandItem,
   CommandList,
-} from '@/components/ui/command'
-import type { Mission, PresetType } from '@/types/dashboard'
+} from '@/components/ui/command';
+import type { Mission, PresetKey } from '@/types/dashboard';
+import { PRESETS } from '@/config/dashboardPresets';
 
 export interface DashboardPresetDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  selection: { mission: Mission; presetType: PresetType; presetId: string }
-  onSave: (next: { mission: Mission; presetType: PresetType; presetId: string }) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  selection: { mission: Mission; presetKey: PresetKey; presetId: string };
+  onSave: (next: {
+    mission: Mission;
+    presetKey: PresetKey;
+    presetId: string;
+  }) => void;
 }
 
 const MISSIONS: { value: Mission; label: string }[] = [
@@ -33,39 +38,56 @@ const MISSIONS: { value: Mission; label: string }[] = [
   { value: 'construction', label: 'Construction' },
   { value: 'passenger', label: 'Passenger Transport' },
   { value: 'municipal', label: 'Municipal Services' },
-]
+];
 
-const PRESET_TYPES: { value: PresetType; label: string }[] = [
-  { value: 'today', label: 'Today' },
-  { value: 'reliability30d', label: '30‑Day Reliability' },
-  { value: 'costEfficiency', label: 'Cost & Efficiency' },
-  { value: 'safetyCompliance', label: 'Safety & Compliance' },
-  { value: 'customerExperience', label: 'Customer Experience' },
-]
+function presetsForMission(mission: Mission) {
+  return PRESETS.filter((p) => p.mission === mission);
+}
 
-export function DashboardPresetDialog({ open, onOpenChange, selection, onSave }: DashboardPresetDialogProps) {
-  const [mission, setMission] = useState<Mission>(selection.mission)
-  const [presetType, setPresetType] = useState<PresetType>(selection.presetType)
+export function DashboardPresetDialog({
+  open,
+  onOpenChange,
+  selection,
+  onSave,
+}: DashboardPresetDialogProps) {
+  const [mission, setMission] = useState<Mission>(selection.mission);
+  const [presetKey, setPresetKey] = useState<PresetKey>(selection.presetKey);
 
   useEffect(() => {
-    if (!open) return
-    setMission(selection.mission)
-    setPresetType(selection.presetType)
-  }, [open, selection.mission, selection.presetType])
+    if (!open) return;
+    setMission(selection.mission);
+    setPresetKey(selection.presetKey);
+  }, [open, selection.mission, selection.presetKey]);
 
-  const computedId = useMemo(() => `${mission}:${presetType}`, [mission, presetType])
+  useEffect(() => {
+    // Ensure presetKey stays valid for the selected mission, pick default if not
+    const available = presetsForMission(mission);
+    if (!available.find((u) => u.presetKey === presetKey)) {
+      const next = available.find((p) => p.isDefault) ?? available[0];
+      if (next) setPresetKey(next.presetKey);
+    }
+  }, [mission, presetKey]);
+
+  const computedId = useMemo(
+    () => `${mission}:${presetKey}`,
+    [mission, presetKey]
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Edit dashboard preset</DialogTitle>
-          <DialogDescription>Choose a mission and preset type to shape the dashboard.</DialogDescription>
+          <DialogDescription>
+            Choose a mission and preset to shape the dashboard.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
-            <div className="text-xs font-medium text-muted-foreground mb-2">Mission</div>
+            <div className="text-xs font-medium text-muted-foreground mb-2">
+              Mission
+            </div>
             <Command>
               <CommandList>
                 <CommandEmpty>No missions found.</CommandEmpty>
@@ -75,7 +97,11 @@ export function DashboardPresetDialog({ open, onOpenChange, selection, onSave }:
                       key={m.value}
                       onSelect={() => setMission(m.value)}
                       data-selected={mission === m.value}
-                      className={mission === m.value ? 'data-[selected=true]:bg-accent' : ''}
+                      className={
+                        mission === m.value
+                          ? 'data-[selected=true]:bg-accent'
+                          : ''
+                      }
                     >
                       <span className="truncate">{m.label}</span>
                     </CommandItem>
@@ -86,19 +112,33 @@ export function DashboardPresetDialog({ open, onOpenChange, selection, onSave }:
           </div>
 
           <div>
-            <div className="text-xs font-medium text-muted-foreground mb-2">Preset type</div>
+            <div className="text-xs font-medium text-muted-foreground mb-2">
+              Preset
+            </div>
             <Command>
               <CommandList>
-                <CommandEmpty>No preset types found.</CommandEmpty>
+                <CommandEmpty>No presets found.</CommandEmpty>
                 <CommandGroup>
-                  {PRESET_TYPES.map((p) => (
+                  {presetsForMission(mission).map((p) => (
                     <CommandItem
-                      key={p.value}
-                      onSelect={() => setPresetType(p.value)}
-                      data-selected={presetType === p.value}
-                      className={presetType === p.value ? 'data-[selected=true]:bg-accent' : ''}
+                      key={p.presetKey}
+                      onSelect={() => setPresetKey(p.presetKey)}
+                      data-selected={presetKey === p.presetKey}
+                      className={
+                        presetKey === p.presetKey
+                          ? 'data-[selected=true]:bg-accent'
+                          : ''
+                      }
                     >
-                      <span className="truncate">{p.label}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="truncate">
+                          {p.name}
+                          {p.isDefault ? ' (default)' : ''}
+                        </span>
+                        <span className="text-muted-foreground text-xs line-clamp-2">
+                          {p.description}
+                        </span>
+                      </div>
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -108,16 +148,13 @@ export function DashboardPresetDialog({ open, onOpenChange, selection, onSave }:
         </div>
 
         <DialogFooter className="mt-4">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button
             onClick={() => {
-              onSave({ mission, presetType, presetId: computedId })
-              onOpenChange(false)
+              onSave({ mission, presetKey, presetId: computedId });
+              onOpenChange(false);
             }}
           >
             Save
@@ -125,9 +162,7 @@ export function DashboardPresetDialog({ open, onOpenChange, selection, onSave }:
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
-export default DashboardPresetDialog
-
-
+export default DashboardPresetDialog;
