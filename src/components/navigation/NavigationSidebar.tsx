@@ -172,7 +172,7 @@ const sidebarNavigationData: NavigationSection[] = [
         id: 'dashboard',
         label: 'Dashboard',
         icon: SquaresFourIcon,
-        href: '/dashboard',
+        href: '/',
       },
       {
         id: 'inbox',
@@ -190,7 +190,7 @@ const sidebarNavigationData: NavigationSection[] = [
         id: 'live-map',
         label: 'Live map',
         icon: GlobeIcon,
-        href: '/',
+        href: '/livemap',
       },
       {
         id: 'reports',
@@ -558,10 +558,10 @@ export function NavigationSidebar({
     }
 
     // Default to dashboard if no match
-    if (pathname === '/dashboard') {
+    if (pathname === '/' || pathname === '/dashboard') {
       setActiveItemId('dashboard');
       setActiveSettingsItemId('');
-    } else if (pathname === '/') {
+    } else if (pathname === '/livemap') {
       setActiveItemId('live-map');
       setActiveSettingsItemId('');
     }
