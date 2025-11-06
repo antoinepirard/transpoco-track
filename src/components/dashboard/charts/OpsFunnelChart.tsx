@@ -3,6 +3,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Cell } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { useWidgetSettings } from '@/hooks/useWidgetSettings';
+import { WidgetHoverChrome } from '@/components/dashboard/WidgetHoverChrome';
 
 interface OpsFunnelChartProps {
   funnel: {
@@ -29,6 +32,17 @@ const STAGE_COLORS = {
 };
 
 export function OpsFunnelChart({ funnel, isLoading }: OpsFunnelChartProps) {
+  type DateRange = 'today' | '7d' | '28d';
+  const { settings, update, reset } = useWidgetSettings<{
+    dateRange: DateRange;
+    showPercentages: boolean;
+    targetCompletionRate: number;
+  }>('opsFunnel', {
+    dateRange: 'today',
+    showPercentages: false,
+    targetCompletionRate: 85,
+  });
+
   if (isLoading) {
     return (
       <Card>
@@ -50,13 +64,66 @@ export function OpsFunnelChart({ funnel, isLoading }: OpsFunnelChartProps) {
   ];
 
   const conversionRate = funnel.planned > 0 ? ((funnel.completed / funnel.planned) * 100).toFixed(1) : '0';
+  const targetMet = parseFloat(conversionRate) >= settings.targetCompletionRate;
 
   return (
-    <Card>
+    <WidgetHoverChrome
+      popover={(
+        <div className="grid gap-3">
+          <div>
+            <div className="text-sm font-medium">Operations Funnel</div>
+            <p className="text-xs text-muted-foreground">Configure display and targets.</p>
+          </div>
+          <div className="grid gap-1.5">
+            <label className="text-xs font-medium" htmlFor="of-dateRange">Date range</label>
+            <select
+              id="of-dateRange"
+              value={settings.dateRange}
+              onChange={(e) => update({ dateRange: e.target.value as DateRange })}
+              className="h-8 w-full rounded-md border bg-background px-2 text-sm"
+            >
+              <option value="today">Today</option>
+              <option value="7d">Last 7 days</option>
+              <option value="28d">Last 28 days</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="of-showPercentages"
+              checked={settings.showPercentages}
+              onChange={(e) => update({ showPercentages: e.target.checked })}
+              className="h-4 w-4 rounded border"
+            />
+            <label htmlFor="of-showPercentages" className="text-xs font-medium">Show percentages on bars</label>
+          </div>
+          <div className="grid gap-1.5">
+            <label className="text-xs font-medium" htmlFor="of-target">Target completion rate (%)</label>
+            <input
+              id="of-target"
+              type="number"
+              min={0}
+              max={100}
+              step={5}
+              value={settings.targetCompletionRate}
+              onChange={(e) => update({ targetCompletionRate: Number(e.target.value) })}
+              className="h-8 w-full rounded-md border bg-background px-2 text-sm"
+            />
+          </div>
+          <div className="flex justify-end pt-1">
+            <Button variant="outline" size="sm" onClick={() => reset()}>
+              Reset
+            </Button>
+          </div>
+        </div>
+      )}
+    >
+      <Card>
       <CardHeader>
         <CardTitle>Operations Funnel</CardTitle>
         <CardDescription>
           Job progression • {conversionRate}% completion rate
+          {targetMet ? ' ✓' : ` (target: ${settings.targetCompletionRate}%)`}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -98,5 +165,6 @@ export function OpsFunnelChart({ funnel, isLoading }: OpsFunnelChartProps) {
         </ChartContainer>
       </CardContent>
     </Card>
+    </WidgetHoverChrome>
   );
 }
