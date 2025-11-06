@@ -54,10 +54,23 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
     const reindexed = sliced.map((week, idx) => ({
       ...week,
       weekIndex: idx,
-      vehicles: week.vehicles.map(v => ({
-        ...v,
-        weekIndex: idx + (Math.random() - 0.5) * 0.3, // jitter for scatter
-      })),
+      vehicles: week.vehicles.map((v, vIdx) => {
+        // Power law distribution for more natural spread
+        // Use deterministic pseudo-random based on vehicle ID for consistency
+        const seed = v.vehicleId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + vIdx;
+        const random = (Math.sin(seed) * 10000) % 1;
+        
+        // Power law: more points clustered near aggregate, with long tail
+        const sign = random < 0.5 ? -1 : 1;
+        const magnitude = Math.pow(Math.abs(random - 0.5) * 2, 2.5); // power law exponent
+        const verticalSpread = sign * magnitude * 15; // spread in percentage points
+        
+        return {
+          ...v,
+          weekIndex: idx + (Math.random() - 0.5) * 0.3, // horizontal jitter
+          onTimePercent: Math.max(0, Math.min(100, v.onTimePercent + verticalSpread)), // clamp to 0-100
+        };
+      }),
     }));
     
     // Add boundary points for step area to extend to edges
