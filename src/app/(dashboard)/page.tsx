@@ -51,7 +51,6 @@ export default function Home() {
         showTrails={false}
         autoConnect={false}
         demoMode={true}
-        showSidebar={false}
         centerOnLocation={mapCenter}
       />
     </div>
