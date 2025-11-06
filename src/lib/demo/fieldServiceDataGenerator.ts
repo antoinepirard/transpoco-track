@@ -836,7 +836,7 @@ class FieldServiceDataGenerator {
   }
 
   private generateOutcome(
-    scenario: typeof JOB_SCENARIOS.repair[0],
+    scenario: (typeof JOB_SCENARIOS)[keyof typeof JOB_SCENARIOS][number],
     actualDuration: number,
     tech: Technician | undefined
   ): ServiceOutcome {
