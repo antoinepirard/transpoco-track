@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Check } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -81,6 +83,16 @@ export function DashboardPresetDialog({
           <DialogDescription>
             Choose a mission and preset to shape the dashboard.
           </DialogDescription>
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-xs text-muted-foreground">Current:</span>
+            <Badge variant="outline">
+              {MISSIONS.find((m) => m.value === mission)?.label || mission}
+            </Badge>
+            <Badge variant="secondary">
+              {presetsForMission(mission).find((p) => p.presetKey === presetKey)
+                ?.name || presetKey}
+            </Badge>
+          </div>
         </DialogHeader>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -104,6 +116,9 @@ export function DashboardPresetDialog({
                       }
                     >
                       <span className="truncate">{m.label}</span>
+                      {mission === m.value ? (
+                        <Check className="ml-auto text-primary" />
+                      ) : null}
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -139,6 +154,9 @@ export function DashboardPresetDialog({
                           {p.description}
                         </span>
                       </div>
+                      {presetKey === p.presetKey ? (
+                        <Check className="ml-auto text-primary" />
+                      ) : null}
                     </CommandItem>
                   ))}
                 </CommandGroup>
