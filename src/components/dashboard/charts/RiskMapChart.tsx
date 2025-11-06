@@ -37,7 +37,16 @@ export function RiskMapChart({ jobs, isLoading, onJobClick }: RiskMapChartProps)
     (j) => !['completed', 'cancelled', 'planned'].includes(j.status)
   );
 
-  const data = activeJobs.map((job) => {
+  type RiskPoint = {
+    id: string;
+    x: number;
+    y: number;
+    status: 'green' | 'amber' | 'red';
+    label: string;
+    priority: Job['priority'];
+  };
+
+  const data: RiskPoint[] = activeJobs.map((job) => {
     const now = new Date();
     const windowEnd = new Date(job.windowEnd);
     const estimatedArrival = job.estimatedArrival || now;
@@ -69,32 +78,37 @@ export function RiskMapChart({ jobs, isLoading, onJobClick }: RiskMapChartProps)
     return '#ef4444'; // red-500
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  type CustomTooltipProps = {
+    active?: boolean;
+    payload?: Array<{ payload: RiskPoint }>;
+  };
+
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload;
+      const point = payload[0].payload;
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-semibold text-sm">{data.label}</p>
+          <p className="font-semibold text-sm">{point.label}</p>
           <p className="text-xs text-gray-600">
             Status:{' '}
             <span
               className={`font-semibold ${
-                data.status === 'green'
+                point.status === 'green'
                   ? 'text-green-600'
-                  : data.status === 'amber'
+                  : point.status === 'amber'
                   ? 'text-amber-600'
                   : 'text-red-600'
               }`}
             >
-              {data.status === 'green'
+              {point.status === 'green'
                 ? 'On Track'
-                : data.status === 'amber'
+                : point.status === 'amber'
                 ? 'Tight'
                 : 'Late'}
             </span>
           </p>
           <p className="text-xs text-gray-600">
-            Priority: <span className="font-semibold">{data.priority}</span>
+            Priority: <span className="font-semibold">{point.priority}</span>
           </p>
           <p className="text-xs text-gray-400 mt-1">Click to view details</p>
         </div>
@@ -103,10 +117,11 @@ export function RiskMapChart({ jobs, isLoading, onJobClick }: RiskMapChartProps)
     return null;
   };
 
-  const handleClick = (data: any) => {
-    if (data && data.id && onJobClick) {
-      console.log(`[Demo] View job ${data.id} details`);
-      onJobClick(data.id);
+  const handleClick = (entry: unknown) => {
+    const point = entry as Partial<RiskPoint>;
+    if (point && typeof point.id === 'string' && onJobClick) {
+      console.log(`[Demo] View job ${point.id} details`);
+      onJobClick(point.id);
     }
   };
 

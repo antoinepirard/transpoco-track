@@ -31,6 +31,9 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
+  const [activeFilter, setActiveFilter] = useState<'breached' | 'near'>('breached');
+  const [listExpanded, setListExpanded] = useState(false);
+
   if (isLoading || !data || data.length === 0) {
     return (
       <Card>
@@ -49,11 +52,11 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
   // Flatten vehicle data for scatter plot (use each vehicle's jittered weekIndex)
   const vehicleScatterData = data.flatMap((weekData) =>
     weekData.vehicles.map((v) => ({
-      weekIndex: (v as any).weekIndex ?? (weekData as any).weekIndex,
+      weekIndex: v.weekIndex,
       week: weekData.week,
       onTimePercent: v.onTimePercent,
       vehicleId: v.vehicleId,
-      vehicleName: (v as any).vehicleName || v.vehicleId,
+      vehicleName: v.vehicleName || v.vehicleId,
     }))
   );
 
@@ -66,8 +69,7 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
     .filter((pt) => pt.onTimePercent >= SLA_TARGET && pt.onTimePercent <= SLA_TARGET + 2)
     .sort((a, b) => a.onTimePercent - b.onTimePercent);
 
-  const [activeFilter, setActiveFilter] = useState<'breached' | 'near'>('breached');
-  const [listExpanded, setListExpanded] = useState(false);
+  
 
   // Calculate trend
   const firstWeek = data[0]?.weeklyPercent || 0;

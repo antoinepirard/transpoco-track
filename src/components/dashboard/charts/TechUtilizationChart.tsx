@@ -47,10 +47,11 @@ export function TechUtilizationChart({
   // Take top 10 techs for display
   const topTechs = data.slice(0, 10);
 
-  const handleBarClick = (data: any) => {
-    if (onTechClick && data?.techId) {
-      console.log(`[Demo] Reassign ${data.techName}`);
-      onTechClick(data.techId, data.techName);
+  const handleBarClick = (entry: unknown, _index: number) => {
+    const d = entry as Partial<TechUtilizationData>;
+    if (onTechClick && typeof d?.techId === 'string' && typeof d?.techName === 'string') {
+      console.log(`[Demo] Reassign ${d.techName}`);
+      onTechClick(d.techId, d.techName);
     }
   };
 
