@@ -11,6 +11,7 @@ import { DurationDistributionChart } from '@/components/dashboard/charts/Duratio
 import { ExceptionsTable } from '@/components/dashboard/ExceptionsTable';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DashboardToolbar } from '@/components/dashboard/DashboardToolbar';
 
 export default function DashboardPage() {
   const {
@@ -64,15 +65,18 @@ export default function DashboardPage() {
               {lastUpdate && `Last updated: ${lastUpdate.toLocaleTimeString()}`}
             </p>
           </div>
-          <Button
-            onClick={handleManualRefresh}
-            variant="outline"
-            size="sm"
-            disabled={isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <DashboardToolbar />
+            <Button
+              onClick={handleManualRefresh}
+              variant="outline"
+              size="sm"
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
 
         {/* KPI Header Strip - Full Width */}
