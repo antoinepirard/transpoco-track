@@ -3,7 +3,7 @@
 import { TrendingUp, Activity } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ReferenceLine, Line, Scatter, ComposedChart } from 'recharts';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ReferenceLine, Line, Scatter, ComposedChart, ZAxis } from 'recharts';
 import type { OnTimeByWeekData } from '@/types/fieldService';
 
 interface OnTimeByWeekChartProps {
@@ -77,8 +77,13 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
             }}
           >
             <CartesianGrid vertical={false} />
+            <ZAxis type="number" range={[24, 24]} />
             <XAxis
-              dataKey="week"
+              type="number"
+              dataKey="weekIndex"
+              domain={[0, data.length - 1]}
+              ticks={[0, 1, 2, 3]}
+              tickFormatter={(i) => data[i as number]?.week}
               tickLine={false}
               axisLine={false}
               tickMargin={8}
@@ -108,12 +113,7 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
               stroke="var(--color-target)"
               strokeDasharray="5 5"
               strokeWidth={1.5}
-              label={{ 
-                value: 'SLA 90%', 
-                position: 'right', 
-                fill: 'var(--color-target)',
-                fontSize: 11,
-              }}
+              label={{ value: 'SLA 90%', position: 'left', fill: 'var(--color-target)', fontSize: 11 }}
             />
             
             {/* 7-Day Average Line */}
@@ -139,8 +139,9 @@ export function OnTimeByHourChart({ data, isLoading }: OnTimeByWeekChartProps) {
             {/* Scatter dots for individual vehicles */}
             <Scatter
               data={vehicleScatterData}
+              dataKey="onTimePercent"
               fill="var(--color-weeklyPercent)"
-              fillOpacity={0.6}
+              fillOpacity={0.7}
             />
           </ComposedChart>
         </ChartContainer>

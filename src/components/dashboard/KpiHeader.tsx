@@ -46,7 +46,9 @@ export function KpiHeader({ stats, isLoading }: KpiHeaderProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* On-Time Arrival % */}
-      <Card className={`${getOnTimeBgColor(stats.onTimeArrivalPercent)} border-2`}>
+      <Card
+        className={`${getOnTimeBgColor(stats.onTimeArrivalPercent)} border-1`}
+      >
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-gray-600">
             On-Time Arrival
@@ -54,7 +56,9 @@ export function KpiHeader({ stats, isLoading }: KpiHeaderProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-baseline justify-between">
-            <span className={`text-3xl font-bold ${getOnTimeColor(stats.onTimeArrivalPercent)}`}>
+            <span
+              className={`text-3xl font-bold ${getOnTimeColor(stats.onTimeArrivalPercent)}`}
+            >
               {stats.onTimeArrivalPercent.toFixed(1)}%
             </span>
             <div className="flex items-center text-sm">
@@ -63,17 +67,21 @@ export function KpiHeader({ stats, isLoading }: KpiHeaderProps) {
               ) : (
                 <ArrowDown className="h-4 w-4 text-red-600" />
               )}
-              <span className={trendIsPositive ? 'text-green-600' : 'text-red-600'}>
+              <span
+                className={trendIsPositive ? 'text-green-600' : 'text-red-600'}
+              >
                 {Math.abs(stats.onTimeArrivalTrend).toFixed(1)}%
               </span>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-1">vs 7-day avg • Target ≥90%</p>
+          <p className="text-xs text-gray-500 mt-1">
+            vs 7-day avg • Target ≥90%
+          </p>
         </CardContent>
       </Card>
 
       {/* Jobs Done / Planned */}
-      <Card className="border-2">
+      <Card className="border-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-gray-600">
             Jobs Progress
@@ -88,19 +96,22 @@ export function KpiHeader({ stats, isLoading }: KpiHeaderProps) {
             <span className="text-xl text-gray-600">{stats.jobsPlanned}</span>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            Forecast EOD: <span className="font-semibold">{stats.jobsForecastEOD}</span>
+            Forecast EOD:{' '}
+            <span className="font-semibold">{stats.jobsForecastEOD}</span>
           </p>
           <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
             <div
               className="bg-blue-600 h-2 rounded-full transition-all"
-              style={{ width: `${(stats.jobsDone / stats.jobsPlanned) * 100}%` }}
+              style={{
+                width: `${(stats.jobsDone / stats.jobsPlanned) * 100}%`,
+              }}
             />
           </div>
         </CardContent>
       </Card>
 
       {/* At-Risk Now */}
-      <Card className="border-2">
+      <Card className="border-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-gray-600">
             At-Risk Now
@@ -113,8 +124,8 @@ export function KpiHeader({ stats, isLoading }: KpiHeaderProps) {
                 stats.atRiskCount === 0
                   ? 'text-green-600'
                   : stats.atRiskCount < 5
-                  ? 'text-amber-600'
-                  : 'text-red-600'
+                    ? 'text-amber-600'
+                    : 'text-red-600'
               }`}
             >
               {stats.atRiskCount}
@@ -135,7 +146,7 @@ export function KpiHeader({ stats, isLoading }: KpiHeaderProps) {
       </Card>
 
       {/* First-Time Fix % */}
-      <Card className="border-2">
+      <Card className="border-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-gray-600">
             First-Time Fix
@@ -148,8 +159,8 @@ export function KpiHeader({ stats, isLoading }: KpiHeaderProps) {
                 stats.firstTimeFixPercent >= 85
                   ? 'text-green-600'
                   : stats.firstTimeFixPercent >= 75
-                  ? 'text-amber-600'
-                  : 'text-red-600'
+                    ? 'text-amber-600'
+                    : 'text-red-600'
               }`}
             >
               {stats.firstTimeFixPercent.toFixed(1)}%

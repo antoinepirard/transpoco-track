@@ -746,33 +746,42 @@ class FieldServiceDataGenerator {
 
   private generateWeeklyOnTimeData() {
     const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-    
+
+    // Target wide variance across weeks (seeded, deterministic)
+    const centers = [53, 69, 75, 43];
+    // Keep average line roughly stable around 88-92%
+    const avgBaseline = 88 + this.rnd() * 4;
+
     return weeks.map((week, weekIndex) => {
-      // Generate weekly aggregate performance (trending upward)
-      const basePercent = 88 + (weekIndex * 2); // 88, 90, 92, 94
-      const weeklyPercent = basePercent + (this.rnd() * 4 - 2); // ±2% variance
-      
-      // 7-day average slightly higher
-      const sevenDayAvg = 90 + (weekIndex * 1.5) + (this.rnd() * 2 - 1);
-      
-      // Generate individual technician/vehicle performance for this week
-      const vehicleCount = 8 + Math.floor(this.rnd() * 5); // 8-12 vehicles per week
-      const vehicles = this.technicians.slice(0, vehicleCount).map((tech, idx) => {
-        // Individual performance varies around weekly average
-        const variance = (this.rnd() - 0.5) * 15; // ±7.5%
-        const techOnTime = Math.max(75, Math.min(100, weeklyPercent + variance));
-        
+      // Weekly aggregate around target centers with small variance
+      const weeklyPercentRaw = centers[weekIndex] + (this.rnd() * 6 - 3); // ±3%
+      const weeklyPercent = Math.max(0, Math.min(100, weeklyPercentRaw));
+
+      // Constant-ish 7-day average
+      const sevenDayAvg = avgBaseline;
+
+      // More dots (18-31), smaller, with horizontal jitter so they are not on a line
+      const vehicleCount = 18 + Math.floor(this.rnd() * 14);
+      const vehicles = Array.from({ length: vehicleCount }, (_, i) => {
+        const tech = this.technicians[i % this.technicians.length];
+        const variance = (this.rnd() * 20 - 10); // ±10%
+        const techOnTimeRaw = weeklyPercent + variance;
+        const techOnTime = Math.max(0, Math.min(100, techOnTimeRaw));
+        const jitter = (this.rnd() - 0.5) * 0.96; // -0.48 .. +0.48 (wider spread)
+        const jitteredIndex = Math.max(0, Math.min(weeks.length - 1, weekIndex + jitter));
+
         return {
           week,
-          weekIndex,
+          weekIndex: jitteredIndex,
           vehicleId: tech.vehicleId,
           vehicleName: `${tech.name.split(' ')[0]}'s Van`,
           onTimePercent: Math.round(techOnTime * 10) / 10,
         };
       });
-      
+
       return {
         week,
+        weekIndex,
         weeklyPercent: Math.round(weeklyPercent * 10) / 10,
         sevenDayAvg: Math.round(sevenDayAvg * 10) / 10,
         vehicles,

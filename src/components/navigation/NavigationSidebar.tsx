@@ -167,8 +167,7 @@ const settingsSubmenus = [
 // Navigation data without settings (settings now only in top bar)
 const sidebarNavigationData: NavigationSection[] = [
   {
-    id: 'visibility',
-    title: 'Visibility',
+    id: 'primary',
     items: [
       {
         id: 'dashboard',
@@ -176,6 +175,12 @@ const sidebarNavigationData: NavigationSection[] = [
         icon: SquaresFourIcon,
         href: '/dashboard',
       },
+    ],
+  },
+  {
+    id: 'visibility',
+    title: 'Visibility',
+    items: [
       {
         id: 'live-map',
         label: 'Live map',
