@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer } from '@/components/ui/chart';
-import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Cell, ReferenceLine } from 'recharts';
 import { Button } from '@/components/ui/button';
 import type { Job } from '@/types/fieldService';
 import { useWidgetSettings } from '@/hooks/useWidgetSettings';
@@ -43,6 +43,7 @@ export function RiskMapChart({ jobs, isLoading, onJobClick }: RiskMapChartProps)
     status: 'green' | 'amber' | 'red';
     label: string;
     priority: Job['priority'];
+    minutesFromDeadline: number;
   };
 
   const data = useMemo(() => {
@@ -56,7 +57,7 @@ export function RiskMapChart({ jobs, isLoading, onJobClick }: RiskMapChartProps)
       activeJobs = activeJobs.filter(j => j.priority === settings.filterPriority);
     }
 
-    const points: RiskPoint[] = activeJobs.map((job) => {
+    const points: RiskPoint[] = activeJobs.map((job, jobIdx) => {
       const now = new Date();
       const windowEnd = new Date(job.windowEnd);
       const estimatedArrival = job.estimatedArrival || now;
@@ -71,13 +72,37 @@ export function RiskMapChart({ jobs, isLoading, onJobClick }: RiskMapChartProps)
         riskStatus = minutesLate > settings.redThreshold ? 'red' : minutesLate > settings.amberThreshold ? 'amber' : 'green';
       }
 
+      // X-axis: Priority level (1=low, 2=medium, 3=high, 4=critical)
+      const priorityValue = {
+        'low': 1,
+        'medium': 2,
+        'high': 3,
+        'critical': 4,
+      }[job.priority];
+
+      // Add deterministic jitter to prevent exact overlaps
+      const seed = job.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + jobIdx;
+      const random = (Math.sin(seed) * 10000) % 1;
+      const xJitter = (random - 0.5) * 0.3; // Small horizontal jitter
+
+      // Y-axis: Minutes from deadline (negative = time remaining, positive = late)
+      const minutesFromDeadline = (estimatedArrival.getTime() - windowEnd.getTime()) / (60 * 1000);
+
+      // Add vertical jitter for readability using power law for natural spread
+      const seedY = job.id.split('').reverse().reduce((acc, char) => acc + char.charCodeAt(0), 0) + jobIdx;
+      const randomY = (Math.sin(seedY) * 10000) % 1;
+      const signY = randomY < 0.5 ? -1 : 1;
+      const magnitudeY = Math.pow(Math.abs(randomY - 0.5) * 2, 2.0);
+      const yJitter = signY * magnitudeY * 2; // Small vertical jitter (±2 minutes)
+
       return {
         id: job.id,
-        x: job.customer.longitude,
-        y: job.customer.latitude,
+        x: priorityValue + xJitter,
+        y: minutesFromDeadline + yJitter,
         status: riskStatus,
         label: `${job.customer.name.substring(0, 20)}...`,
         priority: job.priority,
+        minutesFromDeadline: Math.round(minutesFromDeadline),
       };
     });
 
@@ -110,6 +135,11 @@ export function RiskMapChart({ jobs, isLoading, onJobClick }: RiskMapChartProps)
   const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       const point = payload[0].payload;
+      const absMinutes = Math.abs(point.minutesFromDeadline);
+      const timeText = point.minutesFromDeadline <= 0
+        ? `${absMinutes} min remaining`
+        : `${absMinutes} min LATE`;
+
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <p className="font-semibold text-sm">{point.label}</p>
@@ -132,7 +162,13 @@ export function RiskMapChart({ jobs, isLoading, onJobClick }: RiskMapChartProps)
             </span>
           </p>
           <p className="text-xs text-gray-600">
-            Priority: <span className="font-semibold">{point.priority}</span>
+            Time:{' '}
+            <span className={`font-semibold ${point.minutesFromDeadline > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+              {timeText}
+            </span>
+          </p>
+          <p className="text-xs text-gray-600">
+            Priority: <span className="font-semibold capitalize">{point.priority}</span>
           </p>
           <p className="text-xs text-gray-400 mt-1">Click to view details</p>
         </div>
@@ -232,28 +268,37 @@ export function RiskMapChart({ jobs, isLoading, onJobClick }: RiskMapChartProps)
       <CardHeader>
         <CardTitle>Risk Map</CardTitle>
         <CardDescription>
-          Active jobs • Green: on track (&lt;{settings.amberThreshold}m), Amber: {settings.amberThreshold}-{settings.redThreshold}m late, Red: &gt;{settings.redThreshold}m late
+          Priority vs Time Matrix • Higher priority + more late = needs urgent attention • Reference lines show deadline (solid) and thresholds (dashed)
         </CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-64 w-full">
-          <ScatterChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+          <ScatterChart margin={{ top: 10, right: 10, left: 50, bottom: 30 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
             <XAxis
               type="number"
               dataKey="x"
-              name="Longitude"
+              name="Priority"
+              domain={[0.5, 4.5]}
+              ticks={[1, 2, 3, 4]}
+              tickFormatter={(value) => {
+                const labels = { 1: 'Low', 2: 'Medium', 3: 'High', 4: 'Critical' };
+                return labels[value as 1 | 2 | 3 | 4] || '';
+              }}
               className="text-xs"
-              hide
+              label={{ value: 'Priority Level', position: 'bottom', offset: 0 }}
             />
             <YAxis
               type="number"
               dataKey="y"
-              name="Latitude"
+              name="Minutes from Deadline"
               className="text-xs"
-              hide
+              label={{ value: 'Minutes from Deadline', angle: -90, position: 'insideLeft' }}
             />
             <ZAxis range={[100, 100]} />
+            <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" strokeWidth={2} />
+            <ReferenceLine y={settings.amberThreshold} stroke="#f59e0b" strokeDasharray="2 2" strokeWidth={1} opacity={0.5} />
+            <ReferenceLine y={settings.redThreshold} stroke="#ef4444" strokeDasharray="2 2" strokeWidth={1} opacity={0.5} />
             <Tooltip content={<CustomTooltip />} />
             <Scatter
               data={data}
