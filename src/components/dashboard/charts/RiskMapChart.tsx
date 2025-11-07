@@ -273,7 +273,7 @@ export function RiskMapChart({ jobs, isLoading, onJobClick }: RiskMapChartProps)
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-64 w-full">
-          <ScatterChart margin={{ top: 10, right: 10, left: 50, bottom: 30 }}>
+          <ScatterChart margin={{ top: 10, right: 10, left: 100, bottom: 30 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
             <XAxis
               type="number"
@@ -293,7 +293,7 @@ export function RiskMapChart({ jobs, isLoading, onJobClick }: RiskMapChartProps)
               dataKey="y"
               name="Minutes from Deadline"
               className="text-xs"
-              label={{ value: 'Minutes from Deadline', angle: -90, position: 'insideLeft' }}
+              label={{ value: 'Minutes from Deadline', angle: -90, position: 'left', style: { textAnchor: 'middle' } }}
             />
             <ZAxis range={[100, 100]} />
             <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" strokeWidth={2} />

@@ -651,7 +651,7 @@ class FieldServiceDataGenerator {
       }
 
       if (['en-route', 'arrived', 'in-progress', 'completed'].includes(status)) {
-        const arrivalTime = this.calculateArrivalTime(windowStart, i, totalJobs);
+        const arrivalTime = this.calculateArrivalTime(windowStart, windowEnd, i, totalJobs);
         job.arrivedAt = arrivalTime;
         job.estimatedArrival = arrivalTime;
       }
@@ -822,16 +822,19 @@ class FieldServiceDataGenerator {
     return candidates[Math.floor(this.rnd() * candidates.length)];
   }
 
-  private calculateArrivalTime(windowStart: Date, index: number, total: number): Date {
-    // 85% arrive on time
-    const isLate = this.rnd() > 0.85;
+  private calculateArrivalTime(windowStart: Date, windowEnd: Date, index: number, total: number): Date {
+    // 65% arrive on time, 35% are late
+    const isLate = this.rnd() > 0.65;
 
     if (isLate) {
+      // Late jobs arrive 10-60 minutes AFTER the deadline
       const lateMinutes = Math.floor(this.rnd() * 50) + 10;
-      return new Date(windowStart.getTime() + lateMinutes * 60 * 1000);
+      return new Date(windowEnd.getTime() + lateMinutes * 60 * 1000);
     } else {
-      const earlyMinutes = Math.floor(this.rnd() * 60);
-      return new Date(windowStart.getTime() + earlyMinutes * 60 * 1000);
+      // On-time jobs arrive anywhere between windowStart and windowEnd
+      const windowDurationMinutes = (windowEnd.getTime() - windowStart.getTime()) / (60 * 1000);
+      const minutesFromStart = Math.floor(this.rnd() * windowDurationMinutes);
+      return new Date(windowStart.getTime() + minutesFromStart * 60 * 1000);
     }
   }
 
