@@ -25,7 +25,7 @@ export default function OnboardingLayout({
             Welcome to Transpoco
           </h1>
           <p className="text-muted-foreground">
-            Let's get you set up in just a few steps
+            Let&apos;s get you set up in just a few steps
           </p>
         </div>
 

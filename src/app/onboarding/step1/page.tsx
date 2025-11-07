@@ -61,7 +61,7 @@ export default function Step1Page() {
         <CardHeader>
           <CardTitle>Tell us about yourself</CardTitle>
           <CardDescription>
-            We'll use this information to personalize your experience. You were
+            We&apos;ll use this information to personalize your experience. You were
             invited by an admin, so we already have your company details.
           </CardDescription>
         </CardHeader>

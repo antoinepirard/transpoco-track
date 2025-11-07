@@ -69,7 +69,7 @@ export default function Step3Page() {
     <div className="max-w-3xl mx-auto space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Let's set up your fleet</CardTitle>
+          <CardTitle>Let&apos;s set up your fleet</CardTitle>
           <CardDescription>
             Complete these quick actions to get the most out of Transpoco. You
             can also skip and do this later from your dashboard.
@@ -119,7 +119,7 @@ export default function Step3Page() {
               <div>
                 <p className="font-semibold">Great progress!</p>
                 <p className="text-sm text-muted-foreground">
-                  You've completed {completedActions.length} of 3 setup actions
+                  You&apos;ve completed {completedActions.length} of 3 setup actions
                 </p>
               </div>
             </div>

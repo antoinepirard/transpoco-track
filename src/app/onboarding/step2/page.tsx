@@ -127,7 +127,7 @@ export default function Step2Page() {
             Company Information
           </CardTitle>
           <CardDescription>
-            We've automatically detected your industry based on your company
+            We&apos;ve automatically detected your industry based on your company
             profile
           </CardDescription>
         </CardHeader>

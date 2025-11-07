@@ -822,7 +822,7 @@ class FieldServiceDataGenerator {
     return candidates[Math.floor(this.rnd() * candidates.length)];
   }
 
-  private calculateArrivalTime(windowStart: Date, windowEnd: Date, index: number, total: number): Date {
+  private calculateArrivalTime(windowStart: Date, windowEnd: Date, _index: number, _total: number): Date {
     // 65% arrive on time, 35% are late
     const isLate = this.rnd() > 0.65;
 
@@ -841,7 +841,7 @@ class FieldServiceDataGenerator {
   private generateOutcome(
     scenario: (typeof JOB_SCENARIOS)[keyof typeof JOB_SCENARIOS][number],
     actualDuration: number,
-    tech: Technician | undefined
+    _tech: Technician | undefined
   ): ServiceOutcome {
     const isFirstTimeFix = this.rnd() > 0.12; // 88% first-time fix rate
 
