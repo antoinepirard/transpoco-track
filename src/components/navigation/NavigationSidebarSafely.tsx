@@ -247,7 +247,7 @@ export function NavigationSidebarSafely({
   const [isProductDiscoveryOpen, setIsProductDiscoveryOpen] = useState(false);
 
   // Demo locked items (premium features) - memoized to prevent re-renders
-  const lockedItemIds = useMemo(
+  const lockedItemIds = useMemo<string[]>(
     () => (mounted && showLockedItems ? [] : []),
     [mounted, showLockedItems]
   );
