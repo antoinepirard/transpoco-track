@@ -24,6 +24,7 @@ interface NavigationItemDemoProps {
   isExpanded?: boolean;
   isLocked?: boolean;
   level?: 'parent' | 'child';
+  activeColor?: string;
   onItemClick?: (item: NavigationItem) => void;
   onExpandToggle?: (itemId: string) => void;
   onLearnMore?: (item: NavigationItem) => void;
@@ -38,6 +39,7 @@ export function NavigationItemDemo({
   isExpanded = false,
   isLocked = false,
   level = 'parent',
+  activeColor = '#0e0033',
   onItemClick,
   onExpandToggle,
   onLearnMore,
@@ -78,14 +80,14 @@ export function NavigationItemDemo({
 
   const getButtonClassName = () => {
     const baseClasses = `w-full flex items-center text-sm font-medium rounded-md transition-immediate group focus-ring cursor-pointer`;
-    
+
     if (isChild) {
       const childPadding = 'py-1.5 pr-2 pl-6';
       if (isLocked) {
         return `${baseClasses} ${childPadding} text-gray-600 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
       }
       if (isActive) {
-        return `${baseClasses} ${childPadding} bg-[#0e0033] text-white`;
+        return `${baseClasses} ${childPadding} text-white`;
       }
       return `${baseClasses} ${childPadding} text-gray-600 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
     }
@@ -96,7 +98,7 @@ export function NavigationItemDemo({
       return `${baseClasses} ${parentPadding} text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
     }
     if (isActive) {
-      return `${baseClasses} ${parentPadding} bg-[#0e0033] text-white`;
+      return `${baseClasses} ${parentPadding} text-white`;
     }
     return `${baseClasses} ${parentPadding} text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
   };
@@ -144,6 +146,7 @@ export function NavigationItemDemo({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={getButtonClassName()}
+        style={isActive ? { backgroundColor: activeColor } : undefined}
         aria-current={isActive ? 'page' : undefined}
         role="menuitem"
         title={isLocked ? `${item.label} (Premium Feature - Click to learn more)` : item.label}

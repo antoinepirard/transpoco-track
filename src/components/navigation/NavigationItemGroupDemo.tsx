@@ -19,6 +19,7 @@ interface NavigationItemGroupDemoProps {
   isLocked?: boolean;
   activeItemId?: string;
   lockedItemIds?: string[];
+  activeColor?: string;
   onItemClick?: (item: NavigationItem) => void;
   onExpandToggle?: (itemId: string) => void;
   onLearnMore?: (item: NavigationItem) => void;
@@ -34,6 +35,7 @@ export function NavigationItemGroupDemo({
   isLocked = false,
   activeItemId,
   lockedItemIds = [],
+  activeColor,
   onItemClick,
   onExpandToggle,
   onLearnMore,
@@ -58,6 +60,7 @@ export function NavigationItemGroupDemo({
         isExpanded={safeIsExpanded}
         isLocked={isLocked}
         level="parent"
+        activeColor={activeColor}
         onItemClick={onItemClick}
         onExpandToggle={onExpandToggle}
         onLearnMore={onLearnMore}
@@ -88,6 +91,7 @@ export function NavigationItemGroupDemo({
                     isActive={isChildActive}
                     isLocked={isChildLocked}
                     level="child"
+                    activeColor={activeColor}
                     onItemClick={onItemClick}
                     onLearnMore={onLearnMore}
                     onKeyDown={onKeyDown}

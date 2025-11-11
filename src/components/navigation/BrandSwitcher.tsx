@@ -26,12 +26,14 @@ const brands = [
     id: 'transpoco' as const,
     name: 'Transpoco',
     logo: '/transpoco-logo.svg',
+    darkLogo: '/transpoco-logo.svg',
     description: 'Fleet Management',
   },
   {
     id: 'safely' as const,
     name: 'Safely',
     logo: '/safelylogo.png',
+    darkLogo: '/Group-1707478422.png',
     description: 'Safety Solutions',
   },
 ];
@@ -52,7 +54,7 @@ export function BrandSwitcher({ selectedBrand, onBrandChange, variant = 'light',
           : 'hover:hover-only:bg-gray-100'
       }`}>
         <Image
-          src={currentBrand.logo}
+          src={variant === 'dark' ? currentBrand.darkLogo : currentBrand.logo}
           alt={`${currentBrand.name} logo`}
           width={111}
           height={26}

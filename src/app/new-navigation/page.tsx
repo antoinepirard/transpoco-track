@@ -13,6 +13,7 @@ import { NavigationSidebarWithSubmenus } from '@/components/navigation/Navigatio
 import { NavigationSidebarWithTopBarSearch } from '@/components/navigation/NavigationSidebarWithTopBarSearch';
 import { NavigationSidebarWithSidebarSearch } from '@/components/navigation/NavigationSidebarWithSidebarSearch';
 import { NavigationSidebarWithSelectedSubmenus } from '@/components/navigation/NavigationSidebarWithSelectedSubmenus';
+import { NavigationSidebarSafely } from '@/components/navigation/NavigationSidebarSafely';
 import { ResolutionMetadata } from '@/components/navigation/ResolutionMetadata';
 
 // Define navigation variants
@@ -73,6 +74,13 @@ const navigationVariants: NavigationVariant[] = [
     description:
       'Sidebar navigation with integrated search, selected items highlighting, and expanded submenu functionality',
     component: NavigationSidebarWithSelectedSubmenus,
+  },
+  {
+    id: 'safely',
+    name: 'Safely Variant',
+    description:
+      'Streamlined Safely-branded navigation with dark green top bar and simplified menu structure',
+    component: NavigationSidebarSafely,
   },
 ];
 
