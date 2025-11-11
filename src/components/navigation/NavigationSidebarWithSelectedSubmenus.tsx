@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useNavigation } from '@/contexts/NavigationContext';
 import {
   BellIcon,
@@ -500,6 +501,7 @@ export function NavigationSidebarWithSelectedSubmenus({
   onActiveItemChange,
 }: NavigationSidebarWithSelectedSubmenusProps) {
   const navRef = useRef<HTMLElement>(null);
+  const router = useRouter();
   const {
     toggleExpandedItem,
     isItemExpanded,
@@ -707,6 +709,17 @@ export function NavigationSidebarWithSelectedSubmenus({
     console.log(`[Demo] Learn more about premium feature: "${item.label}"`);
   }, []);
 
+  const handleBrandChange = useCallback(
+    (brand: 'transpoco' | 'safely') => {
+      setSelectedBrand(brand);
+      if (brand === 'safely') {
+        // Navigate to safely variant when switching to Safely
+        router.push('/new-navigation?variant=safely');
+      }
+    },
+    [router]
+  );
+
   const handleTopBarItemClick = (itemId: string) => {
     // Handle messages and notifications
     setActiveItemId(itemId); // Set active to messages or notifications
@@ -835,7 +848,7 @@ export function NavigationSidebarWithSelectedSubmenus({
           <div className="hidden md:block">
             <BrandSwitcher
               selectedBrand={selectedBrand}
-              onBrandChange={setSelectedBrand}
+              onBrandChange={handleBrandChange}
               variant="dark"
               onAddNewProduct={() => setIsProductDiscoveryOpen(true)}
             />
@@ -1099,7 +1112,7 @@ export function NavigationSidebarWithSelectedSubmenus({
               <div className="h-14 bg-[#0e0033] border-b border-gray-600 flex items-center justify-between px-4">
                 <BrandSwitcher
                   selectedBrand={selectedBrand}
-                  onBrandChange={setSelectedBrand}
+                  onBrandChange={handleBrandChange}
                   variant="dark"
                   onAddNewProduct={() => setIsProductDiscoveryOpen(true)}
                 />

@@ -214,6 +214,7 @@ export function NavigationSidebarSafely({
   onActiveItemChange,
 }: NavigationSidebarSafelyProps) {
   const navRef = useRef<HTMLElement>(null);
+  const router = useRouter();
   const {
     toggleExpandedItem,
     isItemExpanded,
@@ -380,6 +381,17 @@ export function NavigationSidebarSafely({
     console.log(`[Demo] Learn more about premium feature: "${item.label}"`);
   }, []);
 
+  const handleBrandChange = useCallback(
+    (brand: 'transpoco' | 'safely') => {
+      setSelectedBrand(brand);
+      if (brand === 'transpoco') {
+        // Navigate to selected-sidebar-submenus variant when switching to Transpoco
+        router.push('/new-navigation?variant=selected-sidebar-submenus');
+      }
+    },
+    [router]
+  );
+
   const handleTopBarItemClick = (itemId: string) => {
     // Handle messages and notifications
     setActiveItemId(itemId); // Set active to messages or notifications
@@ -442,7 +454,7 @@ export function NavigationSidebarSafely({
           <div className="hidden md:block">
             <BrandSwitcher
               selectedBrand={selectedBrand}
-              onBrandChange={setSelectedBrand}
+              onBrandChange={handleBrandChange}
               variant="dark"
               onAddNewProduct={() => setIsProductDiscoveryOpen(true)}
             />
@@ -639,7 +651,7 @@ export function NavigationSidebarSafely({
               <div className="h-14 bg-[#1a3a2a] border-b border-gray-600 flex items-center justify-between px-4">
                 <BrandSwitcher
                   selectedBrand={selectedBrand}
-                  onBrandChange={setSelectedBrand}
+                  onBrandChange={handleBrandChange}
                   variant="dark"
                   onAddNewProduct={() => setIsProductDiscoveryOpen(true)}
                 />
