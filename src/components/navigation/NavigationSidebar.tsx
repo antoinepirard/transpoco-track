@@ -1076,8 +1076,8 @@ export function NavigationSidebar({
                           return;
                         }
 
-                        // Fallback: replace to dashboard with explicit active param
-                        router.replace(`/?active=${clickedItem.id}`);
+                        // Fallback: replace to Coming Soon page with explicit active param
+                        router.replace(`/coming-soon/${clickedItem.id}?active=${clickedItem.id}`);
                       };
 
                       return (
@@ -1252,8 +1252,8 @@ export function NavigationSidebar({
                               return;
                             }
 
-                            // Fallback: replace to dashboard with explicit active param
-                            router.replace(`/?active=${clickedItem.id}`);
+                            // Fallback: replace to Coming Soon page with explicit active param
+                            router.replace(`/coming-soon/${clickedItem.id}?active=${clickedItem.id}`);
                           };
 
                           return (
