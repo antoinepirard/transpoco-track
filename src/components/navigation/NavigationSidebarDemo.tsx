@@ -528,8 +528,9 @@ export function NavigationSidebarDemo({
   const handleLearnMore = useCallback(
     (item: NavigationItem) => {
       console.log(`[Demo] Learn more about premium feature: "${item.label}"`);
-      // Navigate to feature details page
-      router.push(`/features/${item.id}`);
+      // Navigate to feature details page using replace to avoid adding to history stack
+      // This makes the locked feature page feel like the actual destination rather than a layer
+      router.replace(`/features/${item.id}`);
     },
     [router]
   );
