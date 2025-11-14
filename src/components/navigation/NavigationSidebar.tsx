@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState, useMemo, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useNavigation } from '@/contexts/NavigationContext';
 import {
   ChatCircleIcon,
@@ -516,6 +516,7 @@ export function NavigationSidebar({
   const navRef = useRef<HTMLElement>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const {
     toggleExpandedItem,
     isItemExpanded,
@@ -541,6 +542,14 @@ export function NavigationSidebar({
       const featureId = featureMatch[1];
       // Set the locked navigation item as active
       setActiveItemId(featureId);
+      setActiveSettingsItemId('');
+      return;
+    }
+
+    // Honor explicit active query param to allow selecting items without routes
+    const activeFromQuery = searchParams.get('active');
+    if (activeFromQuery) {
+      setActiveItemId(activeFromQuery);
       setActiveSettingsItemId('');
       return;
     }
@@ -575,7 +584,7 @@ export function NavigationSidebar({
       setActiveItemId('live-map');
       setActiveSettingsItemId('');
     }
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   // Brand selection state (for sidebar branding)
   const [selectedBrand, setSelectedBrand] = useState<'transpoco' | 'safely'>(
@@ -1064,7 +1073,11 @@ export function NavigationSidebar({
                         // Navigate to href if it exists
                         if (clickedItem.href) {
                           router.push(clickedItem.href);
+                          return;
                         }
+
+                        // Fallback: replace to dashboard with explicit active param
+                        router.replace(`/?active=${clickedItem.id}`);
                       };
 
                       return (
@@ -1236,7 +1249,11 @@ export function NavigationSidebar({
                             // Navigate to href if it exists
                             if (clickedItem.href) {
                               router.push(clickedItem.href);
+                              return;
                             }
+
+                            // Fallback: replace to dashboard with explicit active param
+                            router.replace(`/?active=${clickedItem.id}`);
                           };
 
                           return (
