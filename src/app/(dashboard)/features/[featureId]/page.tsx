@@ -63,15 +63,6 @@ export default function FeatureDetailsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Close Button - Fixed Top Right */}
-      <button
-        onClick={handleClose}
-        className="fixed right-6 top-20 z-50 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-        aria-label="Close"
-      >
-        <X className="h-5 w-5" />
-      </button>
-
       {/* Main Content */}
       <div className="mx-auto max-w-3xl px-6 py-12 pb-16">
         {/* Hero Section */}
