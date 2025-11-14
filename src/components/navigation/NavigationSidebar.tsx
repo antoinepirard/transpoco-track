@@ -535,6 +535,16 @@ export function NavigationSidebar({
 
   // Sync active item with pathname
   useEffect(() => {
+    // Check if we're on a feature details page (/features/[featureId])
+    const featureMatch = pathname.match(/^\/features\/([^/]+)$/);
+    if (featureMatch) {
+      const featureId = featureMatch[1];
+      // Set the locked navigation item as active
+      setActiveItemId(featureId);
+      setActiveSettingsItemId('');
+      return;
+    }
+
     // Helper function to find item by href in nested structure
     const findItemByHref = (items: NavigationItem[], href: string): NavigationItem | null => {
       for (const item of items) {
