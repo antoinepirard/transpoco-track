@@ -194,7 +194,8 @@ export function NavigationTooltip({
           onClick={() => {
             console.log(`[Demo] Learn more about: ${content.title}`);
             if (content.id) {
-              router.push(`/features/${content.id}`);
+              // Use replace instead of push to avoid adding to history stack
+              router.replace(`/features/${content.id}`);
             }
           }}
         >

@@ -15,13 +15,24 @@ export default function FeatureDetailsPage() {
   // Get feature data
   const feature = getLockedFeature(featureId);
 
+  // Handle navigation back - fallback to home if no history
+  const handleClose = () => {
+    // Check if there's history to go back to
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      // Fallback to home page if no history (e.g., direct link)
+      router.replace('/');
+    }
+  };
+
   // Handle invalid feature ID
   if (!isValidFeatureId(featureId) || !feature) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-8">
         {/* Close Button */}
         <button
-          onClick={() => router.back()}
+          onClick={handleClose}
           className="fixed right-6 top-20 z-50 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
           aria-label="Close"
         >
@@ -36,7 +47,7 @@ export default function FeatureDetailsPage() {
           <p className="mb-6 text-gray-600">
             The feature you're looking for doesn't exist or is not available.
           </p>
-          <Button onClick={() => router.back()} variant="outline">
+          <Button onClick={handleClose} variant="outline">
             Go Back
           </Button>
         </div>
@@ -54,7 +65,7 @@ export default function FeatureDetailsPage() {
     <div className="min-h-screen bg-white">
       {/* Close Button - Fixed Top Right */}
       <button
-        onClick={() => router.back()}
+        onClick={handleClose}
         className="fixed right-6 top-20 z-50 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
         aria-label="Close"
       >
