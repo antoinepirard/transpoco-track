@@ -19,6 +19,7 @@ export default function BaseReportPage({
 }: BaseReportPageProps) {
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const mountedRef = useRef(false);
+  const driversLoadedRef = useRef(false); // Track if drivers have been loaded
   const [drivers, setDrivers] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
 
@@ -45,8 +46,10 @@ export default function BaseReportPage({
 
       if (mountedRef.current) {
         setRows(data);
-        if (!drivers.length) {
+        // Only set drivers once on first load to avoid circular dependency
+        if (!driversLoadedRef.current && data.length > 0) {
           setDrivers(Array.from(new Set(data.map((d) => d.driver))).sort());
+          driversLoadedRef.current = true;
         }
       }
     } catch (error) {
@@ -59,7 +62,7 @@ export default function BaseReportPage({
         setLoading(false);
       }
     }
-  }, [filters, drivers.length]);
+  }, [filters]);
 
   // Component mounting and initialization
   useEffect(() => {
@@ -94,7 +97,7 @@ export default function BaseReportPage({
   // Fetch data after initialization
   useEffect(() => {
     if (initialized && mountedRef.current) {
-      setTimeout(() => fetchData(), 0);
+      fetchData();
     }
   }, [initialized, fetchData]);
 

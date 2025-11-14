@@ -656,6 +656,15 @@ export function NavigationSidebarDemo({
                     console.log(
                       `[Demo] Active item set to "${clickedItem.label}"`
                     );
+
+                    // Navigate to the item's href when available
+                    if (clickedItem.href) {
+                      router.push(clickedItem.href);
+                      return;
+                    }
+
+                    // Fallback to dashboard when item has no dedicated route yet
+                    router.push('/');
                   };
 
                   return (
