@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
 interface TooltipContent {
@@ -11,6 +12,7 @@ interface TooltipContent {
   description: string;
   image?: string;
   learnMoreUrl?: string;
+  id?: string;
 }
 
 interface NavigationTooltipProps {
@@ -23,9 +25,9 @@ interface NavigationTooltipProps {
   onMouseLeave?: () => void;
 }
 
-export function NavigationTooltip({ 
-  isVisible, 
-  content, 
+export function NavigationTooltip({
+  isVisible,
+  content,
   anchorRect,
   previousAnchorRect,
   onClose,
@@ -34,6 +36,7 @@ export function NavigationTooltip({
 }: NavigationTooltipProps) {
   const [mounted, setMounted] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -184,11 +187,16 @@ export function NavigationTooltip({
         <p className="text-xs text-gray-300 leading-relaxed">
           {content.description}
         </p>
-        <Button 
-          size="sm" 
+        <Button
+          size="sm"
           variant="secondary"
           className="w-full text-xs h-8 cursor-pointer"
-          onClick={() => console.log(`[Demo] Learn more about: ${content.title}`)}
+          onClick={() => {
+            console.log(`[Demo] Learn more about: ${content.title}`);
+            if (content.id) {
+              router.push(`/features/${content.id}`);
+            }
+          }}
         >
           Learn More
         </Button>

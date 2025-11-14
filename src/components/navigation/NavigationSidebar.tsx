@@ -616,12 +616,14 @@ export function NavigationSidebar({
   const tooltipContent = useMemo(
     () => ({
       'cost-management': {
+        id: 'cost-management',
         title: 'Cost Management',
         description:
           'Complete Total Cost of Ownership (TCO) analysis and financial optimization tools. Track all fleet expenses, identify cost-saving opportunities, and optimize your fleet budget with detailed analytics.',
         image: '/vehicle-maintenance.webp',
       },
       'fuel-electric': {
+        id: 'fuel-electric',
         title: 'Fuel/Electric Vehicles',
         description:
           'Comprehensive EV fleet management and fuel optimization. Monitor charging status, plan efficient routes for electric vehicles, and seamlessly manage mixed fuel and electric fleets.',
@@ -753,9 +755,14 @@ export function NavigationSidebar({
     []
   );
 
-  const handleLearnMore = useCallback((item: NavigationItem) => {
-    console.log(`[Demo] Learn more about premium feature: "${item.label}"`);
-  }, []);
+  const handleLearnMore = useCallback(
+    (item: NavigationItem) => {
+      console.log(`[Demo] Learn more about premium feature: "${item.label}"`);
+      // Navigate to feature details page
+      router.push(`/features/${item.id}`);
+    },
+    [router]
+  );
 
   const handleTopBarItemClick = (itemId: string) => {
     // Handle messages and notifications
@@ -1447,7 +1454,7 @@ export function NavigationSidebar({
             </div>
           )}
 
-          <div className="flex-1 overflow-hidden h-full min-h-0 relative">
+          <div className="flex-1 overflow-y-auto h-full min-h-0 relative">
             {children}
             <AnimatePresence>
               {globalTooltip.isVisible &&
