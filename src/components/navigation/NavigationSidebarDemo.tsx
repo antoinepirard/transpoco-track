@@ -9,6 +9,7 @@ import {
   useEffect,
 } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Menu } from '@base-ui-components/react';
 import { useNavigation } from '@/contexts/NavigationContext';
 import {
@@ -305,6 +306,7 @@ export function NavigationSidebarDemo({
   onActiveItemChange,
 }: NavigationSidebarDemoProps) {
   const navRef = useRef<HTMLElement>(null);
+  const router = useRouter();
   const {
     toggleExpandedItem,
     isItemExpanded,
@@ -343,23 +345,27 @@ export function NavigationSidebarDemo({
   const tooltipContent = useMemo(
     () => ({
       bikly: {
+        id: 'bikly',
         title: 'Bikly',
         description:
           'Advanced safety and compliance monitoring for your fleet. Get real-time alerts, driver behavior insights, and comprehensive safety reporting to reduce incidents and improve driver performance.',
         image: '/pointing at laptop screen with data on show.webp',
       },
       'fleet-ai': {
+        id: 'fleet-ai',
         title: 'Fleet AI',
         description:
           'AI-powered predictive analytics and intelligent fleet optimization. Leverage machine learning to predict maintenance needs, optimize routes, and make data-driven decisions for maximum efficiency.',
       },
       'cost-management': {
+        id: 'cost-management',
         title: 'Cost Management',
         description:
           'Complete Total Cost of Ownership (TCO) analysis and financial optimization tools. Track all fleet expenses, identify cost-saving opportunities, and optimize your fleet budget with detailed analytics.',
         image: '/vehicle-maintenance.webp',
       },
       'fuel-electric': {
+        id: 'fuel-electric',
         title: 'Fuel/Electric Vehicles',
         description:
           'Comprehensive EV fleet management and fuel optimization. Monitor charging status, plan efficient routes for electric vehicles, and seamlessly manage mixed fuel and electric fleets.',
@@ -519,10 +525,14 @@ export function NavigationSidebarDemo({
     []
   );
 
-  const handleLearnMore = useCallback((item: NavigationItem) => {
-    console.log(`[Demo] Learn more about premium feature: "${item.label}"`);
-    // In a real app, this would open a modal or navigate to a pricing page
-  }, []);
+  const handleLearnMore = useCallback(
+    (item: NavigationItem) => {
+      console.log(`[Demo] Learn more about premium feature: "${item.label}"`);
+      // Navigate to feature details page
+      router.push(`/features/${item.id}`);
+    },
+    [router]
+  );
 
   // Cleanup timeout on unmount
   useEffect(() => {

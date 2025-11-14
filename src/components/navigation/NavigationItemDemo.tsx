@@ -83,34 +83,37 @@ export function NavigationItemDemo({
 
     if (isChild) {
       const childPadding = 'py-1.5 pr-2 pl-6';
-      if (isLocked) {
-        return `${baseClasses} ${childPadding} text-gray-600 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
-      }
+      // Check active state first (including active locked items)
       if (isActive) {
         return `${baseClasses} ${childPadding} text-white`;
+      }
+      if (isLocked) {
+        return `${baseClasses} ${childPadding} text-gray-600 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
       }
       return `${baseClasses} ${childPadding} text-gray-600 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
     }
 
     // Parent item styling
     const parentPadding = 'px-2 py-1.5';
-    if (isLocked) {
-      return `${baseClasses} ${parentPadding} text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
-    }
+    // Check active state first (including active locked items)
     if (isActive) {
       return `${baseClasses} ${parentPadding} text-white`;
+    }
+    if (isLocked) {
+      return `${baseClasses} ${parentPadding} text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
     }
     return `${baseClasses} ${parentPadding} text-gray-700 hover:hover-only:bg-gray-100 hover:hover-only:text-gray-900`;
   };
 
   const getIconClassName = () => {
     const baseClasses = `mr-3 h-5 w-5 flex-shrink-0 transition-immediate`;
-    
-    if (isLocked) {
-      return `${baseClasses} text-gray-400 group-hover:hover-only:text-gray-500`;
-    }
+
+    // Check active state first (including active locked items)
     if (isActive) {
       return `${baseClasses} text-white`;
+    }
+    if (isLocked) {
+      return `${baseClasses} text-gray-400 group-hover:hover-only:text-gray-500`;
     }
     return `${baseClasses} text-gray-400 group-hover:hover-only:text-gray-500`;
   };
