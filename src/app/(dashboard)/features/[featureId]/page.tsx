@@ -5,7 +5,6 @@ import { X, CheckCircle2, Lock } from 'lucide-react';
 import Image from 'next/image';
 import { getLockedFeature, isValidFeatureId } from '@/config/lockedFeatures';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 
 export default function FeatureDetailsPage() {
   const params = useParams();
@@ -45,7 +44,7 @@ export default function FeatureDetailsPage() {
             Feature Not Found
           </h1>
           <p className="mb-6 text-gray-600">
-            The feature you're looking for doesn't exist or is not available.
+            The feature you&apos;re looking for doesn&apos;t exist or is not available.
           </p>
           <Button onClick={handleClose} variant="outline">
             Go Back
