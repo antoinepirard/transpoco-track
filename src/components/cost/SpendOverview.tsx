@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useMemo } from 'react';
-import { Line, LineChart, ResponsiveContainer, XAxis } from 'recharts';
+import { Line, LineChart, XAxis } from 'recharts';
 import { TrendingDown, TrendingUp, CheckCircle, Database } from 'lucide-react';
 import type { CostDashboardData } from '@/types/cost';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
