@@ -170,7 +170,7 @@ const sidebarNavigationData: NavigationSection[] = [
     items: [
       {
         id: 'dashboard',
-        label: 'Cost dashboard',
+        label: 'Control Centre',
         icon: CurrencyDollarIcon,
         href: '/',
       },
