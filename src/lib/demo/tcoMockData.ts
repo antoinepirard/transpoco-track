@@ -1,4 +1,5 @@
 import type {
+  ActionItem,
   ActionItemsSummary,
   CostDataSourceSummary,
   CostDateRange,
@@ -120,10 +121,6 @@ function round(value: number, decimals = 0): number {
 
 function randomBetween(min: number, max: number): number {
   return Math.random() * (max - min) + min;
-}
-
-function pickRandom<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)];
 }
 
 function seededRandom(seed: number): () => number {
@@ -465,7 +462,7 @@ function buildDataSourceSummary(): CostDataSourceSummary {
 }
 
 function buildActionItems(outliers: TcoOutlierSummary): ActionItemsSummary {
-  const items = [];
+  const items: ActionItem[] = [];
   
   // Add action items for critical outliers
   outliers.outliers
