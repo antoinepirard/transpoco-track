@@ -171,7 +171,7 @@ const sidebarNavigationData: NavigationSection[] = [
       {
         id: 'dashboard',
         label: 'Control Centre',
-        icon: CurrencyDollarIcon,
+        icon: SquaresFourIcon,
         href: '/',
       },
       {
