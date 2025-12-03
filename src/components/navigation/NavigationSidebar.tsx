@@ -170,8 +170,8 @@ const sidebarNavigationData: NavigationSection[] = [
     items: [
       {
         id: 'dashboard',
-        label: 'Dashboard',
-        icon: SquaresFourIcon,
+        label: 'Cost dashboard',
+        icon: CurrencyDollarIcon,
         href: '/',
       },
       {
@@ -349,6 +349,7 @@ const sidebarNavigationData: NavigationSection[] = [
             id: 'speed-summary',
             label: 'Speed Summary',
             icon: GaugeIcon,
+            href: '/reports/speed-summary',
           },
           {
             id: 'speed-trend',

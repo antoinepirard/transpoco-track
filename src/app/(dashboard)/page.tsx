@@ -1,25 +1,14 @@
-'use client';
+import { CostDashboard } from '@/components/cost/CostDashboard';
+import { getCostDashboardDemoData } from '@/lib/demo/cost';
 
-import { useState, useEffect } from 'react';
-import DashboardPage from './dashboard/page';
-import { WelcomeModal } from '@/components/onboarding/WelcomeModal';
-import { useOnboardingStore } from '@/stores/onboardingStore';
+export const revalidate = 300;
 
-export default function Home() {
-  const { completedAt, hasSeenWelcome } = useOnboardingStore();
-  const [showWelcome, setShowWelcome] = useState(false);
-
-  useEffect(() => {
-    // Show welcome modal if onboarding is completed but user hasn't seen welcome yet
-    if (completedAt && !hasSeenWelcome) {
-      setShowWelcome(true);
-    }
-  }, [completedAt, hasSeenWelcome]);
+export default function DashboardPage() {
+  const data = getCostDashboardDemoData();
 
   return (
-    <>
-      <DashboardPage />
-      <WelcomeModal open={showWelcome} onClose={() => setShowWelcome(false)} />
-    </>
+    <div className="space-y-8 p-6">
+      <CostDashboard data={data} />
+    </div>
   );
 }
