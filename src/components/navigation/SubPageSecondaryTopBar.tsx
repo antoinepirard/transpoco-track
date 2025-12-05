@@ -13,6 +13,7 @@ import {
   EnvelopeIcon,
   PaperPlaneIcon,
   PlusIcon,
+  CreditCardIcon,
 } from '@phosphor-icons/react';
 import {
   DropdownMenu,
@@ -78,6 +79,27 @@ const subPageTabs: Record<string, SecondaryTopBarItem[]> = {
 
   // Fuel / Electric module (moved to sidebar submenus; keep empty for now)
   'fuel-electric': [],
+
+  // Fuel Settings sub-page
+  'fuel-settings': [
+    { id: 'fuel-accounts', label: 'Fuel Accounts', icon: CreditCardIcon },
+    { id: 'fuel-cards', label: 'Fuel Cards', icon: CreditCardIcon },
+    {
+      id: 'ev-suitability-settings',
+      label: 'EV Suitability Settings',
+      icon: GearIcon,
+    },
+  ],
+};
+
+// Page-specific help items (shown in addition to default help items)
+const pageHelpItems: Record<string, { id: string; label: string }[]> = {
+  'fuel-settings': [
+    { id: 'fuel-guide', label: 'How to use the fuel modules?' },
+  ],
+  'driving-style-settings': [
+    { id: 'driving-style-guide', label: 'How to use driving style?' },
+  ],
 };
 
 export function SubPageSecondaryTopBar({
@@ -89,6 +111,7 @@ export function SubPageSecondaryTopBar({
   onActionButtonClick,
 }: SubPageSecondaryTopBarProps) {
   const tabs = subPageTabs[pageId] || [];
+  const helpItems = pageHelpItems[pageId] || [];
 
   const handleTabClick = (tab: SecondaryTopBarItem) => {
     onTabClick?.({ id: tab.id, label: tab.label });
@@ -148,7 +171,21 @@ export function SubPageSecondaryTopBar({
             <DropdownMenuTrigger className="flex items-center p-2 rounded-md transition-immediate group focus-ring cursor-pointer text-gray-600 hover:hover-only:bg-white hover:hover-only:text-gray-900 outline-none">
               <QuestionIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-64">
+              {/* Page-specific help items */}
+              {helpItems.map((item) => (
+                <DropdownMenuItem
+                  key={item.id}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    console.log(`[Demo] ${item.label} clicked`);
+                    window.open('#', '_blank');
+                  }}
+                >
+                  {item.label}
+                </DropdownMenuItem>
+              ))}
+              {/* Default help items */}
               <DropdownMenuItem
                 className="cursor-pointer"
                 onClick={() => console.log('[Demo] Get started clicked')}

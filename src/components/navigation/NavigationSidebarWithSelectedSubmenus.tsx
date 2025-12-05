@@ -465,6 +465,7 @@ const sidebarNavigationData: NavigationSection[] = [
           },
           { id: 'ev-suitability', label: 'EV Suitability', icon: TruckIcon },
           { id: 'ev-charging', label: 'EV Charging', icon: BatteryHighIcon },
+          { id: 'fuel-settings', label: 'Settings', icon: GearIcon },
         ],
       },
       {
@@ -780,6 +781,8 @@ export function NavigationSidebarWithSelectedSubmenus({
       'driving-style-settings': 'alerts',
       // Fuel/Electric module
       'fuel-electric': 'fuel',
+      // Fuel Settings sub-page
+      'fuel-settings': 'fuel-accounts',
       // Reports: Journeys
       journeys: 'journeys',
     };
@@ -803,6 +806,7 @@ export function NavigationSidebarWithSelectedSubmenus({
         'fuel-accounts': 'settings',
         'fuel-cards': 'settings',
         'ev-suitability-settings': 'settings',
+        'fuel-settings': 'fuel-accounts',
       };
       setActiveSubPageTabId(fuelChildrenToTab[activeItemId] || 'fuel');
     } else if (activeItemId in defaultTabs) {
@@ -1272,7 +1276,7 @@ export function NavigationSidebarWithSelectedSubmenus({
         )}
 
         <main className="flex-1 overflow-hidden h-full min-h-0 relative flex flex-col">
-          {/* Secondary top bar for Walkaround, Driving Style, Messages, etc. (NOT for Reports) */}
+          {/* Secondary top bar for Walkaround, Driving Style, Fuel Settings, Messages, etc. (NOT for Reports) */}
           {(activeItemId === 'messages' ||
             activeItemId === 'all-checks' ||
             activeItemId === 'driven-without-checks' ||
@@ -1282,7 +1286,8 @@ export function NavigationSidebarWithSelectedSubmenus({
             activeItemId === 'speed-improvement' ||
             activeItemId === 'driving-summary' ||
             activeItemId === 'driver-mileage-summary' ||
-            activeItemId === 'driving-style-settings') && (
+            activeItemId === 'driving-style-settings' ||
+            activeItemId === 'fuel-settings') && (
             <SubPageSecondaryTopBar
               pageId={activeItemId}
               activeTabId={activeSubPageTabId}
@@ -1312,7 +1317,10 @@ export function NavigationSidebarWithSelectedSubmenus({
                   <label className="mb-0.5 text-[11px] font-medium text-[#3D88C5]">
                     Reports
                   </label>
-                  <select className="h-8 rounded border border-gray-300 px-2 text-xs bg-gray-50" disabled>
+                  <select
+                    className="h-8 rounded border border-gray-300 px-2 text-xs bg-gray-50"
+                    disabled
+                  >
                     <option>
                       {activeItemId === 'journeys' && 'Journeys'}
                       {activeItemId === 'off-road' && 'Off Road Vehicles'}
@@ -1323,13 +1331,17 @@ export function NavigationSidebarWithSelectedSubmenus({
                       {activeItemId === 'stops' && 'Stops'}
                       {activeItemId === 'stops-idling' && 'Stops/Idling'}
                       {activeItemId === 'locations' && 'Locations'}
-                      {activeItemId === 'route-completion-summary' && 'Route Completion Summary'}
+                      {activeItemId === 'route-completion-summary' &&
+                        'Route Completion Summary'}
                     </option>
                   </select>
                 </div>
 
                 {/* Journey Type */}
-                {(activeItemId === 'journeys' || activeItemId === 'idling' || activeItemId === 'stops' || activeItemId === 'stops-idling') && (
+                {(activeItemId === 'journeys' ||
+                  activeItemId === 'idling' ||
+                  activeItemId === 'stops' ||
+                  activeItemId === 'stops-idling') && (
                   <div className="flex flex-col min-w-[120px]">
                     <label className="mb-0.5 text-[11px] font-medium text-[#3D88C5]">
                       Journey Type
@@ -1384,7 +1396,9 @@ export function NavigationSidebarWithSelectedSubmenus({
                       type="checkbox"
                       className="w-3.5 h-3.5 text-[#3D88C5] border-gray-300 rounded focus:ring-[#3D88C5]"
                     />
-                    <span className="text-[11px] font-medium text-[#3D88C5]">limit by shift time:</span>
+                    <span className="text-[11px] font-medium text-[#3D88C5]">
+                      limit by shift time:
+                    </span>
                   </label>
                   <select className="h-8 rounded border border-gray-300 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#3D88C5] focus:border-transparent">
                     <option value="11:00 - 15:59">11:00 - 15:59</option>
