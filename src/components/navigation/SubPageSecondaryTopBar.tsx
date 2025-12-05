@@ -172,7 +172,6 @@ export function SubPageSecondaryTopBar({
               <QuestionIcon className="h-5 w-5 flex-shrink-0 transition-immediate text-gray-400 group-hover:hover-only:text-gray-500" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
-              {/* Page-specific help items */}
               {helpItems.map((item) => (
                 <DropdownMenuItem
                   key={item.id}
@@ -185,7 +184,6 @@ export function SubPageSecondaryTopBar({
                   {item.label}
                 </DropdownMenuItem>
               ))}
-              {/* Default help items */}
               <DropdownMenuItem
                 className="cursor-pointer"
                 onClick={() => console.log('[Demo] Get started clicked')}

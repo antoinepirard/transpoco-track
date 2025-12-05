@@ -781,7 +781,6 @@ export function NavigationSidebarWithSelectedSubmenus({
       'driving-style-settings': 'alerts',
       // Fuel/Electric module
       'fuel-electric': 'fuel',
-      // Fuel Settings sub-page
       'fuel-settings': 'fuel-accounts',
       // Reports: Journeys
       journeys: 'journeys',
