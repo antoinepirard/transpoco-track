@@ -148,7 +148,7 @@ export default function FeatureDetailsPage() {
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 pt-0.5">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <CheckCircle2 className="h-5 w-5 text-blue-500" />
                   </div>
                   <div className="flex-1">
                     <h3 className="mb-1 text-sm font-semibold text-gray-900">
@@ -163,6 +163,37 @@ export default function FeatureDetailsPage() {
             ))}
           </div>
         </div>
+
+        {/* Key Benefits - Show remaining items after first 4 */}
+        {feature.valueProps.length > 4 && (
+          <div className="mb-8">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">
+              Key Benefits
+            </h2>
+            <div className="space-y-3">
+              {feature.valueProps.slice(4).map((prop) => (
+                <div
+                  key={prop.id}
+                  className="rounded-lg border border-gray-200 bg-white p-4 transition-all duration-200 hover:border-blue-200 hover:shadow-sm"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 pt-0.5">
+                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="mb-1 text-sm font-semibold text-gray-900">
+                        {prop.title}
+                      </h3>
+                      <p className="text-sm leading-relaxed text-gray-600">
+                        {prop.description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Call to Action - Bottom */}
         <div className="overflow-hidden rounded-xl border-2 border-blue-600 bg-gradient-to-br from-blue-50 via-white to-blue-50 p-8 text-center shadow-lg">
