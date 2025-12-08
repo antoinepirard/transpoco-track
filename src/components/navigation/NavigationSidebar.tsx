@@ -529,12 +529,6 @@ export function NavigationSidebar({
   const [activeItemId, setActiveItemId] = useState<string>('dashboard');
   const [activeSettingsItemId, setActiveSettingsItemId] = useState<string>('');
 
-  // Ensure SSR and first client render match to avoid hydration mismatches
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Sync active item with pathname
   useEffect(() => {
     // Check if we're on a feature details page (/features/[featureId])
@@ -628,8 +622,8 @@ export function NavigationSidebar({
 
   // Demo locked items (premium features) - memoized to prevent re-renders
   const lockedItemIds = useMemo(
-    () => (mounted && showLockedItems ? ['cost-management'] : []),
-    [mounted, showLockedItems]
+    () => (showLockedItems ? ['cost-management'] : []),
+    [showLockedItems]
   );
 
   // Tooltip content for locked items - memoized to prevent re-renders
@@ -1106,7 +1100,7 @@ export function NavigationSidebar({
           </nav>
 
           <div className="px-4 pb-2 space-y-2">
-            {mounted && showDiscoverButton && (
+            {showDiscoverButton && (
               <Button
                 onClick={() => setIsProductDiscoveryOpen(true)}
                 size="default"

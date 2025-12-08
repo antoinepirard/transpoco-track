@@ -135,13 +135,13 @@ export default function FeatureDetailsPage() {
           </div>
         </div>
 
-        {/* Value Propositions - Show only first 4 */}
+        {/* Value Propositions - Show only first 3 */}
         <div className="mb-8">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">
             Key Features
           </h2>
           <div className="space-y-3">
-            {feature.valueProps.slice(0, 4).map((prop) => (
+            {feature.valueProps.slice(0, 3).map((prop) => (
               <div
                 key={prop.id}
                 className="rounded-lg border border-gray-200 bg-white p-4 transition-all duration-200 hover:border-blue-200 hover:shadow-sm"
@@ -164,14 +164,14 @@ export default function FeatureDetailsPage() {
           </div>
         </div>
 
-        {/* Key Benefits - Show remaining items after first 4 */}
-        {feature.valueProps.length > 4 && (
+        {/* Key Benefits - Show items 4-6 */}
+        {feature.valueProps.length > 3 && (
           <div className="mb-8">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">
               Key Benefits
             </h2>
             <div className="space-y-3">
-              {feature.valueProps.slice(4).map((prop) => (
+              {feature.valueProps.slice(3, 6).map((prop) => (
                 <div
                   key={prop.id}
                   className="rounded-lg border border-gray-200 bg-white p-4 transition-all duration-200 hover:border-blue-200 hover:shadow-sm"

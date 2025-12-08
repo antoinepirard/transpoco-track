@@ -63,6 +63,12 @@ export const lockedFeatures: Record<string, LockedFeature> = {
         description:
           'Build detailed custom reports with flexible filtering, grouping, and export options for stakeholder communication.',
       },
+      {
+        id: 'budget-tracking',
+        title: 'Budget vs Actual Tracking',
+        description:
+          'Monitor budget performance with variance analysis and alerts when costs exceed planned thresholds.',
+      },
     ],
   },
   'fuel-electric': {
