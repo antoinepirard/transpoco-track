@@ -788,48 +788,28 @@ export function VehicleDetailDrawer({
               : 'bg-slate-50'
           )}
         >
-          {isOutlier ? (
-            <>
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => onAddExpense?.(vehicle.vehicleId)}
-              >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Add Expense
-              </Button>
-              <Button
-                className={cn(
-                  'flex-1',
-                  effectiveSeverity === 'critical'
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : 'bg-amber-600 hover:bg-amber-700'
-                )}
-                onClick={() => onFlagForReview?.(vehicle.vehicleId)}
-              >
-                <Flag className="h-4 w-4 mr-1.5" />
-                Take Action
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => onFlagForReview?.(vehicle.vehicleId)}
-              >
-                <Flag className="h-4 w-4 mr-1.5" />
-                Flag for Review
-              </Button>
-              <Button
-                className="flex-1"
-                onClick={() => onAddExpense?.(vehicle.vehicleId)}
-              >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Add Expense
-              </Button>
-            </>
-          )}
+          <Button
+            variant={isOutlier ? 'default' : 'outline'}
+            className={cn(
+              'flex-1',
+              isOutlier &&
+                (effectiveSeverity === 'critical'
+                  ? 'bg-red-600 hover:bg-red-700'
+                  : 'bg-amber-600 hover:bg-amber-700')
+            )}
+            onClick={() => onFlagForReview?.(vehicle.vehicleId)}
+          >
+            <Flag className="h-4 w-4 mr-1.5" />
+            {isOutlier ? 'Take Action' : 'Flag for Review'}
+          </Button>
+          <Button
+            variant={isOutlier ? 'outline' : 'default'}
+            className="flex-1"
+            onClick={() => onAddExpense?.(vehicle.vehicleId)}
+          >
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add Expense
+          </Button>
         </div>
       </div>
     </>
