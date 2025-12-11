@@ -462,7 +462,7 @@ export function CustomExportAIDialog({
       const updated = [...prev];
       updated[index] = {
         ...updated[index],
-        dataField: dataField === '' ? null : dataField,
+        dataField: dataField === '__skip__' ? null : dataField,
         confidence: 1,
         isManualOverride: true,
       };
@@ -748,14 +748,16 @@ export function CustomExportAIDialog({
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
               <div className="flex items-center gap-2">
                 <Select
-                  value={mapping.dataField || ''}
+                  value={mapping.dataField || '__skip__'}
                   onValueChange={(v) => handleMappingChange(index, v)}
                 >
                   <SelectTrigger className="h-9">
                     <SelectValue placeholder="Select field..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">-- Skip this column --</SelectItem>
+                    <SelectItem value="__skip__">
+                      -- Skip this column --
+                    </SelectItem>
                     {Object.entries(groupedFields).map(([group, fields]) => (
                       <SelectGroup key={group}>
                         <SelectLabel>{group}</SelectLabel>
