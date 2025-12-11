@@ -293,7 +293,7 @@ export function InvoiceDropZone({
 
     return (
       <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl max-w-5xl w-full shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="bg-white rounded-xl max-w-5xl w-full shadow-2xl overflow-hidden h-[70vh] flex flex-col">
           {/* Header */}
           <div className="p-4 bg-emerald-50 border-b flex items-center gap-3 flex-shrink-0">
             <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
