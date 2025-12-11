@@ -156,7 +156,6 @@ export default function ControlCentrePage() {
         {tcoData && costData && (
           <FleetHealthCard
             vehicles={tcoData.vehicles}
-            outlierSummary={tcoData.outlierSummary}
             dataSources={tcoData.dataSources}
             compliance={costData.compliance}
             isLoading={isLoading}
