@@ -836,27 +836,30 @@ export function CustomExportAIDialog({
       <div className="py-4 space-y-4">
         {/* Preview Table */}
         <div className="border rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50">
+          <div className="overflow-x-auto max-h-[200px]">
+            <table className="w-full text-sm table-fixed">
+              <thead className="bg-slate-50 sticky top-0">
                 <tr>
                   {columnMappings.map((m) => (
                     <th
                       key={m.templateColumn}
+                      title={m.templateColumn}
                       className={cn(
-                        'px-3 py-2 text-left font-medium whitespace-nowrap',
+                        'px-3 py-2 text-left font-medium w-[120px] min-w-[100px]',
                         !m.dataField && 'text-muted-foreground'
                       )}
                     >
-                      {m.templateColumn}
-                      {!m.dataField && (
-                        <Badge
-                          variant="outline"
-                          className="ml-1.5 text-[10px] px-1 py-0"
-                        >
-                          Empty
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-1">
+                        <span className="truncate">{m.templateColumn}</span>
+                        {!m.dataField && (
+                          <Badge
+                            variant="outline"
+                            className="shrink-0 text-[10px] px-1 py-0"
+                          >
+                            Empty
+                          </Badge>
+                        )}
+                      </div>
                     </th>
                   ))}
                 </tr>
@@ -868,7 +871,7 @@ export function CustomExportAIDialog({
                       <td
                         key={`${vehicle.vehicleId}-${m.templateColumn}`}
                         className={cn(
-                          'px-3 py-2 whitespace-nowrap',
+                          'px-3 py-2 truncate',
                           !m.dataField && 'text-muted-foreground'
                         )}
                       >
