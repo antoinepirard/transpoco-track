@@ -332,80 +332,15 @@ const sidebarNavigationData: NavigationSection[] = [
     ],
   },
   {
-    id: 'safety',
-    title: 'Safety & Compliance',
-    items: [
-      {
-        id: 'cameras',
-        label: 'Cameras',
-        icon: CameraIcon,
-      },
-      {
-        id: 'driving-style',
-        label: 'Driving Style',
-        icon: SteeringWheelIcon,
-        children: [
-          {
-            id: 'speed-summary',
-            label: 'Speed Summary',
-            icon: GaugeIcon,
-            href: '/reports/speed-summary',
-          },
-          {
-            id: 'speed-trend',
-            label: 'Speed Trend',
-            icon: ChartLineIcon,
-          },
-          {
-            id: 'speed-improvement',
-            label: 'Speed Improvement',
-            icon: TrendUpIcon,
-          },
-          {
-            id: 'driving-summary',
-            label: 'Driving Summary',
-            icon: SteeringWheelIcon,
-          },
-          {
-            id: 'driver-mileage-summary',
-            label: 'Driver Mileage Summary',
-            icon: RoadHorizonIcon,
-          },
-          {
-            id: 'driving-style-settings',
-            label: 'Settings',
-            icon: GearIcon,
-          },
-        ],
-      },
-      {
-        id: 'walkaround',
-        label: 'Walkaround',
-        icon: ListChecksIcon,
-        children: [
-          {
-            id: 'all-checks',
-            label: 'All Checks',
-            icon: CheckCircleIcon,
-          },
-          {
-            id: 'driven-without-checks',
-            label: 'Driven without Checks',
-            icon: WarningIcon,
-          },
-          {
-            id: 'walkaround-settings',
-            label: 'Settings',
-            icon: GearIcon,
-          },
-        ],
-      },
-    ],
-  },
-  {
     id: 'efficiency',
     title: 'Asset & Cost Management',
     items: [
+      {
+        id: 'cost-management',
+        label: 'Cost Management',
+        icon: CurrencyDollarIcon,
+        href: '/cost-management',
+      },
       {
         id: 'maintain',
         label: 'Maintain',
@@ -485,11 +420,76 @@ const sidebarNavigationData: NavigationSection[] = [
         label: 'Temperature',
         icon: ThermometerIcon,
       },
+    ],
+  },
+  {
+    id: 'safety',
+    title: 'Safety & Compliance',
+    items: [
       {
-        id: 'cost-management',
-        label: 'Cost Management',
-        icon: CurrencyDollarIcon,
-        href: '/cost-management',
+        id: 'cameras',
+        label: 'Cameras',
+        icon: CameraIcon,
+      },
+      {
+        id: 'driving-style',
+        label: 'Driving Style',
+        icon: SteeringWheelIcon,
+        children: [
+          {
+            id: 'speed-summary',
+            label: 'Speed Summary',
+            icon: GaugeIcon,
+            href: '/reports/speed-summary',
+          },
+          {
+            id: 'speed-trend',
+            label: 'Speed Trend',
+            icon: ChartLineIcon,
+          },
+          {
+            id: 'speed-improvement',
+            label: 'Speed Improvement',
+            icon: TrendUpIcon,
+          },
+          {
+            id: 'driving-summary',
+            label: 'Driving Summary',
+            icon: SteeringWheelIcon,
+          },
+          {
+            id: 'driver-mileage-summary',
+            label: 'Driver Mileage Summary',
+            icon: RoadHorizonIcon,
+          },
+          {
+            id: 'driving-style-settings',
+            label: 'Settings',
+            icon: GearIcon,
+          },
+        ],
+      },
+      {
+        id: 'walkaround',
+        label: 'Walkaround',
+        icon: ListChecksIcon,
+        children: [
+          {
+            id: 'all-checks',
+            label: 'All Checks',
+            icon: CheckCircleIcon,
+          },
+          {
+            id: 'driven-without-checks',
+            label: 'Driven without Checks',
+            icon: WarningIcon,
+          },
+          {
+            id: 'walkaround-settings',
+            label: 'Settings',
+            icon: GearIcon,
+          },
+        ],
       },
     ],
   },
