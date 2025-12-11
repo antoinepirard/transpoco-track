@@ -489,6 +489,7 @@ const sidebarNavigationData: NavigationSection[] = [
         id: 'cost-management',
         label: 'Cost Management',
         icon: CurrencyDollarIcon,
+        href: '/cost-management',
       },
     ],
   },
@@ -550,7 +551,10 @@ export function NavigationSidebar({
     }
 
     // Helper function to find item by href in nested structure
-    const findItemByHref = (items: NavigationItem[], href: string): NavigationItem | null => {
+    const findItemByHref = (
+      items: NavigationItem[],
+      href: string
+    ): NavigationItem | null => {
       for (const item of items) {
         if (item.href === href) return item;
         if (item.children) {
@@ -622,19 +626,19 @@ export function NavigationSidebar({
 
   // Demo locked items (premium features) - memoized to prevent re-renders
   const lockedItemIds = useMemo(
-    () => (showLockedItems ? ['cost-management'] : []),
+    () => (showLockedItems ? ['cameras'] : []),
     [showLockedItems]
   );
 
   // Tooltip content for locked items - memoized to prevent re-renders
   const tooltipContent = useMemo(
     () => ({
-      'cost-management': {
-        id: 'cost-management',
-        title: 'Cost Management',
+      cameras: {
+        id: 'cameras',
+        title: 'Cameras',
         description:
-          'Complete Total Cost of Ownership (TCO) analysis and financial optimization tools. Track all fleet expenses, identify cost-saving opportunities, and optimize your fleet budget with detailed analytics.',
-        image: '/vehicle-maintenance.webp',
+          'Video telematics with AI-powered incident detection, driver coaching, and evidence capture. Protect your fleet with intelligent dashcam technology.',
+        image: '/pointing at laptop screen with data on show.webp',
       },
       'fuel-electric': {
         id: 'fuel-electric',
@@ -1072,7 +1076,9 @@ export function NavigationSidebar({
                         }
 
                         // Fallback: replace to Coming Soon page with explicit active param
-                        router.replace(`/coming-soon/${clickedItem.id}?active=${clickedItem.id}`);
+                        router.replace(
+                          `/coming-soon/${clickedItem.id}?active=${clickedItem.id}`
+                        );
                       };
 
                       return (
@@ -1248,7 +1254,9 @@ export function NavigationSidebar({
                             }
 
                             // Fallback: replace to Coming Soon page with explicit active param
-                            router.replace(`/coming-soon/${clickedItem.id}?active=${clickedItem.id}`);
+                            router.replace(
+                              `/coming-soon/${clickedItem.id}?active=${clickedItem.id}`
+                            );
                           };
 
                           return (
@@ -1383,7 +1391,10 @@ export function NavigationSidebar({
                   <label className="mb-0.5 text-[11px] font-medium text-[#3D88C5]">
                     Reports
                   </label>
-                  <select className="h-8 rounded border border-gray-300 px-2 text-xs bg-gray-50" disabled>
+                  <select
+                    className="h-8 rounded border border-gray-300 px-2 text-xs bg-gray-50"
+                    disabled
+                  >
                     <option>
                       {activeItemId === 'journeys' && 'Journeys'}
                       {activeItemId === 'off-road' && 'Off Road Vehicles'}
@@ -1394,13 +1405,17 @@ export function NavigationSidebar({
                       {activeItemId === 'stops' && 'Stops'}
                       {activeItemId === 'stops-idling' && 'Stops/Idling'}
                       {activeItemId === 'locations' && 'Locations'}
-                      {activeItemId === 'route-completion-summary' && 'Route Completion Summary'}
+                      {activeItemId === 'route-completion-summary' &&
+                        'Route Completion Summary'}
                     </option>
                   </select>
                 </div>
 
                 {/* Journey Type */}
-                {(activeItemId === 'journeys' || activeItemId === 'idling' || activeItemId === 'stops' || activeItemId === 'stops-idling') && (
+                {(activeItemId === 'journeys' ||
+                  activeItemId === 'idling' ||
+                  activeItemId === 'stops' ||
+                  activeItemId === 'stops-idling') && (
                   <div className="flex flex-col min-w-[120px]">
                     <label className="mb-0.5 text-[11px] font-medium text-[#3D88C5]">
                       Journey Type
@@ -1455,7 +1470,9 @@ export function NavigationSidebar({
                       type="checkbox"
                       className="w-3.5 h-3.5 text-[#3D88C5] border-gray-300 rounded focus:ring-[#3D88C5]"
                     />
-                    <span className="text-[11px] font-medium text-[#3D88C5]">limit by shift time:</span>
+                    <span className="text-[11px] font-medium text-[#3D88C5]">
+                      limit by shift time:
+                    </span>
                   </label>
                   <select className="h-8 rounded border border-gray-300 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#3D88C5] focus:border-transparent">
                     <option value="11:00 - 15:59">11:00 - 15:59</option>

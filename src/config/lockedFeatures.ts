@@ -22,52 +22,52 @@ export interface LockedFeature {
 }
 
 export const lockedFeatures: Record<string, LockedFeature> = {
-  'cost-management': {
-    id: 'cost-management',
-    title: 'Cost Management',
-    tagline: 'Unlock Insights and Optimise Costs',
-    category: 'Fleet Analytics',
+  cameras: {
+    id: 'cameras',
+    title: 'Cameras',
+    tagline: 'See What Your Fleet Sees',
+    category: 'Safety & Compliance',
     description:
-      'Complete Total Cost of Ownership (TCO) analysis and cost optimization tools for your fleet.',
+      'Video telematics with AI-powered incident detection, driver coaching, and evidence capture.',
     longDescription:
-      'Get comprehensive insights into your fleet\'s total cost of ownership with advanced analytics, predictive maintenance costs, and optimization recommendations. Make data-driven decisions to reduce operational expenses and maximize ROI.',
-    image: '/vehicle-maintenance.webp',
+      'Transform fleet safety with intelligent dashcam technology. Capture critical footage, automatically detect risky driving events, and use video evidence to protect your drivers and reduce insurance costs. AI-powered coaching helps improve driver behavior over time.',
+    image: '/pointing at laptop screen with data on show.webp',
     valueProps: [
       {
-        id: 'tco-analysis',
-        title: 'Total Cost of Ownership Analysis',
+        id: 'incident-capture',
+        title: 'Automatic Incident Capture',
         description:
-          'Comprehensive TCO tracking including fuel, maintenance, insurance, and depreciation costs across your entire fleet.',
+          'AI detects and records safety-critical events like harsh braking, collisions, and near-misses with full video context.',
       },
       {
-        id: 'cost-forecasting',
-        title: 'Predictive Cost Forecasting',
+        id: 'driver-coaching',
+        title: 'Video-Based Driver Coaching',
         description:
-          'AI-powered predictions for upcoming maintenance and operational costs to help you budget more effectively.',
+          'Use real footage to provide constructive feedback and improve driver behavior with evidence-based coaching sessions.',
       },
       {
-        id: 'cost-optimization',
-        title: 'Cost Optimization Recommendations',
+        id: 'insurance-evidence',
+        title: 'Insurance Evidence & Claims',
         description:
-          'Actionable insights to reduce expenses through route optimization, fuel efficiency improvements, and preventive maintenance.',
+          'Protect your fleet from false claims with timestamped, GPS-verified video evidence for insurance disputes.',
       },
       {
-        id: 'benchmark-reporting',
-        title: 'Benchmark Reporting',
+        id: 'live-streaming',
+        title: 'Live Vehicle Streaming',
         description:
-          'Compare your fleet costs against industry standards and identify opportunities for improvement.',
+          'View real-time video feeds from any vehicle in your fleet for immediate situational awareness.',
       },
       {
-        id: 'custom-reporting',
-        title: 'Custom Cost Reports',
+        id: 'event-alerts',
+        title: 'Real-Time Event Alerts',
         description:
-          'Build detailed custom reports with flexible filtering, grouping, and export options for stakeholder communication.',
+          'Receive instant notifications when safety events are detected, enabling rapid response to incidents.',
       },
       {
-        id: 'budget-tracking',
-        title: 'Budget vs Actual Tracking',
+        id: 'compliance-recording',
+        title: 'Compliance Recording',
         description:
-          'Monitor budget performance with variance analysis and alerts when costs exceed planned thresholds.',
+          'Maintain detailed video logs for regulatory compliance, audits, and duty of care documentation.',
       },
     ],
   },
