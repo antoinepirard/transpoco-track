@@ -28,11 +28,7 @@ export interface ComplianceSummary {
 // Report Types
 export type ReportStatus = 'ready' | 'generating' | 'scheduled' | 'attention';
 
-export type ReportType =
-  | 'monthly-cost'
-  | 'compliance'
-  | 'fuel-mileage'
-  | 'bik';
+export type ReportType = 'monthly-cost' | 'compliance' | 'fuel-mileage' | 'bik';
 
 export interface FleetReport {
   id: string;
@@ -325,3 +321,121 @@ export interface TcoDashboardData {
   dataSources: CostDataSourceSummary;
   actionItems: ActionItemsSummary;
 }
+
+// ============================================
+// Custom Export (AI) Types
+// ============================================
+
+export interface ExportColumnMapping {
+  templateColumn: string;
+  dataField: string | null;
+  confidence: number; // 0-1, how confident the AI is in the mapping
+  isManualOverride: boolean;
+}
+
+export interface ExportTemplate {
+  id: string;
+  name: string;
+  createdAt: string;
+  sourceFileName: string;
+  columnMappings: ExportColumnMapping[];
+}
+
+export interface ExportableField {
+  id: string;
+  label: string;
+  group: 'Vehicle' | 'Cost' | 'Cost Breakdown' | 'Usage' | 'Compliance';
+  format?: 'currency' | 'number' | 'percentage' | 'text' | 'date';
+}
+
+// Available fields that can be exported
+export const EXPORTABLE_FIELDS: ExportableField[] = [
+  // Vehicle fields
+  { id: 'vehicleId', label: 'Vehicle ID', group: 'Vehicle', format: 'text' },
+  {
+    id: 'vehicleLabel',
+    label: 'Vehicle Name',
+    group: 'Vehicle',
+    format: 'text',
+  },
+  {
+    id: 'registrationNumber',
+    label: 'Registration',
+    group: 'Vehicle',
+    format: 'text',
+  },
+  {
+    id: 'vehicleType',
+    label: 'Vehicle Type',
+    group: 'Vehicle',
+    format: 'text',
+  },
+  { id: 'driverName', label: 'Driver', group: 'Vehicle', format: 'text' },
+  // Cost fields
+  { id: 'monthlyTco', label: 'Monthly TCO', group: 'Cost', format: 'currency' },
+  { id: 'tcoPerKm', label: 'TCO per km', group: 'Cost', format: 'currency' },
+  {
+    id: 'tcoPerHour',
+    label: 'TCO per hour',
+    group: 'Cost',
+    format: 'currency',
+  },
+  { id: 'tcoTrend', label: 'TCO Trend %', group: 'Cost', format: 'percentage' },
+  // Cost Breakdown fields
+  {
+    id: 'fuel',
+    label: 'Fuel Cost',
+    group: 'Cost Breakdown',
+    format: 'currency',
+  },
+  {
+    id: 'maintenance',
+    label: 'Maintenance',
+    group: 'Cost Breakdown',
+    format: 'currency',
+  },
+  {
+    id: 'insurance',
+    label: 'Insurance',
+    group: 'Cost Breakdown',
+    format: 'currency',
+  },
+  { id: 'lease', label: 'Lease', group: 'Cost Breakdown', format: 'currency' },
+  { id: 'tax', label: 'Road Tax', group: 'Cost Breakdown', format: 'currency' },
+  { id: 'tolls', label: 'Tolls', group: 'Cost Breakdown', format: 'currency' },
+  { id: 'fines', label: 'Fines', group: 'Cost Breakdown', format: 'currency' },
+  {
+    id: 'parking',
+    label: 'Parking',
+    group: 'Cost Breakdown',
+    format: 'currency',
+  },
+  // Usage fields
+  { id: 'totalKm', label: 'Total km', group: 'Usage', format: 'number' },
+  { id: 'totalHours', label: 'Total Hours', group: 'Usage', format: 'number' },
+  {
+    id: 'utilization',
+    label: 'Utilization %',
+    group: 'Usage',
+    format: 'percentage',
+  },
+  {
+    id: 'vehicleAge',
+    label: 'Vehicle Age (months)',
+    group: 'Usage',
+    format: 'number',
+  },
+  // Compliance fields
+  {
+    id: 'dataCompleteness',
+    label: 'Data Completeness %',
+    group: 'Compliance',
+    format: 'percentage',
+  },
+  {
+    id: 'peerGroupMultiple',
+    label: 'Peer Comparison',
+    group: 'Compliance',
+    format: 'number',
+  },
+];

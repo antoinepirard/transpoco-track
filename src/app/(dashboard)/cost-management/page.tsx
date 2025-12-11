@@ -13,6 +13,7 @@ import {
   Car,
   Receipt,
   Flag,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +42,7 @@ import { CsvUploadDialog } from '@/components/cost/CsvUploadDialog';
 import { ExpensesList, type Expense } from '@/components/cost/ExpensesList';
 import { EditExpenseDialog } from '@/components/cost/EditExpenseDialog';
 import { FlaggedVehiclesList } from '@/components/cost/FlaggedVehiclesList';
+import { CustomExportAIDialog } from '@/components/cost/CustomExportAIDialog';
 import type { VehicleTco } from '@/types/cost';
 
 type StatusFilter = 'all' | 'critical' | 'warning' | 'ok';
@@ -72,6 +74,9 @@ export default function CostManagementPage() {
 
   // CSV Upload dialog state
   const [isCsvUploadOpen, setIsCsvUploadOpen] = useState(false);
+
+  // Custom Export AI dialog state
+  const [isCustomExportOpen, setIsCustomExportOpen] = useState(false);
 
   // Expenses state
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -385,6 +390,11 @@ ${filteredVehicles
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => setIsCustomExportOpen(true)}>
+                <Sparkles className="h-4 w-4 mr-2 text-violet-500" />
+                Custom Export (AI)
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleExportPdf}>
                 <FileText className="h-4 w-4 mr-2 text-red-500" />
                 Monthly Board Pack
@@ -581,6 +591,14 @@ ${filteredVehicles
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         onSave={handleSaveExpense}
+      />
+
+      {/* Custom Export AI Dialog */}
+      <CustomExportAIDialog
+        open={isCustomExportOpen}
+        onOpenChange={setIsCustomExportOpen}
+        vehicles={data.vehicles}
+        currency={data.currency}
       />
     </div>
   );
