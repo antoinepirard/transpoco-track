@@ -405,8 +405,12 @@ export function VehicleCostTable({
                   className={cn(
                     'cursor-pointer transition-colors hover:bg-slate-50',
                     isSelected && 'bg-blue-50 hover:bg-blue-100',
-                    status === 'critical' && 'bg-red-50/30',
-                    status === 'warning' && 'bg-amber-50/30'
+                    !isSelected &&
+                      status === 'critical' &&
+                      'bg-red-50 hover:bg-red-100',
+                    !isSelected &&
+                      status === 'warning' &&
+                      'bg-amber-50 hover:bg-amber-100'
                   )}
                 >
                   {onSelectionChange && (
