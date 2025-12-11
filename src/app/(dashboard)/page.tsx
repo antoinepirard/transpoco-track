@@ -1,35 +1,35 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { RefreshCw, Download, Database, FileSpreadsheet } from 'lucide-react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  TcoKpiHeader,
-  TcoCostBreakdown,
-  TcoTrendChart,
-  TcoVehicleRanking,
-  TcoOutlierAlert,
-} from '@/components/tco';
-import { ActionItemsStrip } from '@/components/cost/ActionItemsStrip';
-import { DataSourceStatus } from '@/components/cost/DataSourceStatus';
+  TcoOverviewCard,
+  LivemapPreview,
+  FleetHealthCard,
+} from '@/components/dashboard';
 import {
   getTcoDashboardDemoData,
   refreshTcoDashboardDemoData,
 } from '@/lib/demo/tcoMockData';
-import type { TcoDashboardData } from '@/types/cost';
+import { getCostDashboardDemoData } from '@/lib/demo/cost';
+import type { TcoDashboardData, CostDashboardData } from '@/types/cost';
 
-export default function TcoDashboardPage() {
-  const [data, setData] = useState<TcoDashboardData | null>(null);
+export default function ControlCentrePage() {
+  const [tcoData, setTcoData] = useState<TcoDashboardData | null>(null);
+  const [costData, setCostData] = useState<CostDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   // Load initial data
   useEffect(() => {
     const loadData = () => {
-      const dashboardData = getTcoDashboardDemoData();
-      setData(dashboardData);
-      setLastUpdate(new Date(dashboardData.updatedAt));
+      const tco = getTcoDashboardDemoData();
+      const cost = getCostDashboardDemoData();
+      setTcoData(tco);
+      setCostData(cost);
+      setLastUpdate(new Date(tco.updatedAt));
       setIsLoading(false);
     };
 
@@ -39,9 +39,11 @@ export default function TcoDashboardPage() {
   // Auto-refresh every 60 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      const dashboardData = refreshTcoDashboardDemoData();
-      setData(dashboardData);
-      setLastUpdate(new Date(dashboardData.updatedAt));
+      const tco = refreshTcoDashboardDemoData();
+      const cost = getCostDashboardDemoData();
+      setTcoData(tco);
+      setCostData(cost);
+      setLastUpdate(new Date(tco.updatedAt));
     }, 60000);
 
     return () => clearInterval(interval);
@@ -49,81 +51,72 @@ export default function TcoDashboardPage() {
 
   const handleManualRefresh = useCallback(() => {
     setIsLoading(true);
-    // Small delay to show loading state
     setTimeout(() => {
-      const dashboardData = refreshTcoDashboardDemoData();
-      setData(dashboardData);
-      setLastUpdate(new Date(dashboardData.updatedAt));
+      const tco = refreshTcoDashboardDemoData();
+      const cost = getCostDashboardDemoData();
+      setTcoData(tco);
+      setCostData(cost);
+      setLastUpdate(new Date(tco.updatedAt));
       setIsLoading(false);
     }, 300);
   }, []);
 
-  const handleVehicleClick = useCallback((vehicleId: string) => {
-    console.log(`[Demo] View details for vehicle ${vehicleId}`);
-    // In a real app, this would navigate to a vehicle detail page
-  }, []);
+  // Calculate total issues for header badge
+  const totalIssues = useMemo(() => {
+    if (!tcoData || !costData) return 0;
 
-  const handleExport = useCallback(() => {
-    console.log('[Demo] Exporting TCO report...');
-    // In a real app, this would trigger a report download
-  }, []);
+    const utilizationIssues = tcoData.outlierSummary.outliers.filter((o) =>
+      o.reasons.some((r) => r.reason === 'low-utilization')
+    ).length;
+    const trackingIssues = tcoData.vehicles.filter(
+      (v) => v.dataCompleteness < 80
+    ).length;
+    const dataSourceIssues = tcoData.dataSources.sources.filter(
+      (s) => s.status !== 'connected'
+    ).length;
+    const complianceIssues = costData.compliance.items.filter(
+      (c) =>
+        c.status === 'overdue' ||
+        c.status === 'expired' ||
+        c.status === 'due-soon'
+    ).length;
+
+    return (
+      utilizationIssues + trackingIssues + dataSourceIssues + complianceIssues
+    );
+  }, [tcoData, costData]);
 
   return (
     <div className="w-full h-full overflow-y-auto bg-gray-50">
       <div className="container mx-auto p-6 space-y-6 max-w-7xl">
         {/* Header */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-                Fleet TCO Dashboard
+                Control Centre
               </h1>
-              {data && (
+              {tcoData && (
                 <Badge variant="outline" className="text-xs">
-                  {data.fleetSummary.totalVehicles} vehicles
+                  {tcoData.fleetSummary.totalVehicles} vehicles
+                </Badge>
+              )}
+              {totalIssues > 0 && (
+                <Badge variant="destructive" className="text-xs">
+                  {totalIssues} issues
                 </Badge>
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              Total Cost of Ownership – what it really costs to run your fleet
+              Fleet overview at a glance
             </p>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              {lastUpdate && (
-                <span>Updated {lastUpdate.toLocaleTimeString()}</span>
-              )}
-              {data && (
-                <>
-                  <span>·</span>
-                  <span className="flex items-center gap-1">
-                    <Database className="h-3 w-3" />
-                    <span
-                      className={
-                        data.fleetSummary.dataCompleteness >= 90
-                          ? 'text-emerald-600 font-medium'
-                          : data.fleetSummary.dataCompleteness >= 70
-                            ? 'text-amber-600 font-medium'
-                            : 'text-rose-600 font-medium'
-                      }
-                    >
-                      {data.fleetSummary.dataCompleteness}% data verified
-                    </span>
-                    <span className="text-muted-foreground/70">
-                      from {data.fleetSummary.dataSourceCount} sources
-                    </span>
-                  </span>
-                </>
-              )}
-            </div>
+            {lastUpdate && (
+              <p className="text-xs text-muted-foreground">
+                Updated {lastUpdate.toLocaleTimeString()}
+              </p>
+            )}
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-2" />
-              Export Report
-            </Button>
-            <Button variant="outline" size="sm">
-              <FileSpreadsheet className="h-4 w-4 mr-2" />
-              BIK Report
-            </Button>
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -138,77 +131,30 @@ export default function TcoDashboardPage() {
           </div>
         </div>
 
-        {/* Action Items Strip */}
-        {data && (
-          <section aria-labelledby="action-items">
-            <ActionItemsStrip summary={data.actionItems} />
-          </section>
-        )}
-
-        {/* KPI Header Strip - Full Width */}
-        {data && (
-          <TcoKpiHeader
-            summary={data.fleetSummary}
-            currency={data.currency}
-            isLoading={isLoading}
-          />
-        )}
-
-        {/* Cost Breakdown + Trend Charts Row */}
+        {/* Main Grid - TCO Overview + Livemap */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {data && (
-            <>
-              <TcoCostBreakdown
-                breakdown={data.fleetSummary.costBreakdown}
-                totalTco={data.fleetSummary.totalMonthlyTco}
-                currency={data.currency}
-                isLoading={isLoading}
-              />
-              <TcoTrendChart
-                trend={data.fleetSummary.monthlyTrend}
-                currency={data.currency}
-                isLoading={isLoading}
-              />
-            </>
+          {/* TCO Overview Card */}
+          {tcoData && (
+            <TcoOverviewCard
+              summary={tcoData.fleetSummary}
+              currency={tcoData.currency}
+              isLoading={isLoading}
+            />
           )}
+
+          {/* Livemap Preview */}
+          <LivemapPreview />
         </div>
 
-        {/* Outliers & Levers Section */}
-        {data && (
-          <TcoOutlierAlert
-            outlierSummary={data.outlierSummary}
-            currency={data.currency}
+        {/* Fleet Health Section */}
+        {tcoData && costData && (
+          <FleetHealthCard
+            vehicles={tcoData.vehicles}
+            outlierSummary={tcoData.outlierSummary}
+            dataSources={tcoData.dataSources}
+            compliance={costData.compliance}
             isLoading={isLoading}
-            onVehicleClick={handleVehicleClick}
           />
-        )}
-
-        {/* Top 10 Expensive Vehicles */}
-        {data && (
-          <TcoVehicleRanking
-            vehicles={data.vehicles}
-            currency={data.currency}
-            isLoading={isLoading}
-            onVehicleClick={handleVehicleClick}
-          />
-        )}
-
-        {/* Data Sources & Health */}
-        {data && (
-          <section aria-labelledby="data-health" className="space-y-3">
-            <div>
-              <h2
-                id="data-health"
-                className="text-sm font-semibold uppercase tracking-wide text-muted-foreground"
-              >
-                Data Health & Sources
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                Connected data feeds powering your TCO calculations
-              </p>
-            </div>
-            <DataSourceStatus summary={data.dataSources} />
-          </section>
         )}
       </div>
     </div>
