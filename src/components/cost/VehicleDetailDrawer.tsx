@@ -151,13 +151,14 @@ export function VehicleDetailDrawer({
   const isOutlier = hasOutlierData || isHighDeviation;
 
   // Determine effective severity
-  const effectiveSeverity: 'critical' | 'warning' | undefined = hasOutlierData
-    ? outlier?.severity
-    : isHighDeviation
-      ? vehicle.peerGroupMultiple > 1.8
-        ? 'critical'
-        : 'warning'
-      : undefined;
+  const effectiveSeverity: 'critical' | 'warning' | 'monitor' | undefined =
+    hasOutlierData
+      ? outlier?.severity
+      : isHighDeviation
+        ? vehicle.peerGroupMultiple > 1.8
+          ? 'critical'
+          : 'warning'
+        : undefined;
 
   // Calculate excess cost if not provided by outlier data
   const peerAvgTco = vehicle.monthlyTco / vehicle.peerGroupMultiple;
