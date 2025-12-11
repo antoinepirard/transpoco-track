@@ -200,12 +200,21 @@ export interface TcoCostBucketAmount {
   color: string;
 }
 
+// Vehicle group type
+export type VehicleGroup =
+  | 'sales-fleet'
+  | 'delivery-vans'
+  | 'service-vehicles'
+  | 'executive-cars'
+  | 'maintenance-crews';
+
 // Vehicle-level TCO data
 export interface VehicleTco {
   vehicleId: string;
   vehicleLabel: string;
   registrationNumber: string;
   vehicleType: 'truck' | 'van' | 'car' | 'motorcycle';
+  group: VehicleGroup;
   driver?: {
     id: string;
     name: string;

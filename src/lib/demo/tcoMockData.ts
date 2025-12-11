@@ -13,6 +13,7 @@ import type {
   TcoOutlierReason,
   TcoOutlierReasonDetail,
   TcoOutlierSummary,
+  VehicleGroup,
   VehicleTco,
 } from '@/types/cost';
 
@@ -90,6 +91,25 @@ const VEHICLE_TYPES: {
   { type: 'car', share: 0.12, models: ['Passat', 'Octavia', 'Focus', 'Golf'] },
   { type: 'motorcycle', share: 0.03, models: ['MT-07', 'CB500X'] },
 ];
+
+// Vehicle groups with distribution and labels
+const VEHICLE_GROUPS: {
+  id: VehicleGroup;
+  label: string;
+  share: number;
+}[] = [
+  { id: 'delivery-vans', label: 'Delivery Vans', share: 0.35 },
+  { id: 'service-vehicles', label: 'Service Vehicles', share: 0.25 },
+  { id: 'sales-fleet', label: 'Sales Fleet', share: 0.2 },
+  { id: 'maintenance-crews', label: 'Maintenance Crews', share: 0.12 },
+  { id: 'executive-cars', label: 'Executive Cars', share: 0.08 },
+];
+
+// Export vehicle groups for use in filters
+export const VEHICLE_GROUP_OPTIONS = VEHICLE_GROUPS.map((g) => ({
+  id: g.id,
+  label: g.label,
+}));
 
 // Driver names pool
 const DRIVER_NAMES = [
@@ -248,6 +268,18 @@ function generateVehicles(): VehicleTco[] {
       }
     }
 
+    // Determine vehicle group
+    const groupRoll = seededRandom();
+    let groupCumulative = 0;
+    let selectedGroup = VEHICLE_GROUPS[0];
+    for (const vg of VEHICLE_GROUPS) {
+      groupCumulative += vg.share;
+      if (groupRoll <= groupCumulative) {
+        selectedGroup = vg;
+        break;
+      }
+    }
+
     const region =
       REGION_PREFIXES[Math.floor(seededRandom() * REGION_PREFIXES.length)];
     const vehicleNumber = String(100 + i).padStart(3, '0');
@@ -306,6 +338,7 @@ function generateVehicles(): VehicleTco[] {
       vehicleLabel: `${model} · ${vehicleId}`,
       registrationNumber: `${regYear}-${regLetters}-${Math.floor(seededRandom() * 90000 + 10000)}`,
       vehicleType: selectedType.type,
+      group: selectedGroup.id,
       driver:
         seededRandom() < 0.85
           ? {

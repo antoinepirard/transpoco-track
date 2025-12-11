@@ -13,6 +13,8 @@ import {
   Receipt,
   Flag,
   Sparkles,
+  Users,
+  CalendarDays,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,8 +33,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getTcoDashboardDemoData } from '@/lib/demo/tcoMockData';
+import {
+  getTcoDashboardDemoData,
+  VEHICLE_GROUP_OPTIONS,
+} from '@/lib/demo/tcoMockData';
 import { getCostDashboardDemoData } from '@/lib/demo/cost';
 import { VehicleCostTable } from '@/components/cost/VehicleCostTable';
 import { VehicleDetailDrawer } from '@/components/cost/VehicleDetailDrawer';
@@ -41,10 +51,99 @@ import { ExpensesList, type Expense } from '@/components/cost/ExpensesList';
 import { EditExpenseDialog } from '@/components/cost/EditExpenseDialog';
 import { FlaggedVehiclesList } from '@/components/cost/FlaggedVehiclesList';
 import { CustomExportAIDialog } from '@/components/cost/CustomExportAIDialog';
-import type { VehicleTco } from '@/types/cost';
+import type { VehicleGroup, VehicleTco } from '@/types/cost';
 
 type StatusFilter = 'all' | 'critical' | 'warning' | 'ok';
-type VehicleTypeFilter = 'all' | 'van' | 'truck' | 'car';
+type TimePreset =
+  | 'last-7-days'
+  | 'last-30-days'
+  | 'last-90-days'
+  | 'this-month'
+  | 'last-month'
+  | 'custom';
+
+interface DateRange {
+  from: Date;
+  to: Date;
+}
+
+const TIME_PRESETS: { id: TimePreset; label: string }[] = [
+  { id: 'last-7-days', label: 'Last 7 days' },
+  { id: 'last-30-days', label: 'Last 30 days' },
+  { id: 'last-90-days', label: 'Last 90 days' },
+  { id: 'this-month', label: 'This month' },
+  { id: 'last-month', label: 'Last month' },
+  { id: 'custom', label: 'Custom range' },
+];
+
+function getDateRangeForPreset(preset: TimePreset): DateRange {
+  const now = new Date();
+  const to = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    23,
+    59,
+    59
+  );
+
+  switch (preset) {
+    case 'last-7-days': {
+      const from = new Date(to);
+      from.setDate(from.getDate() - 6);
+      from.setHours(0, 0, 0, 0);
+      return { from, to };
+    }
+    case 'last-30-days': {
+      const from = new Date(to);
+      from.setDate(from.getDate() - 29);
+      from.setHours(0, 0, 0, 0);
+      return { from, to };
+    }
+    case 'last-90-days': {
+      const from = new Date(to);
+      from.setDate(from.getDate() - 89);
+      from.setHours(0, 0, 0, 0);
+      return { from, to };
+    }
+    case 'this-month': {
+      const from = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+      return { from, to };
+    }
+    case 'last-month': {
+      const from = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
+      const lastDayLastMonth = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        0,
+        23,
+        59,
+        59
+      );
+      return { from, to: lastDayLastMonth };
+    }
+    default:
+      // For custom, return last 30 days as default
+      const from = new Date(to);
+      from.setDate(from.getDate() - 29);
+      from.setHours(0, 0, 0, 0);
+      return { from, to };
+  }
+}
+
+function formatDateRange(range: DateRange): string {
+  const options: Intl.DateTimeFormatOptions = {
+    day: 'numeric',
+    month: 'short',
+  };
+  const fromStr = range.from.toLocaleDateString('en-IE', options);
+  const toStr = range.to.toLocaleDateString('en-IE', options);
+  return `${fromStr} - ${toStr}`;
+}
+
+function formatDateForInput(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
 
 export interface FlaggedVehicle {
   vehicleId: string;
@@ -60,8 +159,12 @@ export default function CostManagementPage() {
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [vehicleTypeFilter, setVehicleTypeFilter] =
-    useState<VehicleTypeFilter>('all');
+  const [groupFilter, setGroupFilter] = useState<'all' | VehicleGroup>('all');
+  const [timePreset, setTimePreset] = useState<TimePreset>('last-30-days');
+  const [dateRange, setDateRange] = useState<DateRange>(() =>
+    getDateRangeForPreset('last-30-days')
+  );
+  const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
 
   // Selection state
   const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([]);
@@ -123,9 +226,9 @@ export default function CostManagementPage() {
       });
     }
 
-    // Vehicle type filter
-    if (vehicleTypeFilter !== 'all') {
-      result = result.filter((v) => v.vehicleType === vehicleTypeFilter);
+    // Vehicle group filter
+    if (groupFilter !== 'all') {
+      result = result.filter((v) => v.group === groupFilter);
     }
 
     return result;
@@ -134,7 +237,7 @@ export default function CostManagementPage() {
     data.outlierSummary.outliers,
     searchQuery,
     statusFilter,
-    vehicleTypeFilter,
+    groupFilter,
   ]);
 
   // Stats for filter badges
@@ -260,7 +363,7 @@ export default function CostManagementPage() {
 
       return [
         v.vehicleId,
-        v.vehicleLabel.split('·')[0]?.trim(),
+        v.vehicleLabel.split('�')[0]?.trim(),
         v.driver?.name ?? '',
         v.tcoPerKm.toFixed(2),
         fuel.toFixed(0),
@@ -291,15 +394,15 @@ Generated: ${new Date().toLocaleDateString('en-IE')}
 
 SUMMARY
 -------
-Total Monthly Cost: €${data.fleetSummary.totalMonthlyTco.toLocaleString()}
-Cost per Vehicle: €${data.fleetSummary.tcoPerVehicle.toLocaleString()}
-Cost per km: €${data.fleetSummary.tcoPerKm.toFixed(2)}
+Total Monthly Cost: �${data.fleetSummary.totalMonthlyTco.toLocaleString()}
+Cost per Vehicle: �${data.fleetSummary.tcoPerVehicle.toLocaleString()}
+Cost per km: �${data.fleetSummary.tcoPerKm.toFixed(2)}
 Vehicles Tracked: ${data.vehicles.length}
 Data Completeness: ${data.fleetSummary.dataCompleteness}%
 
 COST BREAKDOWN
 --------------
-${data.fleetSummary.costBreakdown.map((b) => `${b.label}: €${b.amount.toLocaleString()} (${b.sharePct}%)`).join('\n')}
+${data.fleetSummary.costBreakdown.map((b) => `${b.label}: �${b.amount.toLocaleString()} (${b.sharePct}%)`).join('\n')}
 
 TOP COST VEHICLES
 -----------------
@@ -307,7 +410,7 @@ ${filteredVehicles
   .slice(0, 10)
   .map(
     (v) =>
-      `${v.vehicleId}: €${v.monthlyTco.toLocaleString()} (€${v.tcoPerKm.toFixed(2)}/km)`
+      `${v.vehicleId}: �${v.monthlyTco.toLocaleString()} (�${v.tcoPerKm.toFixed(2)}/km)`
   )
   .join('\n')}
 `;
@@ -345,14 +448,38 @@ ${filteredVehicles
     URL.revokeObjectURL(url);
   };
 
+  const handleTimePresetChange = (preset: TimePreset) => {
+    setTimePreset(preset);
+    if (preset === 'custom') {
+      setIsCustomDateOpen(true);
+    } else {
+      setDateRange(getDateRangeForPreset(preset));
+    }
+  };
+
+  const handleCustomDateChange = (field: 'from' | 'to', value: string) => {
+    const newDate = new Date(value);
+    if (field === 'from') {
+      newDate.setHours(0, 0, 0, 0);
+    } else {
+      newDate.setHours(23, 59, 59, 999);
+    }
+    setDateRange((prev) => ({ ...prev, [field]: newDate }));
+  };
+
   const clearFilters = () => {
     setSearchQuery('');
     setStatusFilter('all');
-    setVehicleTypeFilter('all');
+    setGroupFilter('all');
+    setTimePreset('last-30-days');
+    setDateRange(getDateRangeForPreset('last-30-days'));
   };
 
   const hasActiveFilters =
-    searchQuery || statusFilter !== 'all' || vehicleTypeFilter !== 'all';
+    searchQuery ||
+    statusFilter !== 'all' ||
+    groupFilter !== 'all' ||
+    timePreset !== 'last-30-days';
 
   return (
     <div className="p-6 space-y-4 h-full flex flex-col">
@@ -483,23 +610,106 @@ ${filteredVehicles
               </SelectContent>
             </Select>
 
-            {/* Vehicle type filter */}
+            {/* Vehicle group filter */}
             <Select
-              value={vehicleTypeFilter}
-              onValueChange={(v) =>
-                setVehicleTypeFilter(v as VehicleTypeFilter)
-              }
+              value={groupFilter}
+              onValueChange={(v) => setGroupFilter(v as 'all' | VehicleGroup)}
             >
-              <SelectTrigger className="w-[140px] h-9">
-                <SelectValue placeholder="Vehicle Type" />
+              <SelectTrigger className="w-[170px] h-9">
+                <Users className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Group" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="van">Vans</SelectItem>
-                <SelectItem value="truck">Trucks</SelectItem>
-                <SelectItem value="car">Cars</SelectItem>
+                <SelectItem value="all">All Groups</SelectItem>
+                {VEHICLE_GROUP_OPTIONS.map((group) => (
+                  <SelectItem key={group.id} value={group.id}>
+                    {group.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+
+            {/* Time range filter */}
+            <Popover open={isCustomDateOpen} onOpenChange={setIsCustomDateOpen}>
+              <div className="flex items-center">
+                <Select
+                  value={timePreset}
+                  onValueChange={(v) => handleTimePresetChange(v as TimePreset)}
+                >
+                  <SelectTrigger className="w-[160px] h-9 rounded-r-none border-r-0">
+                    <CalendarDays className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Time range" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_PRESETS.map((preset) => (
+                      <SelectItem key={preset.id} value={preset.id}>
+                        {preset.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 rounded-l-none px-2 text-xs text-muted-foreground font-normal min-w-[120px]"
+                  >
+                    {formatDateRange(dateRange)}
+                  </Button>
+                </PopoverTrigger>
+              </div>
+              <PopoverContent className="w-auto p-4" align="end">
+                <div className="space-y-4">
+                  <div className="text-sm font-medium">Custom date range</div>
+                  <div className="grid gap-3">
+                    <div className="grid gap-1.5">
+                      <label
+                        htmlFor="date-from"
+                        className="text-xs text-muted-foreground"
+                      >
+                        From
+                      </label>
+                      <Input
+                        id="date-from"
+                        type="date"
+                        className="h-9"
+                        value={formatDateForInput(dateRange.from)}
+                        onChange={(e) =>
+                          handleCustomDateChange('from', e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <label
+                        htmlFor="date-to"
+                        className="text-xs text-muted-foreground"
+                      >
+                        To
+                      </label>
+                      <Input
+                        id="date-to"
+                        type="date"
+                        className="h-9"
+                        value={formatDateForInput(dateRange.to)}
+                        onChange={(e) =>
+                          handleCustomDateChange('to', e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      setTimePreset('custom');
+                      setIsCustomDateOpen(false);
+                    }}
+                  >
+                    Apply
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
 
             {/* Clear filters */}
             {hasActiveFilters && (
