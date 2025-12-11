@@ -362,7 +362,8 @@ function buildBreakdown(total: number): CostBreakdownItem[] {
 }
 
 function buildTrend(total: number): CostTrendPoint[] {
-  const now = new Date();
+  // Use fixed base date to avoid hydration mismatch
+  const now = new Date('2025-01-01T00:00:00Z');
   return Array.from({ length: 6 }).map((_, idx) => {
     const date = new Date(now);
     date.setMonth(date.getMonth() - (5 - idx));
@@ -428,9 +429,8 @@ function buildReportsSummary(): ReportsSummary {
 }
 
 function buildCostDashboardData(): CostDashboardData {
-  const totalCost =
-    BASE_TOTAL_COST *
-    (1 + Math.sin(Date.now() / (1000 * 60 * 60 * 24)) * 0.015);
+  // Use fixed multiplier to avoid hydration mismatch (no Date.now())
+  const totalCost = BASE_TOTAL_COST * 1.005;
   const breakdown = buildBreakdown(totalCost);
   const trend = buildTrend(totalCost);
   const savings = buildSavingsSummary();
@@ -440,12 +440,12 @@ function buildCostDashboardData(): CostDashboardData {
   const reports = buildReportsSummary();
   const actionItems = buildActionItems();
 
-  const end = new Date();
-  const start = new Date(end);
-  start.setMonth(start.getMonth() - 1);
+  // Use fixed dates to avoid hydration mismatch
+  const end = new Date('2025-01-01T00:00:00Z');
+  const start = new Date('2024-12-01T00:00:00Z');
 
   return {
-    updatedAt: new Date().toISOString(),
+    updatedAt: '2025-01-01T00:00:00.000Z',
     currency: 'EUR',
     dateRange: {
       label: 'Last 30 days',
@@ -482,7 +482,7 @@ export function getCostDashboardDemoData(): CostDashboardData {
 }
 
 export function refreshCostDashboardDemoData(): CostDashboardData {
-  cachedData = buildCostDashboardData();
-  cachedAt = Date.now();
-  return cachedData;
+  cachedData = null;
+  cachedAt = 0;
+  return getCostDashboardDemoData();
 }

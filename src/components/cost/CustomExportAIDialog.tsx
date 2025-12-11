@@ -674,7 +674,9 @@ export function CustomExportAIDialog({
                   />
                 </label>
               </p>
-              <p className="text-xs text-muted-foreground">Supports CSV files</p>
+              <p className="text-xs text-muted-foreground">
+                Supports CSV files
+              </p>
             </>
           )}
         </div>
