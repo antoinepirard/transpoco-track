@@ -135,6 +135,8 @@ export function InvoiceDropZone({
   const [state, setState] = useState<ProcessingState>('idle');
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string>('');
+  const [fileType, setFileType] = useState<string>('');
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(
     null
   );
@@ -152,7 +154,12 @@ export function InvoiceDropZone({
 
   const processFile = async (file: File) => {
     setFileName(file.name);
+    setFileType(file.type);
     setState('uploading');
+
+    // Create preview URL for the file
+    const previewUrl = URL.createObjectURL(file);
+    setFilePreviewUrl(previewUrl);
 
     // Simulate upload
     await new Promise((resolve) => setTimeout(resolve, 500));
@@ -198,6 +205,11 @@ export function InvoiceDropZone({
         setState('idle');
         setExtractedData(null);
         setFileName('');
+        setFileType('');
+        if (filePreviewUrl) {
+          URL.revokeObjectURL(filePreviewUrl);
+          setFilePreviewUrl(null);
+        }
       }, 2000);
     }
   };
@@ -206,6 +218,11 @@ export function InvoiceDropZone({
     setState('idle');
     setExtractedData(null);
     setFileName('');
+    setFileType('');
+    if (filePreviewUrl) {
+      URL.revokeObjectURL(filePreviewUrl);
+      setFilePreviewUrl(null);
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -269,18 +286,21 @@ export function InvoiceDropZone({
     );
   }
 
-  // Preview extracted data
+  // Preview extracted data with document preview
   if (state === 'preview' && extractedData) {
+    const isPdf = fileType === 'application/pdf';
+    const isImage = fileType.startsWith('image/');
+
     return (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl max-w-md w-full mx-4 shadow-2xl overflow-hidden">
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl max-w-5xl w-full shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
           {/* Header */}
-          <div className="p-4 bg-emerald-50 border-b flex items-center gap-3">
+          <div className="p-4 bg-emerald-50 border-b flex items-center gap-3 flex-shrink-0">
             <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
               <Sparkles className="h-5 w-5 text-emerald-600" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold">AI Extracted Data</h3>
+              <h3 className="font-semibold">Review Extracted Data</h3>
               <p className="text-xs text-muted-foreground">
                 {Math.round(extractedData.confidence * 100)}% confidence ·{' '}
                 {fileName}
@@ -291,108 +311,152 @@ export function InvoiceDropZone({
             </Button>
           </div>
 
-          {/* Editable Fields */}
-          <div className="p-4 space-y-4">
-            {/* Vehicle */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Vehicle</Label>
-              <Select
-                value={extractedData.vehicle}
-                onValueChange={(v) => updateExtractedField('vehicle', v)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DEMO_VEHICLES.map((v) => (
-                    <SelectItem key={v.id} value={v.id}>
-                      {v.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Category */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Category</Label>
-              <Select
-                value={extractedData.category}
-                onValueChange={(v) => updateExtractedField('category', v)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {COST_CATEGORIES.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>
-                      {c.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Amount and Date row */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Amount (€)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                    €
-                  </span>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={extractedData.amount}
-                    onChange={(e) =>
-                      updateExtractedField('amount', e.target.value)
-                    }
-                    className="pl-7"
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Date</Label>
-                <Input
-                  type="date"
-                  value={extractedData.date}
-                  onChange={(e) => updateExtractedField('date', e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Supplier */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Supplier</Label>
-              <Input
-                value={extractedData.supplier}
-                onChange={(e) =>
-                  updateExtractedField('supplier', e.target.value)
-                }
-              />
-            </div>
-
-            {/* Low confidence warning */}
-            {extractedData.confidence < 0.9 && (
-              <div className="flex items-start gap-2 p-2 rounded-lg bg-amber-50 text-amber-700 text-xs">
-                <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                <span>
-                  Some fields may need review. Please verify before confirming.
+          {/* Content: Document Preview + Form */}
+          <div className="flex-1 flex overflow-hidden min-h-0">
+            {/* Left: Document Preview */}
+            <div className="w-1/2 bg-slate-100 border-r flex flex-col">
+              <div className="p-2 bg-slate-200 border-b flex items-center gap-2">
+                <FileText className="h-4 w-4 text-slate-600" />
+                <span className="text-sm font-medium text-slate-700 truncate">
+                  {fileName}
                 </span>
               </div>
-            )}
-          </div>
+              <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
+                {filePreviewUrl && isPdf && (
+                  <iframe
+                    src={filePreviewUrl}
+                    className="w-full h-full min-h-[400px] rounded border bg-white"
+                    title="Invoice Preview"
+                  />
+                )}
+                {filePreviewUrl && isImage && (
+                  <img
+                    src={filePreviewUrl}
+                    alt="Invoice Preview"
+                    className="max-w-full max-h-full object-contain rounded shadow-sm"
+                  />
+                )}
+                {!filePreviewUrl && (
+                  <div className="text-center text-muted-foreground">
+                    <FileText className="h-16 w-16 mx-auto mb-2 opacity-30" />
+                    <p>Preview not available</p>
+                  </div>
+                )}
+              </div>
+            </div>
 
-          {/* Footer */}
-          <div className="p-4 bg-slate-50 border-t flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button className="flex-1" onClick={handleConfirm}>
-              <Check className="h-4 w-4 mr-1.5" />
-              Confirm & Add
-            </Button>
+            {/* Right: Editable Fields */}
+            <div className="w-1/2 flex flex-col">
+              <div className="flex-1 overflow-auto p-6 space-y-4">
+                {/* Vehicle */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Vehicle</Label>
+                  <Select
+                    value={extractedData.vehicle}
+                    onValueChange={(v) => updateExtractedField('vehicle', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DEMO_VEHICLES.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          {v.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Category */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Category</Label>
+                  <Select
+                    value={extractedData.category}
+                    onValueChange={(v) => updateExtractedField('category', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COST_CATEGORIES.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Amount and Date row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">Amount (€)</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                        €
+                      </span>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={extractedData.amount}
+                        onChange={(e) =>
+                          updateExtractedField('amount', e.target.value)
+                        }
+                        className="pl-7"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">Date</Label>
+                    <Input
+                      type="date"
+                      value={extractedData.date}
+                      onChange={(e) =>
+                        updateExtractedField('date', e.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Supplier */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Supplier</Label>
+                  <Input
+                    value={extractedData.supplier}
+                    onChange={(e) =>
+                      updateExtractedField('supplier', e.target.value)
+                    }
+                  />
+                </div>
+
+                {/* Low confidence warning */}
+                {extractedData.confidence < 0.9 && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 text-amber-700 text-sm">
+                    <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Some fields may need review. Please verify before
+                      confirming.
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 bg-slate-50 border-t flex gap-2 flex-shrink-0">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleCancel}
+                >
+                  Cancel
+                </Button>
+                <Button className="flex-1" onClick={handleConfirm}>
+                  <Check className="h-4 w-4 mr-1.5" />
+                  Confirm & Add
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

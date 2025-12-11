@@ -1,7 +1,16 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, Filter, Download, FileSpreadsheet, X } from 'lucide-react';
+import {
+  Search,
+  Filter,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  X,
+  Upload,
+  ShieldCheck,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -16,12 +25,15 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { getTcoDashboardDemoData } from '@/lib/demo/tcoMockData';
+import { getCostDashboardDemoData } from '@/lib/demo/cost';
 import { VehicleCostTable } from '@/components/cost/VehicleCostTable';
 import { VehicleDetailDrawer } from '@/components/cost/VehicleDetailDrawer';
 import { InvoiceDropZone } from '@/components/cost/InvoiceDropZone';
+import { CsvUploadDialog } from '@/components/cost/CsvUploadDialog';
 import type { VehicleTco } from '@/types/cost';
 
 type StatusFilter = 'all' | 'critical' | 'warning' | 'ok';
@@ -29,6 +41,7 @@ type VehicleTypeFilter = 'all' | 'van' | 'truck' | 'car';
 
 export default function CostManagementPage() {
   const data = useMemo(() => getTcoDashboardDemoData(), []);
+  const costData = useMemo(() => getCostDashboardDemoData(), []);
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,6 +55,9 @@ export default function CostManagementPage() {
   // Drawer state
   const [drawerVehicle, setDrawerVehicle] = useState<VehicleTco | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // CSV Upload dialog state
+  const [isCsvUploadOpen, setIsCsvUploadOpen] = useState(false);
 
   // Get outlier for selected vehicle
   const drawerOutlier = useMemo(() => {
@@ -193,6 +209,67 @@ export default function CostManagementPage() {
     URL.revokeObjectURL(url);
   };
 
+  const handleExportPdf = () => {
+    // Generate PDF board pack content
+    const content = `TRANSPOCO FLEET COST REPORT
+Generated: ${new Date().toLocaleDateString('en-IE')}
+
+SUMMARY
+-------
+Total Monthly Cost: €${data.fleetSummary.totalMonthlyTco.toLocaleString()}
+Cost per Vehicle: €${data.fleetSummary.tcoPerVehicle.toLocaleString()}
+Cost per km: €${data.fleetSummary.tcoPerKm.toFixed(2)}
+Vehicles Tracked: ${data.vehicles.length}
+Data Completeness: ${data.fleetSummary.dataCompleteness}%
+
+COST BREAKDOWN
+--------------
+${data.fleetSummary.costBreakdown.map((b) => `${b.label}: €${b.amount.toLocaleString()} (${b.sharePct}%)`).join('\n')}
+
+TOP COST VEHICLES
+-----------------
+${filteredVehicles
+  .slice(0, 10)
+  .map(
+    (v) =>
+      `${v.vehicleId}: €${v.monthlyTco.toLocaleString()} (€${v.tcoPerKm.toFixed(2)}/km)`
+  )
+  .join('\n')}
+`;
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fleet-cost-report-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCompliance = () => {
+    const headers = ['Vehicle', 'Type', 'Due Date', 'Status', 'Days Until Due'];
+    const rows = costData.compliance.items.map((item) => [
+      item.vehicleLabel,
+      item.type.toUpperCase(),
+      item.dueDate,
+      item.status,
+      item.daysUntilDue.toString(),
+    ]);
+
+    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `compliance-report-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const clearFilters = () => {
     setSearchQuery('');
     setStatusFilter('all');
@@ -217,6 +294,14 @@ export default function CostManagementPage() {
 
         <div className="flex items-center gap-2">
           <InvoiceDropZone compact onExpenseAdded={handleExpenseAdded} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsCsvUploadOpen(true)}
+          >
+            <Upload className="h-4 w-4 mr-1.5" />
+            Upload CSV
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -224,10 +309,19 @@ export default function CostManagementPage() {
                 Export
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={handleExportPdf}>
+                <FileText className="h-4 w-4 mr-2 text-red-500" />
+                Monthly Board Pack
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleExportCsv}>
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Export as CSV
+                <FileSpreadsheet className="h-4 w-4 mr-2 text-emerald-600" />
+                Cost Breakdown (CSV)
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleExportCompliance}>
+                <ShieldCheck className="h-4 w-4 mr-2 text-blue-500" />
+                Compliance Status
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -339,6 +433,12 @@ export default function CostManagementPage() {
         onClose={handleCloseDrawer}
         onFlagForReview={handleFlagForReview}
         onAddExpense={handleAddExpenseFromDrawer}
+      />
+
+      {/* CSV Upload Dialog */}
+      <CsvUploadDialog
+        open={isCsvUploadOpen}
+        onOpenChange={setIsCsvUploadOpen}
       />
     </div>
   );

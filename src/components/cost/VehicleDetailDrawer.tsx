@@ -126,7 +126,7 @@ export function VehicleDetailDrawer({
       {/* Drawer */}
       <div
         className={cn(
-          'fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 transform transition-transform duration-300 ease-out overflow-hidden flex flex-col',
+          'fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-xl z-50 transform transition-transform duration-300 ease-out overflow-hidden flex flex-col',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
