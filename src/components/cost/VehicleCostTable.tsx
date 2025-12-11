@@ -46,7 +46,11 @@ function getCostBucket(vehicle: VehicleTco, bucket: string): number {
 function getVehicleStatus(
   vehicle: VehicleTco,
   outliers: TcoOutlier[]
-): { status: 'ok' | 'warning' | 'critical'; label: string; deviation?: number } {
+): {
+  status: 'ok' | 'warning' | 'critical';
+  label: string;
+  deviation?: number;
+} {
   const outlier = outliers.find(
     (o) => o.vehicle.vehicleId === vehicle.vehicleId
   );
@@ -55,13 +59,25 @@ function getVehicleStatus(
   const deviationPct = Math.round((vehicle.peerGroupMultiple - 1) * 100);
 
   if (outlier?.severity === 'critical') {
-    return { status: 'critical', label: `+${deviationPct}%`, deviation: deviationPct };
+    return {
+      status: 'critical',
+      label: `+${deviationPct}%`,
+      deviation: deviationPct,
+    };
   }
   if (outlier?.severity === 'warning') {
-    return { status: 'warning', label: `+${deviationPct}%`, deviation: deviationPct };
+    return {
+      status: 'warning',
+      label: `+${deviationPct}%`,
+      deviation: deviationPct,
+    };
   }
   if (vehicle.peerGroupMultiple > 1.3) {
-    return { status: 'warning', label: `+${deviationPct}%`, deviation: deviationPct };
+    return {
+      status: 'warning',
+      label: `+${deviationPct}%`,
+      deviation: deviationPct,
+    };
   }
   if (vehicle.peerGroupMultiple < 0.85) {
     // Below average - good performance
@@ -103,9 +119,11 @@ function StatusBadge({
   // Generate a descriptive tooltip
   const getTooltip = () => {
     if (deviation === undefined) return '';
-    if (status === 'critical') return `${deviation}% above peer group average - needs attention`;
+    if (status === 'critical')
+      return `${deviation}% above peer group average - needs attention`;
     if (status === 'warning') return `${deviation}% above peer group average`;
-    if (deviation < 0) return `${Math.abs(deviation)}% below average - good performance`;
+    if (deviation < 0)
+      return `${Math.abs(deviation)}% below average - good performance`;
     return 'Within normal range';
   };
 
@@ -363,7 +381,10 @@ export function VehicleCostTable({
           </thead>
           <tbody className="divide-y">
             {sortedVehicles.map((vehicle) => {
-              const { status, label, deviation } = getVehicleStatus(vehicle, outliers);
+              const { status, label, deviation } = getVehicleStatus(
+                vehicle,
+                outliers
+              );
               const isSelected = selectedIds.includes(vehicle.vehicleId);
 
               return (
@@ -437,7 +458,11 @@ export function VehicleCostTable({
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <StatusBadge status={status} label={label} deviation={deviation} />
+                    <StatusBadge
+                      status={status}
+                      label={label}
+                      deviation={deviation}
+                    />
                   </td>
                 </tr>
               );
