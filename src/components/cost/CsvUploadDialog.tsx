@@ -477,7 +477,14 @@ export function CsvUploadDialog({ open, onOpenChange }: CsvUploadDialogProps) {
   );
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          handleClose();
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-[500px]">
         {step === 'upload' && renderUploadStep()}
         {step === 'mapping' && renderMappingStep()}

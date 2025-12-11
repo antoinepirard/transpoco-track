@@ -101,12 +101,16 @@ export function VehicleDetailDrawer({
   onFlagForReview,
   onAddExpense,
 }: VehicleDetailDrawerProps) {
-  const trendData = useMemo(
-    () => (vehicle ? generateTrendData(vehicle.monthlyTco) : []),
-    [vehicle]
-  );
-
-  const maxTrendValue = Math.max(...trendData.map((d) => d.value));
+  const { trendData, maxTrendValue } = useMemo(() => {
+    if (!vehicle) {
+      return { trendData: [], maxTrendValue: 0 };
+    }
+    const data = generateTrendData(vehicle.monthlyTco);
+    return {
+      trendData: data,
+      maxTrendValue: Math.max(...data.map((d) => d.value)),
+    };
+  }, [vehicle]);
 
   if (!vehicle) return null;
 

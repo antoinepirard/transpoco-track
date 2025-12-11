@@ -477,6 +477,7 @@ const sidebarNavigationData: NavigationSection[] = [
         id: 'cost-management',
         label: 'Cost Management',
         icon: CurrencyDollarIcon,
+        href: '/cost-management',
       },
     ],
   },
@@ -561,18 +562,18 @@ export function NavigationSidebarWithSelectedSubmenus({
 
   // Demo locked items (premium features) - memoized to prevent re-renders
   const lockedItemIds = useMemo(
-    () => (mounted && showLockedItems ? ['cost-management'] : []),
+    () => (mounted && showLockedItems ? ['cameras'] : []),
     [mounted, showLockedItems]
   );
 
   // Tooltip content for locked items - memoized to prevent re-renders
   const tooltipContent = useMemo(
     () => ({
-      'cost-management': {
-        title: 'Cost Management',
+      cameras: {
+        title: 'Cameras',
         description:
-          'Complete Total Cost of Ownership (TCO) analysis and financial optimization tools. Track all fleet expenses, identify cost-saving opportunities, and optimize your fleet budget with detailed analytics.',
-        image: '/vehicle-maintenance.webp',
+          'Video telematics with AI-powered incident detection, driver coaching, and evidence capture. Protect your fleet with intelligent dashcam technology.',
+        image: '/pointing at laptop screen with data on show.webp',
       },
       'fuel-electric': {
         title: 'Fuel/Electric Vehicles',
