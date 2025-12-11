@@ -1,10 +1,8 @@
 'use client';
 
 import { memo, useMemo } from 'react';
-import Link from 'next/link';
 import {
   AlertTriangle,
-  Gauge,
   Radio,
   Database,
   ShieldCheck,
@@ -24,7 +22,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import type {
-  TcoOutlierSummary,
   VehicleTco,
   CostDataSourceSummary,
   ComplianceSummary,
@@ -32,7 +29,6 @@ import type {
 
 interface FleetHealthCardProps {
   vehicles: VehicleTco[];
-  outlierSummary: TcoOutlierSummary;
   dataSources: CostDataSourceSummary;
   compliance: ComplianceSummary;
   isLoading?: boolean;
@@ -133,18 +129,10 @@ function LoadingSkeleton() {
 
 export const FleetHealthCard = memo(function FleetHealthCard({
   vehicles,
-  outlierSummary,
   dataSources,
   compliance,
   isLoading,
 }: FleetHealthCardProps) {
-  // Calculate utilization issues (vehicles with low utilization from outliers)
-  const utilizationIssues = useMemo(() => {
-    return outlierSummary.outliers.filter((o) =>
-      o.reasons.some((r) => r.reason === 'low-utilization')
-    );
-  }, [outlierSummary.outliers]);
-
   // Calculate tracking issues (vehicles with low data completeness)
   const trackingIssues = useMemo(() => {
     return vehicles.filter((v) => v.dataCompleteness < 80);
@@ -167,10 +155,7 @@ export const FleetHealthCard = memo(function FleetHealthCard({
 
   // Total issues count
   const totalIssues =
-    utilizationIssues.length +
-    trackingIssues.length +
-    dataSourceIssues.length +
-    complianceIssues.length;
+    trackingIssues.length + dataSourceIssues.length + complianceIssues.length;
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -190,22 +175,14 @@ export const FleetHealthCard = memo(function FleetHealthCard({
               )}
             </CardTitle>
             <CardDescription>
-              Utilization, tracking, and compliance status
+              Tracking, data sources, and compliance status
             </CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent className="flex-1">
-        <Tabs defaultValue="utilization" className="h-full flex flex-col">
+        <Tabs defaultValue="tracking" className="h-full flex flex-col">
           <TabsList className="w-full justify-start">
-            <TabsTrigger value="utilization" className="text-xs">
-              <Gauge className="h-3.5 w-3.5" />
-              Utilization
-              <TabBadge
-                count={utilizationIssues.length}
-                variant={utilizationIssues.length > 2 ? 'critical' : 'warning'}
-              />
-            </TabsTrigger>
             <TabsTrigger value="tracking" className="text-xs">
               <Radio className="h-3.5 w-3.5" />
               Tracking
@@ -235,41 +212,6 @@ export const FleetHealthCard = memo(function FleetHealthCard({
               />
             </TabsTrigger>
           </TabsList>
-
-          {/* Utilization Tab */}
-          <TabsContent
-            value="utilization"
-            className="flex-1 overflow-auto mt-3"
-          >
-            {utilizationIssues.length === 0 ? (
-              <EmptyState message="All vehicles are well utilized" />
-            ) : (
-              <div className="space-y-1">
-                {utilizationIssues.slice(0, 5).map((outlier) => (
-                  <HealthItem
-                    key={outlier.vehicle.vehicleId}
-                    icon={<Gauge className="h-4 w-4" />}
-                    title={outlier.vehicle.vehicleLabel}
-                    subtitle={`${outlier.vehicle.utilization}% utilization · ${outlier.vehicle.totalKm.toLocaleString()} km`}
-                    status={
-                      outlier.vehicle.utilization < 40 ? 'critical' : 'warning'
-                    }
-                    action={
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    }
-                  />
-                ))}
-                {utilizationIssues.length > 5 && (
-                  <Link
-                    href="/cost-management"
-                    className="block text-xs text-primary hover:underline text-center pt-2"
-                  >
-                    +{utilizationIssues.length - 5} more under-utilized vehicles
-                  </Link>
-                )}
-              </div>
-            )}
-          </TabsContent>
 
           {/* Tracking Tab */}
           <TabsContent value="tracking" className="flex-1 overflow-auto mt-3">

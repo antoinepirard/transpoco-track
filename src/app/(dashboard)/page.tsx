@@ -66,9 +66,6 @@ export default function ControlCentrePage() {
   const totalIssues = useMemo(() => {
     if (!tcoData || !costData) return 0;
 
-    const utilizationIssues = tcoData.outlierSummary.outliers.filter((o) =>
-      o.reasons.some((r) => r.reason === 'low-utilization')
-    ).length;
     const trackingIssues = tcoData.vehicles.filter(
       (v) => v.dataCompleteness < 80
     ).length;
@@ -82,9 +79,7 @@ export default function ControlCentrePage() {
         c.status === 'due-soon'
     ).length;
 
-    return (
-      utilizationIssues + trackingIssues + dataSourceIssues + complianceIssues
-    );
+    return trackingIssues + dataSourceIssues + complianceIssues;
   }, [tcoData, costData]);
 
   return (
