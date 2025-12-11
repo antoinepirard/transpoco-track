@@ -659,11 +659,22 @@ export function VehicleDetailDrawer({
           <div>
             <h3 className="text-sm font-medium mb-2">Cost Breakdown</h3>
             <div className="space-y-1">
-              {vehicle.costBreakdown
-                .filter((b) => b.amount > 0)
-                .sort((a, b) => b.amount - a.amount)
-                .slice(0, 6)
-                .map((bucket) => {
+              {(() => {
+                const sortedBuckets = vehicle.costBreakdown
+                  .filter((b) => b.amount > 0)
+                  .sort((a, b) => b.amount - a.amount)
+                  .slice(0, 6);
+
+                // Use peer group multiple to estimate peer average per bucket
+                // If vehicle is 2.3x peer avg, then peer avg for each bucket ≈ bucket.amount / 2.3
+                const peerMultiple = vehicle.peerGroupMultiple || 1;
+                const maxVehicleAmount = Math.max(
+                  ...sortedBuckets.map((b) => b.amount)
+                );
+                // For scaling, use vehicle's max amount as 100%
+                const maxAmount = maxVehicleAmount;
+
+                return sortedBuckets.map((bucket) => {
                   // Check if this bucket is flagged as a problem area
                   const isFlagged =
                     isOutlier &&
@@ -676,6 +687,19 @@ export function VehicleDetailDrawer({
                           (r.reason === 'high-maintenance' ||
                             r.reason === 'high-repairs'))
                     );
+
+                  // Calculate peer average for this bucket based on peer group multiple
+                  // If vehicle is above peer avg (peerMultiple > 1), peer avg is lower than vehicle amount
+                  const peerAvgAmount =
+                    peerMultiple > 0
+                      ? Math.round(bucket.amount / peerMultiple)
+                      : bucket.amount;
+
+                  // Scale bar to max, marker shows where peer average falls
+                  const barWidthPct =
+                    maxAmount > 0 ? (bucket.amount / maxAmount) * 100 : 0;
+                  const avgMarkerPct =
+                    maxAmount > 0 ? (peerAvgAmount / maxAmount) * 100 : null;
 
                   return (
                     <div
@@ -710,11 +734,12 @@ export function VehicleDetailDrawer({
                           />
                         )}
                       </div>
-                      <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="flex-1 h-2 bg-slate-100 rounded-full relative">
+                        {/* Vehicle's cost bar */}
                         <div
                           className="h-full rounded-full"
                           style={{
-                            width: `${bucket.sharePct}%`,
+                            width: `${barWidthPct}%`,
                             backgroundColor: isFlagged
                               ? effectiveSeverity === 'critical'
                                 ? '#dc2626'
@@ -722,6 +747,14 @@ export function VehicleDetailDrawer({
                               : bucket.color,
                           }}
                         />
+                        {/* Peer average marker - on same scale as bar */}
+                        {avgMarkerPct !== null && (
+                          <div
+                            className="absolute top-1/2 -translate-y-1/2 h-4 border-l border-dashed border-slate-700"
+                            style={{ left: `${avgMarkerPct}%` }}
+                            title={`Peer avg: €${peerAvgAmount.toLocaleString()}`}
+                          />
+                        )}
                       </div>
                       <div
                         className={cn(
@@ -736,7 +769,13 @@ export function VehicleDetailDrawer({
                       </div>
                     </div>
                   );
-                })}
+                });
+              })()}
+            </div>
+            {/* Legend for peer average marker */}
+            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <div className="h-3 border-l border-dashed border-slate-700" />
+              <span>Peer group average</span>
             </div>
             <div className="mt-3 pt-3 border-t flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
