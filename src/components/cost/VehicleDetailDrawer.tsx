@@ -1,22 +1,25 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   X,
   Car,
   Truck,
   Bike,
   User,
-  Calendar,
   TrendingUp,
   TrendingDown,
   Flag,
   Plus,
   AlertTriangle,
+  AlertOctagon,
   CheckCircle2,
   Route,
   Clock,
   Gauge,
+  ChevronDown,
+  History,
+  Lightbulb,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -49,6 +52,28 @@ function VehicleIcon({
       return <Car className={className} />;
   }
 }
+
+// Mock driver history for shared vehicles
+const MOCK_DRIVER_HISTORY = [
+  {
+    id: 'drv-2',
+    name: 'Sarah Murphy',
+    from: '2024-06-15',
+    to: '2024-10-31',
+  },
+  {
+    id: 'drv-3',
+    name: 'Michael Byrne',
+    from: '2024-01-10',
+    to: '2024-06-14',
+  },
+  {
+    id: 'drv-4',
+    name: "Ciara O'Neill",
+    from: '2023-08-01',
+    to: '2024-01-09',
+  },
+];
 
 // Mock recent expenses for demo
 const MOCK_RECENT_EXPENSES = [
@@ -101,6 +126,8 @@ export function VehicleDetailDrawer({
   onFlagForReview,
   onAddExpense,
 }: VehicleDetailDrawerProps) {
+  const [showDriverHistory, setShowDriverHistory] = useState(false);
+
   const { trendData, maxTrendValue } = useMemo(() => {
     if (!vehicle) {
       return { trendData: [], maxTrendValue: 0 };
@@ -114,7 +141,27 @@ export function VehicleDetailDrawer({
 
   if (!vehicle) return null;
 
-  const isOutlier = outlier?.isOutlier;
+  // Determine outlier status using same logic as the table:
+  // 1. If in outliers array with severity
+  // 2. OR if peerGroupMultiple > 1.3 (high deviation from peer average)
+  const hasOutlierData = outlier?.isOutlier;
+  const isHighDeviation = vehicle.peerGroupMultiple > 1.3;
+  const isOutlier = hasOutlierData || isHighDeviation;
+
+  // Determine effective severity
+  const effectiveSeverity: 'critical' | 'warning' | undefined = hasOutlierData
+    ? outlier?.severity
+    : isHighDeviation
+      ? vehicle.peerGroupMultiple > 1.8
+        ? 'critical'
+        : 'warning'
+      : undefined;
+
+  // Calculate excess cost if not provided by outlier data
+  const peerAvgTco = vehicle.monthlyTco / vehicle.peerGroupMultiple;
+  const calculatedExcessCost = Math.round(vehicle.monthlyTco - peerAvgTco);
+  const calculatedExcessPct = Math.round((vehicle.peerGroupMultiple - 1) * 100);
+
   const trendPositive = vehicle.tcoTrend <= 0;
 
   return (
@@ -135,19 +182,36 @@ export function VehicleDetailDrawer({
         )}
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-4 border-b bg-slate-50">
+        <div
+          className={cn(
+            'flex items-start justify-between p-4 border-b',
+            isOutlier
+              ? effectiveSeverity === 'critical'
+                ? 'bg-red-50 border-red-200'
+                : 'bg-amber-50 border-amber-200'
+              : 'bg-slate-50'
+          )}
+        >
           <div className="flex items-start gap-3">
             <div
               className={cn(
                 'p-2 rounded-lg',
-                isOutlier ? 'bg-amber-100' : 'bg-slate-200'
+                isOutlier
+                  ? effectiveSeverity === 'critical'
+                    ? 'bg-red-100'
+                    : 'bg-amber-100'
+                  : 'bg-slate-200'
               )}
             >
               <VehicleIcon
                 type={vehicle.vehicleType}
                 className={cn(
                   'h-6 w-6',
-                  isOutlier ? 'text-amber-700' : 'text-slate-600'
+                  isOutlier
+                    ? effectiveSeverity === 'critical'
+                      ? 'text-red-700'
+                      : 'text-amber-700'
+                    : 'text-slate-600'
                 )}
               />
             </div>
@@ -168,45 +232,301 @@ export function VehicleDetailDrawer({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          {/* Driver & Status */}
-          <div className="flex items-center justify-between">
-            {vehicle.driver ? (
-              <div className="flex items-center gap-2 text-sm">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span>{vehicle.driver.name}</span>
+          {/* OUTLIER ALERT BANNER - Only shown for flagged vehicles */}
+          {isOutlier && (
+            <div
+              className={cn(
+                'p-4 rounded-xl border-2',
+                effectiveSeverity === 'critical'
+                  ? 'bg-red-50 border-red-300'
+                  : 'bg-amber-50 border-amber-300'
+              )}
+            >
+              {/* Alert Header */}
+              <div className="flex items-start gap-3 mb-3">
+                <div
+                  className={cn(
+                    'p-2 rounded-full',
+                    effectiveSeverity === 'critical'
+                      ? 'bg-red-100'
+                      : 'bg-amber-100'
+                  )}
+                >
+                  {effectiveSeverity === 'critical' ? (
+                    <AlertOctagon className="h-5 w-5 text-red-600" />
+                  ) : (
+                    <AlertTriangle className="h-5 w-5 text-amber-600" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3
+                    className={cn(
+                      'font-semibold',
+                      effectiveSeverity === 'critical'
+                        ? 'text-red-800'
+                        : 'text-amber-800'
+                    )}
+                  >
+                    {effectiveSeverity === 'critical'
+                      ? 'Critical: Immediate Action Required'
+                      : 'Above Average TCO'}
+                  </h3>
+                  <p
+                    className={cn(
+                      'text-sm mt-0.5',
+                      effectiveSeverity === 'critical'
+                        ? 'text-red-700'
+                        : 'text-amber-700'
+                    )}
+                  >
+                    This vehicle costs{' '}
+                    <span className="font-bold">
+                      €
+                      {(
+                        outlier?.excessCost ?? calculatedExcessCost
+                      ).toLocaleString()}
+                    </span>{' '}
+                    more per month than similar vehicles (
+                    {(outlier?.excessPct ?? calculatedExcessPct).toFixed(0)}%
+                    above average)
+                  </p>
+                </div>
               </div>
-            ) : (
-              <span className="text-sm text-muted-foreground">
-                No driver assigned
-              </span>
-            )}
-            {isOutlier && (
-              <Badge
-                variant="outline"
-                className={cn(
-                  outlier?.severity === 'critical'
-                    ? 'border-red-200 bg-red-50 text-red-700'
-                    : 'border-amber-200 bg-amber-50 text-amber-700'
+
+              {/* Cost Contributors - only if we have outlier data with reasons */}
+              {outlier && outlier.reasons.length > 0 && (
+                <div className="space-y-2 mb-4">
+                  <p
+                    className={cn(
+                      'text-xs font-medium uppercase tracking-wide',
+                      effectiveSeverity === 'critical'
+                        ? 'text-red-600'
+                        : 'text-amber-600'
+                    )}
+                  >
+                    Where the excess cost comes from
+                  </p>
+                  <div className="space-y-2">
+                    {outlier.reasons
+                      .sort((a, b) => b.contribution - a.contribution)
+                      .map((reason) => (
+                        <div
+                          key={reason.reason}
+                          className={cn(
+                            'flex items-center gap-3 p-2 rounded-lg',
+                            effectiveSeverity === 'critical'
+                              ? 'bg-red-100/50'
+                              : 'bg-amber-100/50'
+                          )}
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <span
+                                className={cn(
+                                  'text-sm font-medium',
+                                  effectiveSeverity === 'critical'
+                                    ? 'text-red-800'
+                                    : 'text-amber-800'
+                                )}
+                              >
+                                {reason.label}
+                              </span>
+                              <span
+                                className={cn(
+                                  'text-sm font-bold tabular-nums',
+                                  effectiveSeverity === 'critical'
+                                    ? 'text-red-700'
+                                    : 'text-amber-700'
+                                )}
+                              >
+                                +€{reason.contribution.toLocaleString()}
+                              </span>
+                            </div>
+                            <p
+                              className={cn(
+                                'text-xs mt-0.5',
+                                effectiveSeverity === 'critical'
+                                  ? 'text-red-600'
+                                  : 'text-amber-600'
+                              )}
+                            >
+                              {reason.insight}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* High deviation without detailed outlier data */}
+              {!outlier && isHighDeviation && (
+                <div
+                  className={cn(
+                    'p-3 rounded-lg mb-4',
+                    effectiveSeverity === 'critical'
+                      ? 'bg-red-100/50'
+                      : 'bg-amber-100/50'
+                  )}
+                >
+                  <p
+                    className={cn(
+                      'text-sm',
+                      effectiveSeverity === 'critical'
+                        ? 'text-red-700'
+                        : 'text-amber-700'
+                    )}
+                  >
+                    This vehicle&apos;s TCO per km is{' '}
+                    <span className="font-bold">
+                      {vehicle.peerGroupMultiple.toFixed(1)}x
+                    </span>{' '}
+                    the peer group average. Review cost breakdown below to
+                    identify high-cost areas.
+                  </p>
+                </div>
+              )}
+
+              {/* Suggested Action */}
+              {outlier?.suggestedAction && (
+                <div
+                  className={cn(
+                    'flex items-start gap-2 p-3 rounded-lg',
+                    effectiveSeverity === 'critical'
+                      ? 'bg-red-100 border border-red-200'
+                      : 'bg-amber-100 border border-amber-200'
+                  )}
+                >
+                  <Lightbulb
+                    className={cn(
+                      'h-4 w-4 mt-0.5 flex-shrink-0',
+                      effectiveSeverity === 'critical'
+                        ? 'text-red-600'
+                        : 'text-amber-600'
+                    )}
+                  />
+                  <div className="flex-1">
+                    <p
+                      className={cn(
+                        'text-xs font-medium',
+                        effectiveSeverity === 'critical'
+                          ? 'text-red-700'
+                          : 'text-amber-700'
+                      )}
+                    >
+                      Recommended Action
+                    </p>
+                    <p
+                      className={cn(
+                        'text-sm',
+                        effectiveSeverity === 'critical'
+                          ? 'text-red-800'
+                          : 'text-amber-800'
+                      )}
+                    >
+                      {outlier.suggestedAction}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Driver & Status */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              {vehicle.driver ? (
+                <div className="flex items-center gap-2 text-sm">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <span className="font-medium">{vehicle.driver.name}</span>
+                    <span className="text-xs text-muted-foreground ml-1.5">
+                      (current)
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  No driver assigned
+                </span>
+              )}
+              {!isOutlier && (
+                <Badge
+                  variant="outline"
+                  className="border-emerald-200 bg-emerald-50 text-emerald-700"
+                >
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  Normal
+                </Badge>
+              )}
+            </div>
+
+            {/* Driver History Toggle */}
+            {MOCK_DRIVER_HISTORY.length > 0 && (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowDriverHistory(!showDriverHistory)}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <History className="h-3 w-3" />
+                  <span>
+                    {showDriverHistory ? 'Hide' : 'Show'} driver history
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      'h-3 w-3 transition-transform',
+                      showDriverHistory && 'rotate-180'
+                    )}
+                  />
+                </button>
+
+                {/* Driver History List */}
+                {showDriverHistory && (
+                  <div className="mt-2 pl-5 space-y-1.5 border-l-2 border-slate-100">
+                    {MOCK_DRIVER_HISTORY.map((driver) => (
+                      <div
+                        key={driver.id}
+                        className="flex items-center justify-between text-xs"
+                      >
+                        <span className="text-muted-foreground">
+                          {driver.name}
+                        </span>
+                        <span className="text-muted-foreground tabular-nums">
+                          {new Date(driver.from).toLocaleDateString('en-IE', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: '2-digit',
+                          })}{' '}
+                          –{' '}
+                          {new Date(driver.to).toLocaleDateString('en-IE', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 )}
-              >
-                <AlertTriangle className="h-3 w-3 mr-1" />
-                {outlier?.severity === 'critical' ? 'Critical' : 'High TCO'}
-              </Badge>
-            )}
-            {!isOutlier && (
-              <Badge
-                variant="outline"
-                className="border-emerald-200 bg-emerald-50 text-emerald-700"
-              >
-                <CheckCircle2 className="h-3 w-3 mr-1" />
-                Normal
-              </Badge>
+              </div>
             )}
           </div>
 
           {/* Key Metrics */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="p-3 rounded-lg bg-slate-50">
+            <div
+              className={cn(
+                'p-3 rounded-lg',
+                isOutlier &&
+                  vehicle.peerGroupMultiple > 1.3 &&
+                  (effectiveSeverity === 'critical'
+                    ? 'bg-red-50 ring-1 ring-red-200'
+                    : 'bg-amber-50 ring-1 ring-amber-200'),
+                !isOutlier && 'bg-slate-50',
+                isOutlier && vehicle.peerGroupMultiple <= 1.3 && 'bg-slate-50'
+              )}
+            >
               <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
                 <Route className="h-3 w-3" />
                 TCO/km
@@ -214,23 +534,55 @@ export function VehicleDetailDrawer({
               <p
                 className={cn(
                   'text-lg font-bold tabular-nums',
-                  isOutlier && 'text-amber-600'
+                  isOutlier &&
+                    vehicle.peerGroupMultiple > 1.3 &&
+                    (effectiveSeverity === 'critical'
+                      ? 'text-red-600'
+                      : 'text-amber-600')
                 )}
               >
                 €{vehicle.tcoPerKm.toFixed(2)}
               </p>
               {vehicle.peerGroupMultiple > 1 && (
-                <p className="text-[10px] text-muted-foreground">
+                <p
+                  className={cn(
+                    'text-[10px]',
+                    isOutlier && vehicle.peerGroupMultiple > 1.3
+                      ? effectiveSeverity === 'critical'
+                        ? 'text-red-600 font-medium'
+                        : 'text-amber-600 font-medium'
+                      : 'text-muted-foreground'
+                  )}
+                >
                   {vehicle.peerGroupMultiple.toFixed(1)}x peer avg
                 </p>
               )}
             </div>
-            <div className="p-3 rounded-lg bg-slate-50">
+            <div
+              className={cn(
+                'p-3 rounded-lg',
+                isOutlier &&
+                  vehicle.utilization < 50 &&
+                  (effectiveSeverity === 'critical'
+                    ? 'bg-red-50 ring-1 ring-red-200'
+                    : 'bg-amber-50 ring-1 ring-amber-200'),
+                (!isOutlier || vehicle.utilization >= 50) && 'bg-slate-50'
+              )}
+            >
               <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
                 <Gauge className="h-3 w-3" />
                 Utilization
               </div>
-              <p className="text-lg font-bold tabular-nums">
+              <p
+                className={cn(
+                  'text-lg font-bold tabular-nums',
+                  isOutlier &&
+                    vehicle.utilization < 50 &&
+                    (effectiveSeverity === 'critical'
+                      ? 'text-red-600'
+                      : 'text-amber-600')
+                )}
+              >
                 {vehicle.utilization}%
               </p>
               <p className="text-[10px] text-muted-foreground">
@@ -254,26 +606,6 @@ export function VehicleDetailDrawer({
             </div>
           </div>
 
-          {/* Outlier Insights */}
-          {outlier && outlier.reasons.length > 0 && (
-            <div className="p-3 rounded-lg border border-amber-200 bg-amber-50/50">
-              <h3 className="text-sm font-medium text-amber-800 mb-2">
-                Why TCO is high
-              </h3>
-              <ul className="space-y-1.5">
-                {outlier.reasons.map((reason) => (
-                  <li
-                    key={reason.reason}
-                    className="text-xs text-amber-700 flex items-start gap-2"
-                  >
-                    <AlertTriangle className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                    <span>{reason.insight}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
           {/* 6-Month Trend */}
           <div>
             <div className="flex items-center justify-between mb-3">
@@ -292,24 +624,26 @@ export function VehicleDetailDrawer({
                 {Math.abs(vehicle.tcoTrend).toFixed(1)}%
               </div>
             </div>
-            <div className="flex items-end gap-1 h-20">
+            <div className="flex items-end gap-1">
               {trendData.map((point, i) => (
                 <div
                   key={point.month}
                   className="flex-1 flex flex-col items-center"
                 >
-                  <div
-                    className={cn(
-                      'w-full rounded-t transition-all',
-                      i === trendData.length - 1
-                        ? 'bg-blue-500'
-                        : 'bg-slate-200'
-                    )}
-                    style={{
-                      height: `${(point.value / maxTrendValue) * 100}%`,
-                      minHeight: '4px',
-                    }}
-                  />
+                  <div className="relative w-full h-16 flex items-end">
+                    <div
+                      className={cn(
+                        'w-full rounded-t transition-all',
+                        i === trendData.length - 1
+                          ? 'bg-blue-500'
+                          : 'bg-slate-200'
+                      )}
+                      style={{
+                        height: `${(point.value / maxTrendValue) * 100}%`,
+                        minHeight: '4px',
+                      }}
+                    />
+                  </div>
                   <span className="text-[10px] text-muted-foreground mt-1">
                     {point.month}
                   </span>
@@ -326,31 +660,94 @@ export function VehicleDetailDrawer({
                 .filter((b) => b.amount > 0)
                 .sort((a, b) => b.amount - a.amount)
                 .slice(0, 6)
-                .map((bucket) => (
-                  <div key={bucket.bucket} className="flex items-center gap-3">
-                    <div className="w-20 text-xs text-muted-foreground">
-                      {bucket.label}
-                    </div>
-                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                .map((bucket) => {
+                  // Check if this bucket is flagged as a problem area
+                  const isFlagged =
+                    isOutlier &&
+                    outlier?.reasons.some(
+                      (r) =>
+                        r.reason.toLowerCase().includes(bucket.bucket) ||
+                        (bucket.bucket === 'fuel' &&
+                          r.reason === 'high-fuel') ||
+                        (bucket.bucket === 'maintenance' &&
+                          (r.reason === 'high-maintenance' ||
+                            r.reason === 'high-repairs'))
+                    );
+
+                  return (
+                    <div
+                      key={bucket.bucket}
+                      className={cn(
+                        'flex items-center gap-3 p-2 -mx-2 rounded-lg transition-colors',
+                        isFlagged &&
+                          (effectiveSeverity === 'critical'
+                            ? 'bg-red-50'
+                            : 'bg-amber-50')
+                      )}
+                    >
                       <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${bucket.sharePct}%`,
-                          backgroundColor: bucket.color,
-                        }}
-                      />
+                        className={cn(
+                          'w-20 text-xs',
+                          isFlagged
+                            ? effectiveSeverity === 'critical'
+                              ? 'text-red-700 font-medium'
+                              : 'text-amber-700 font-medium'
+                            : 'text-muted-foreground'
+                        )}
+                      >
+                        {bucket.label}
+                        {isFlagged && (
+                          <AlertTriangle
+                            className={cn(
+                              'inline-block h-3 w-3 ml-1',
+                              effectiveSeverity === 'critical'
+                                ? 'text-red-500'
+                                : 'text-amber-500'
+                            )}
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${bucket.sharePct}%`,
+                            backgroundColor: isFlagged
+                              ? effectiveSeverity === 'critical'
+                                ? '#dc2626'
+                                : '#f59e0b'
+                              : bucket.color,
+                          }}
+                        />
+                      </div>
+                      <div
+                        className={cn(
+                          'w-16 text-right text-xs font-medium tabular-nums',
+                          isFlagged &&
+                            (effectiveSeverity === 'critical'
+                              ? 'text-red-700'
+                              : 'text-amber-700')
+                        )}
+                      >
+                        €{bucket.amount.toLocaleString()}
+                      </div>
                     </div>
-                    <div className="w-16 text-right text-xs font-medium tabular-nums">
-                      €{bucket.amount.toLocaleString()}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
             <div className="mt-3 pt-3 border-t flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
                 Monthly Total
               </span>
-              <span className="font-bold">
+              <span
+                className={cn(
+                  'font-bold',
+                  isOutlier &&
+                    (effectiveSeverity === 'critical'
+                      ? 'text-red-700'
+                      : 'text-amber-700')
+                )}
+              >
                 €{vehicle.monthlyTco.toLocaleString()}
               </span>
             </div>
@@ -381,22 +778,58 @@ export function VehicleDetailDrawer({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t bg-slate-50 flex gap-2">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => onFlagForReview?.(vehicle.vehicleId)}
-          >
-            <Flag className="h-4 w-4 mr-1.5" />
-            Flag for Review
-          </Button>
-          <Button
-            className="flex-1"
-            onClick={() => onAddExpense?.(vehicle.vehicleId)}
-          >
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Expense
-          </Button>
+        <div
+          className={cn(
+            'p-4 border-t flex gap-2',
+            isOutlier
+              ? effectiveSeverity === 'critical'
+                ? 'bg-red-50 border-red-200'
+                : 'bg-amber-50 border-amber-200'
+              : 'bg-slate-50'
+          )}
+        >
+          {isOutlier ? (
+            <>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => onAddExpense?.(vehicle.vehicleId)}
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                Add Expense
+              </Button>
+              <Button
+                className={cn(
+                  'flex-1',
+                  effectiveSeverity === 'critical'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-amber-600 hover:bg-amber-700'
+                )}
+                onClick={() => onFlagForReview?.(vehicle.vehicleId)}
+              >
+                <Flag className="h-4 w-4 mr-1.5" />
+                Take Action
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => onFlagForReview?.(vehicle.vehicleId)}
+              >
+                <Flag className="h-4 w-4 mr-1.5" />
+                Flag for Review
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={() => onAddExpense?.(vehicle.vehicleId)}
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                Add Expense
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </>
