@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   Search,
   Filter,
@@ -10,6 +10,8 @@ import {
   X,
   Upload,
   ShieldCheck,
+  Car,
+  Receipt,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,12 +30,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getTcoDashboardDemoData } from '@/lib/demo/tcoMockData';
 import { getCostDashboardDemoData } from '@/lib/demo/cost';
 import { VehicleCostTable } from '@/components/cost/VehicleCostTable';
 import { VehicleDetailDrawer } from '@/components/cost/VehicleDetailDrawer';
 import { InvoiceDropZone } from '@/components/cost/InvoiceDropZone';
 import { CsvUploadDialog } from '@/components/cost/CsvUploadDialog';
+import { ExpensesList, type Expense } from '@/components/cost/ExpensesList';
+import { EditExpenseDialog } from '@/components/cost/EditExpenseDialog';
 import type { VehicleTco } from '@/types/cost';
 
 type StatusFilter = 'all' | 'critical' | 'warning' | 'ok';
@@ -58,6 +63,11 @@ export default function CostManagementPage() {
 
   // CSV Upload dialog state
   const [isCsvUploadOpen, setIsCsvUploadOpen] = useState(false);
+
+  // Expenses state
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Get outlier for selected vehicle
   const drawerOutlier = useMemo(() => {
@@ -145,10 +155,32 @@ export default function CostManagementPage() {
     // Could open a pre-filled expense form
   };
 
-  const handleExpenseAdded = (expenseData: unknown) => {
+  const handleExpenseAdded = useCallback((expenseData: unknown) => {
     console.log('[Demo] Expense added:', expenseData);
-    // In real app, would refresh data
-  };
+    // Add expense to the list with a unique ID
+    const newExpense: Expense = {
+      id: `exp-${Date.now()}`,
+      ...(expenseData as Omit<Expense, 'id'>),
+    };
+    setExpenses((prev) => [newExpense, ...prev]);
+  }, []);
+
+  const handleEditExpense = useCallback((expense: Expense) => {
+    setEditingExpense(expense);
+    setIsEditDialogOpen(true);
+  }, []);
+
+  const handleSaveExpense = useCallback((updatedExpense: Expense) => {
+    setExpenses((prev) =>
+      prev.map((e) => (e.id === updatedExpense.id ? updatedExpense : e))
+    );
+    setEditingExpense(null);
+  }, []);
+
+  const handleDeleteExpense = useCallback((expenseId: string) => {
+    // In a real app, you'd show a confirmation dialog first
+    setExpenses((prev) => prev.filter((e) => e.id !== expenseId));
+  }, []);
 
   const handleExportCsv = () => {
     const headers = [
@@ -328,102 +360,138 @@ ${filteredVehicles
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 p-3 bg-slate-50 rounded-lg border">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[200px] max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search vehicles, drivers..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9"
+      {/* Tabs */}
+      <Tabs defaultValue="vehicles" className="flex-1 flex flex-col min-h-0">
+        <TabsList>
+          <TabsTrigger value="vehicles" className="gap-1.5">
+            <Car className="h-4 w-4" />
+            Vehicles
+          </TabsTrigger>
+          <TabsTrigger value="expenses" className="gap-1.5">
+            <Receipt className="h-4 w-4" />
+            Expenses
+            {expenses.length > 0 && (
+              <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
+                {expenses.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Vehicles Tab */}
+        <TabsContent
+          value="vehicles"
+          className="flex-1 flex flex-col min-h-0 space-y-4"
+        >
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3 p-3 bg-slate-50 rounded-lg border">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[200px] max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search vehicles, drivers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9"
+              />
+            </div>
+
+            {/* Status filter */}
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+            >
+              <SelectTrigger className="w-[160px] h-9">
+                <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="critical">
+                  <span className="flex items-center gap-2">
+                    Critical
+                    {stats.critical > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="text-[10px] px-1.5 py-0"
+                      >
+                        {stats.critical}
+                      </Badge>
+                    )}
+                  </span>
+                </SelectItem>
+                <SelectItem value="warning">
+                  <span className="flex items-center gap-2">
+                    High TCO
+                    {stats.warning > 0 && (
+                      <Badge className="bg-amber-500 text-[10px] px-1.5 py-0">
+                        {stats.warning}
+                      </Badge>
+                    )}
+                  </span>
+                </SelectItem>
+                <SelectItem value="ok">Normal</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Vehicle type filter */}
+            <Select
+              value={vehicleTypeFilter}
+              onValueChange={(v) =>
+                setVehicleTypeFilter(v as VehicleTypeFilter)
+              }
+            >
+              <SelectTrigger className="w-[140px] h-9">
+                <SelectValue placeholder="Vehicle Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="van">Vans</SelectItem>
+                <SelectItem value="truck">Trucks</SelectItem>
+                <SelectItem value="car">Cars</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Clear filters */}
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="h-9 text-muted-foreground"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear
+              </Button>
+            )}
+
+            {/* Results count */}
+            <div className="ml-auto text-sm text-muted-foreground">
+              {filteredVehicles.length} of {data.vehicles.length} vehicles
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="flex-1 min-h-0">
+            <VehicleCostTable
+              vehicles={filteredVehicles}
+              outliers={data.outlierSummary.outliers}
+              onRowClick={handleRowClick}
+              selectedIds={selectedVehicleIds}
+              onSelectionChange={setSelectedVehicleIds}
+            />
+          </div>
+        </TabsContent>
+
+        {/* Expenses Tab */}
+        <TabsContent value="expenses" className="flex-1 min-h-0">
+          <ExpensesList
+            expenses={expenses}
+            onEdit={handleEditExpense}
+            onDelete={handleDeleteExpense}
           />
-        </div>
-
-        {/* Status filter */}
-        <Select
-          value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v as StatusFilter)}
-        >
-          <SelectTrigger className="w-[160px] h-9">
-            <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="critical">
-              <span className="flex items-center gap-2">
-                Critical
-                {stats.critical > 0 && (
-                  <Badge
-                    variant="destructive"
-                    className="text-[10px] px-1.5 py-0"
-                  >
-                    {stats.critical}
-                  </Badge>
-                )}
-              </span>
-            </SelectItem>
-            <SelectItem value="warning">
-              <span className="flex items-center gap-2">
-                High TCO
-                {stats.warning > 0 && (
-                  <Badge className="bg-amber-500 text-[10px] px-1.5 py-0">
-                    {stats.warning}
-                  </Badge>
-                )}
-              </span>
-            </SelectItem>
-            <SelectItem value="ok">Normal</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Vehicle type filter */}
-        <Select
-          value={vehicleTypeFilter}
-          onValueChange={(v) => setVehicleTypeFilter(v as VehicleTypeFilter)}
-        >
-          <SelectTrigger className="w-[140px] h-9">
-            <SelectValue placeholder="Vehicle Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="van">Vans</SelectItem>
-            <SelectItem value="truck">Trucks</SelectItem>
-            <SelectItem value="car">Cars</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Clear filters */}
-        {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearFilters}
-            className="h-9 text-muted-foreground"
-          >
-            <X className="h-4 w-4 mr-1" />
-            Clear
-          </Button>
-        )}
-
-        {/* Results count */}
-        <div className="ml-auto text-sm text-muted-foreground">
-          {filteredVehicles.length} of {data.vehicles.length} vehicles
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="flex-1 min-h-0">
-        <VehicleCostTable
-          vehicles={filteredVehicles}
-          outliers={data.outlierSummary.outliers}
-          onRowClick={handleRowClick}
-          selectedIds={selectedVehicleIds}
-          onSelectionChange={setSelectedVehicleIds}
-        />
-      </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Vehicle Detail Drawer */}
       <VehicleDetailDrawer
@@ -439,6 +507,14 @@ ${filteredVehicles
       <CsvUploadDialog
         open={isCsvUploadOpen}
         onOpenChange={setIsCsvUploadOpen}
+      />
+
+      {/* Edit Expense Dialog */}
+      <EditExpenseDialog
+        expense={editingExpense}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSave={handleSaveExpense}
       />
     </div>
   );
