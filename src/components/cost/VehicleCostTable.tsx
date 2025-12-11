@@ -46,21 +46,28 @@ function getCostBucket(vehicle: VehicleTco, bucket: string): number {
 function getVehicleStatus(
   vehicle: VehicleTco,
   outliers: TcoOutlier[]
-): { status: 'ok' | 'warning' | 'critical'; label: string } {
+): { status: 'ok' | 'warning' | 'critical'; label: string; deviation?: number } {
   const outlier = outliers.find(
     (o) => o.vehicle.vehicleId === vehicle.vehicleId
   );
 
+  // Calculate percentage deviation from average (1.0 = average, 1.3 = 30% above)
+  const deviationPct = Math.round((vehicle.peerGroupMultiple - 1) * 100);
+
   if (outlier?.severity === 'critical') {
-    return { status: 'critical', label: 'Critical' };
+    return { status: 'critical', label: `+${deviationPct}%`, deviation: deviationPct };
   }
   if (outlier?.severity === 'warning') {
-    return { status: 'warning', label: 'High' };
+    return { status: 'warning', label: `+${deviationPct}%`, deviation: deviationPct };
   }
   if (vehicle.peerGroupMultiple > 1.3) {
-    return { status: 'warning', label: 'Above Avg' };
+    return { status: 'warning', label: `+${deviationPct}%`, deviation: deviationPct };
   }
-  return { status: 'ok', label: 'OK' };
+  if (vehicle.peerGroupMultiple < 0.85) {
+    // Below average - good performance
+    return { status: 'ok', label: `${deviationPct}%`, deviation: deviationPct };
+  }
+  return { status: 'ok', label: 'Avg', deviation: deviationPct };
 }
 
 // Format currency compactly
@@ -87,15 +94,27 @@ function VehicleIcon({ type }: { type: VehicleTco['vehicleType'] }) {
 function StatusBadge({
   status,
   label,
+  deviation,
 }: {
   status: 'ok' | 'warning' | 'critical';
   label: string;
+  deviation?: number;
 }) {
+  // Generate a descriptive tooltip
+  const getTooltip = () => {
+    if (deviation === undefined) return '';
+    if (status === 'critical') return `${deviation}% above peer group average - needs attention`;
+    if (status === 'warning') return `${deviation}% above peer group average`;
+    if (deviation < 0) return `${Math.abs(deviation)}% below average - good performance`;
+    return 'Within normal range';
+  };
+
   return (
     <Badge
       variant="outline"
+      title={getTooltip()}
       className={cn(
-        'text-xs font-medium',
+        'text-xs font-medium tabular-nums',
         status === 'critical' && 'border-red-200 bg-red-50 text-red-700',
         status === 'warning' && 'border-amber-200 bg-amber-50 text-amber-700',
         status === 'ok' && 'border-emerald-200 bg-emerald-50 text-emerald-700'
@@ -344,7 +363,7 @@ export function VehicleCostTable({
           </thead>
           <tbody className="divide-y">
             {sortedVehicles.map((vehicle) => {
-              const { status, label } = getVehicleStatus(vehicle, outliers);
+              const { status, label, deviation } = getVehicleStatus(vehicle, outliers);
               const isSelected = selectedIds.includes(vehicle.vehicleId);
 
               return (
@@ -418,7 +437,7 @@ export function VehicleCostTable({
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <StatusBadge status={status} label={label} />
+                    <StatusBadge status={status} label={label} deviation={deviation} />
                   </td>
                 </tr>
               );
