@@ -14,6 +14,7 @@ import {
   Save,
   Trash2,
   Loader2,
+  ChevronsUpDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -26,14 +27,18 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -297,6 +302,9 @@ export function CustomExportAIDialog({
   );
   const [isExporting, setIsExporting] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
+  const [openComboboxIndex, setOpenComboboxIndex] = useState<number | null>(
+    null
+  );
 
   // Load saved templates on mount
   useState(() => {
@@ -639,18 +647,24 @@ export function CustomExportAIDialog({
         )}
 
         {/* Drop Zone */}
-        <div
+        <label
           className={cn(
-            'border-2 border-dashed rounded-lg p-8 text-center transition-colors',
+            'block border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer',
             isDragging
               ? 'border-primary bg-primary/5'
-              : 'border-gray-200 hover:border-gray-300',
+              : 'border-gray-200 hover:border-gray-300 hover:bg-slate-50',
             isParsingFile && 'pointer-events-none opacity-60'
           )}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
+          <input
+            type="file"
+            className="hidden"
+            accept=".csv,.xlsx,.xls"
+            onChange={handleFileSelect}
+          />
           {isParsingFile ? (
             <>
               <Loader2 className="h-10 w-10 mx-auto text-primary mb-4 animate-spin" />
@@ -664,22 +678,14 @@ export function CustomExportAIDialog({
               <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
               <p className="text-sm font-medium mb-1">
                 Drop your previous report here, or{' '}
-                <label className="text-primary cursor-pointer hover:underline">
-                  browse
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".csv,.xlsx,.xls"
-                    onChange={handleFileSelect}
-                  />
-                </label>
+                <span className="text-primary hover:underline">browse</span>
               </p>
               <p className="text-xs text-muted-foreground">
                 Supports CSV files
               </p>
             </>
           )}
-        </div>
+        </label>
 
         <div className="flex items-start gap-2 p-3 bg-violet-50 rounded-lg">
           <Sparkles className="h-4 w-4 text-violet-600 mt-0.5 shrink-0" />
@@ -734,56 +740,112 @@ export function CustomExportAIDialog({
           </div>
         )}
 
-        <div className="space-y-3 max-h-[300px] overflow-y-auto">
-          {columnMappings.map((mapping, index) => (
-            <div
-              key={mapping.templateColumn}
-              className="grid grid-cols-[1fr_auto_1fr] gap-3 items-center"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium truncate">
-                  {mapping.templateColumn}
-                </span>
-              </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-              <div className="flex items-center gap-2">
-                <Select
-                  value={mapping.dataField || '__skip__'}
-                  onValueChange={(v) => handleMappingChange(index, v)}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Select field..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__skip__">
-                      -- Skip this column --
-                    </SelectItem>
-                    {Object.entries(groupedFields).map(([group, fields]) => (
-                      <SelectGroup key={group}>
-                        <SelectLabel>{group}</SelectLabel>
-                        {fields.map((field) => (
-                          <SelectItem key={field.id} value={field.id}>
-                            {field.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {mapping.dataField &&
-                  !mapping.isManualOverride &&
-                  mapping.confidence > 0.7 && (
-                    <Sparkles className="h-4 w-4 text-violet-500 shrink-0" />
+        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+          {columnMappings.map((mapping, index) => {
+            const selectedField = EXPORTABLE_FIELDS.find(
+              (f) => f.id === mapping.dataField
+            );
+            return (
+              <div
+                key={mapping.templateColumn}
+                className="grid grid-cols-[1fr_auto_1fr] gap-3 items-center"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium truncate">
+                    {mapping.templateColumn}
+                  </span>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center gap-2">
+                  <Popover
+                    open={openComboboxIndex === index}
+                    onOpenChange={(open) =>
+                      setOpenComboboxIndex(open ? index : null)
+                    }
+                    modal={true}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openComboboxIndex === index}
+                        className="h-9 w-[200px] justify-between font-normal"
+                      >
+                        <span className="truncate">
+                          {selectedField?.label || '-- Skip this column --'}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[250px] p-0" align="start">
+                      <Command shouldFilter={true}>
+                        <CommandInput placeholder="Search fields..." />
+                        <CommandList className="max-h-[250px]">
+                          <CommandEmpty>No field found.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem
+                              value="__skip__"
+                              onSelect={() => {
+                                handleMappingChange(index, '__skip__');
+                                setOpenComboboxIndex(null);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4',
+                                  !mapping.dataField
+                                    ? 'opacity-100'
+                                    : 'opacity-0'
+                                )}
+                              />
+                              -- Skip this column --
+                            </CommandItem>
+                          </CommandGroup>
+                          {Object.entries(groupedFields).map(
+                            ([group, fields]) => (
+                              <CommandGroup key={group} heading={group}>
+                                {fields.map((field) => (
+                                  <CommandItem
+                                    key={field.id}
+                                    value={`${field.label} ${group}`}
+                                    onSelect={() => {
+                                      handleMappingChange(index, field.id);
+                                      setOpenComboboxIndex(null);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        'mr-2 h-4 w-4',
+                                        mapping.dataField === field.id
+                                          ? 'opacity-100'
+                                          : 'opacity-0'
+                                      )}
+                                    />
+                                    {field.label}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            )
+                          )}
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  {mapping.dataField &&
+                    !mapping.isManualOverride &&
+                    mapping.confidence > 0.7 && (
+                      <Sparkles className="h-4 w-4 text-violet-500 shrink-0" />
+                    )}
+                  {mapping.dataField && (
+                    <Check className="h-4 w-4 text-emerald-500 shrink-0" />
                   )}
-                {mapping.dataField && (
-                  <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                )}
-                {!mapping.dataField && (
-                  <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
-                )}
+                  {!mapping.dataField && (
+                    <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-4 mt-4 pt-4 border-t text-xs text-muted-foreground">
