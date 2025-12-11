@@ -58,6 +58,7 @@ function getVehicleStatus(
   // Calculate percentage deviation from average (1.0 = average, 1.3 = 30% above)
   const deviationPct = Math.round((vehicle.peerGroupMultiple - 1) * 100);
 
+  // Check outlier data first
   if (outlier?.severity === 'critical') {
     return {
       status: 'critical',
@@ -68,6 +69,16 @@ function getVehicleStatus(
   if (outlier?.severity === 'warning') {
     return {
       status: 'warning',
+      label: `+${deviationPct}%`,
+      deviation: deviationPct,
+    };
+  }
+
+  // Fallback to peer group multiple thresholds (same as drawer)
+  // >1.8x = critical, >1.3x = warning
+  if (vehicle.peerGroupMultiple > 1.8) {
+    return {
+      status: 'critical',
       label: `+${deviationPct}%`,
       deviation: deviationPct,
     };
