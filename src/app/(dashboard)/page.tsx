@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   TcoOverviewCard,
   LivemapPreview,
+  VehicleLeaderboard,
   FleetHealthCard,
 } from '@/components/dashboard';
 import {
@@ -145,6 +146,16 @@ export default function ControlCentrePage() {
           {/* Livemap Preview */}
           <LivemapPreview />
         </div>
+
+        {/* Vehicle Leaderboard */}
+        {tcoData && (
+          <VehicleLeaderboard
+            vehicles={tcoData.vehicles}
+            outlierSummary={tcoData.outlierSummary}
+            currency={tcoData.currency}
+            isLoading={isLoading}
+          />
+        )}
 
         {/* Fleet Health Section */}
         {tcoData && costData && (

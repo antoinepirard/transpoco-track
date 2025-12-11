@@ -1,6 +1,7 @@
 // Control Centre components
 export { TcoOverviewCard } from './TcoOverviewCard';
 export { LivemapPreview } from './LivemapPreview';
+export { VehicleLeaderboard } from './VehicleLeaderboard';
 export { FleetHealthCard } from './FleetHealthCard';
 
 // Existing dashboard components
