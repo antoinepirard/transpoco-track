@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { format } from 'date-fns';
 import {
   Search,
   Filter,
@@ -19,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Select,
   SelectContent,
@@ -132,17 +134,7 @@ function getDateRangeForPreset(preset: TimePreset): DateRange {
 }
 
 function formatDateRange(range: DateRange): string {
-  const options: Intl.DateTimeFormatOptions = {
-    day: 'numeric',
-    month: 'short',
-  };
-  const fromStr = range.from.toLocaleDateString('en-IE', options);
-  const toStr = range.to.toLocaleDateString('en-IE', options);
-  return `${fromStr} - ${toStr}`;
-}
-
-function formatDateForInput(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return `${format(range.from, 'd MMM')} - ${format(range.to, 'd MMM')}`;
 }
 
 export interface FlaggedVehicle {
@@ -457,14 +449,17 @@ ${filteredVehicles
     }
   };
 
-  const handleCustomDateChange = (field: 'from' | 'to', value: string) => {
-    const newDate = new Date(value);
-    if (field === 'from') {
-      newDate.setHours(0, 0, 0, 0);
-    } else {
-      newDate.setHours(23, 59, 59, 999);
+  const handleCalendarSelect = (
+    range: { from?: Date; to?: Date } | undefined
+  ) => {
+    if (range?.from) {
+      const from = new Date(range.from);
+      from.setHours(0, 0, 0, 0);
+      const to = range.to ? new Date(range.to) : from;
+      to.setHours(23, 59, 59, 999);
+      setDateRange({ from, to });
+      setTimePreset('custom');
     }
-    setDateRange((prev) => ({ ...prev, [field]: newDate }));
   };
 
   const clearFilters = () => {
@@ -658,56 +653,14 @@ ${filteredVehicles
                   </Button>
                 </PopoverTrigger>
               </div>
-              <PopoverContent className="w-auto p-4" align="end">
-                <div className="space-y-4">
-                  <div className="text-sm font-medium">Custom date range</div>
-                  <div className="grid gap-3">
-                    <div className="grid gap-1.5">
-                      <label
-                        htmlFor="date-from"
-                        className="text-xs text-muted-foreground"
-                      >
-                        From
-                      </label>
-                      <Input
-                        id="date-from"
-                        type="date"
-                        className="h-9"
-                        value={formatDateForInput(dateRange.from)}
-                        onChange={(e) =>
-                          handleCustomDateChange('from', e.target.value)
-                        }
-                      />
-                    </div>
-                    <div className="grid gap-1.5">
-                      <label
-                        htmlFor="date-to"
-                        className="text-xs text-muted-foreground"
-                      >
-                        To
-                      </label>
-                      <Input
-                        id="date-to"
-                        type="date"
-                        className="h-9"
-                        value={formatDateForInput(dateRange.to)}
-                        onChange={(e) =>
-                          handleCustomDateChange('to', e.target.value)
-                        }
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={() => {
-                      setTimePreset('custom');
-                      setIsCustomDateOpen(false);
-                    }}
-                  >
-                    Apply
-                  </Button>
-                </div>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="range"
+                  defaultMonth={dateRange.from}
+                  selected={{ from: dateRange.from, to: dateRange.to }}
+                  onSelect={handleCalendarSelect}
+                  numberOfMonths={2}
+                />
               </PopoverContent>
             </Popover>
 
