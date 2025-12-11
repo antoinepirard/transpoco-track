@@ -165,8 +165,9 @@ export function CsvUploadDialog({ open, onOpenChange }: CsvUploadDialogProps) {
     }));
   };
 
+  // Check that all required columns have a valid mapping (not skipped/empty)
   const requiredMapped = EXPECTED_COLUMNS.filter((c) => c.required).every(
-    (c) => columnMapping[c.id]
+    (c) => typeof columnMapping[c.id] === 'string' && columnMapping[c.id] !== ''
   );
 
   const handlePreview = () => {

@@ -360,6 +360,7 @@ const sidebarNavigationData: NavigationSection[] = [
         id: 'cost-management',
         label: 'Cost Management',
         icon: CurrencyDollarIcon,
+        href: '/cost-management',
       },
     ],
   },
@@ -406,7 +407,7 @@ export function NavigationSidebarWithSubmenus({
 
   // Demo locked items (premium features) - memoized to prevent re-renders
   const lockedItemIds = useMemo(
-    () => showLockedItems ? ['bikly', 'cost-management', 'fuel-electric'] : [],
+    () => (showLockedItems ? ['bikly', 'cameras', 'fuel-electric'] : []),
     [showLockedItems]
   );
 
@@ -419,11 +420,11 @@ export function NavigationSidebarWithSubmenus({
           'Advanced safety and compliance monitoring for your fleet. Get real-time alerts, driver behavior insights, and comprehensive safety reporting to reduce incidents and improve driver performance.',
         image: '/pointing at laptop screen with data on show.webp',
       },
-      'cost-management': {
-        title: 'Cost Management',
+      cameras: {
+        title: 'Cameras',
         description:
-          'Complete Total Cost of Ownership (TCO) analysis and financial optimization tools. Track all fleet expenses, identify cost-saving opportunities, and optimize your fleet budget with detailed analytics.',
-        image: '/vehicle-maintenance.webp',
+          'Video telematics with AI-powered incident detection, driver coaching, and evidence capture. Protect your fleet with intelligent dashcam technology.',
+        image: '/pointing at laptop screen with data on show.webp',
       },
       'fuel-electric': {
         title: 'Fuel/Electric Vehicles',

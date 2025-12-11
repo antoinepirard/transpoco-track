@@ -276,6 +276,7 @@ const navigationData: NavigationSection[] = [
         id: 'cost-management',
         label: 'Cost Management',
         icon: CurrencyDollarIcon,
+        href: '/cost-management',
       },
     ],
   },
@@ -336,7 +337,7 @@ export function NavigationSidebarDemo({
   const lockedItemIds = useMemo(
     () =>
       mounted && showLockedItems
-        ? ['bikly', 'fleet-ai', 'cost-management', 'fuel-electric']
+        ? ['bikly', 'fleet-ai', 'cameras', 'fuel-electric']
         : [],
     [mounted, showLockedItems]
   );
@@ -357,12 +358,12 @@ export function NavigationSidebarDemo({
         description:
           'AI-powered predictive analytics and intelligent fleet optimization. Leverage machine learning to predict maintenance needs, optimize routes, and make data-driven decisions for maximum efficiency.',
       },
-      'cost-management': {
-        id: 'cost-management',
-        title: 'Cost Management',
+      cameras: {
+        id: 'cameras',
+        title: 'Cameras',
         description:
-          'Complete Total Cost of Ownership (TCO) analysis and financial optimization tools. Track all fleet expenses, identify cost-saving opportunities, and optimize your fleet budget with detailed analytics.',
-        image: '/vehicle-maintenance.webp',
+          'Video telematics with AI-powered incident detection, driver coaching, and evidence capture. Protect your fleet with intelligent dashcam technology.',
+        image: '/pointing at laptop screen with data on show.webp',
       },
       'fuel-electric': {
         id: 'fuel-electric',
