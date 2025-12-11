@@ -391,7 +391,8 @@ export function NavigationSidebarWithSubmenus({
   onActiveItemChange,
 }: NavigationSidebarWithSubmenusProps) {
   const navRef = useRef<HTMLElement>(null);
-  const { toggleExpandedItem, isItemExpanded, showLockedItems } = useNavigation();
+  const { toggleExpandedItem, isItemExpanded, showLockedItems } =
+    useNavigation();
 
   // Local active state
   const [activeItemId, setActiveItemId] = useState<string>('live-map');
@@ -866,7 +867,9 @@ export function NavigationSidebarWithSubmenus({
                           const isExpanded = isItemExpanded(item.id);
                           const isLocked = lockedItemIds.includes(item.id);
 
-                          const handleItemClick = (clickedItem: NavigationItem) => {
+                          const handleItemClick = (
+                            clickedItem: NavigationItem
+                          ) => {
                             setActiveItemId(clickedItem.id);
                             setActiveSettingsItemId('');
                             setIsMobileSidebarOpen(false); // Close mobile sidebar
@@ -907,7 +910,11 @@ export function NavigationSidebarWithSubmenus({
               <div className="px-4 pb-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" size="default" className="w-full">
+                    <Button
+                      variant="secondary"
+                      size="default"
+                      className="w-full"
+                    >
                       <QuestionIcon />
                       Help
                     </Button>
