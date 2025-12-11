@@ -8,7 +8,6 @@ import {
   FileSpreadsheet,
   FileText,
   X,
-  Upload,
   ShieldCheck,
   Car,
   Receipt,
@@ -38,7 +37,6 @@ import { getCostDashboardDemoData } from '@/lib/demo/cost';
 import { VehicleCostTable } from '@/components/cost/VehicleCostTable';
 import { VehicleDetailDrawer } from '@/components/cost/VehicleDetailDrawer';
 import { InvoiceDropZone } from '@/components/cost/InvoiceDropZone';
-import { CsvUploadDialog } from '@/components/cost/CsvUploadDialog';
 import { ExpensesList, type Expense } from '@/components/cost/ExpensesList';
 import { EditExpenseDialog } from '@/components/cost/EditExpenseDialog';
 import { FlaggedVehiclesList } from '@/components/cost/FlaggedVehiclesList';
@@ -71,9 +69,6 @@ export default function CostManagementPage() {
   // Drawer state
   const [drawerVehicle, setDrawerVehicle] = useState<VehicleTco | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  // CSV Upload dialog state
-  const [isCsvUploadOpen, setIsCsvUploadOpen] = useState(false);
 
   // Custom Export AI dialog state
   const [isCustomExportOpen, setIsCustomExportOpen] = useState(false);
@@ -374,14 +369,6 @@ ${filteredVehicles
 
         <div className="flex items-center gap-2">
           <InvoiceDropZone compact onExpenseAdded={handleExpenseAdded} />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsCsvUploadOpen(true)}
-          >
-            <Upload className="h-4 w-4 mr-1.5" />
-            Upload CSV
-          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -577,12 +564,6 @@ ${filteredVehicles
         isFlagged={
           drawerVehicle ? isVehicleFlagged(drawerVehicle.vehicleId) : false
         }
-      />
-
-      {/* CSV Upload Dialog */}
-      <CsvUploadDialog
-        open={isCsvUploadOpen}
-        onOpenChange={setIsCsvUploadOpen}
       />
 
       {/* Edit Expense Dialog */}
