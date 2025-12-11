@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Car,
   Receipt,
+  Flag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,10 +40,18 @@ import { InvoiceDropZone } from '@/components/cost/InvoiceDropZone';
 import { CsvUploadDialog } from '@/components/cost/CsvUploadDialog';
 import { ExpensesList, type Expense } from '@/components/cost/ExpensesList';
 import { EditExpenseDialog } from '@/components/cost/EditExpenseDialog';
+import { FlaggedVehiclesList } from '@/components/cost/FlaggedVehiclesList';
 import type { VehicleTco } from '@/types/cost';
 
 type StatusFilter = 'all' | 'critical' | 'warning' | 'ok';
 type VehicleTypeFilter = 'all' | 'van' | 'truck' | 'car';
+
+export interface FlaggedVehicle {
+  vehicleId: string;
+  flaggedAt: Date;
+  resolved: boolean;
+  resolvedAt?: Date;
+}
 
 export default function CostManagementPage() {
   const data = useMemo(() => getTcoDashboardDemoData(), []);
@@ -68,6 +77,9 @@ export default function CostManagementPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // Flagged vehicles state
+  const [flaggedVehicles, setFlaggedVehicles] = useState<FlaggedVehicle[]>([]);
 
   // Get outlier for selected vehicle
   const drawerOutlier = useMemo(() => {
@@ -145,10 +157,41 @@ export default function CostManagementPage() {
     setIsDrawerOpen(false);
   };
 
-  const handleFlagForReview = (vehicleId: string) => {
-    console.log('[Demo] Vehicle flagged for review:', vehicleId);
-    // In real app, would update vehicle status
-  };
+  const handleFlagForReview = useCallback((vehicleId: string) => {
+    setFlaggedVehicles((prev) => {
+      // Don't add if already flagged and not resolved
+      if (prev.some((f) => f.vehicleId === vehicleId && !f.resolved)) {
+        return prev;
+      }
+      return [...prev, { vehicleId, flaggedAt: new Date(), resolved: false }];
+    });
+  }, []);
+
+  const handleResolveFlag = useCallback((vehicleId: string) => {
+    setFlaggedVehicles((prev) =>
+      prev.map((f) =>
+        f.vehicleId === vehicleId && !f.resolved
+          ? { ...f, resolved: true, resolvedAt: new Date() }
+          : f
+      )
+    );
+  }, []);
+
+  // Check if a vehicle is currently flagged (not resolved)
+  const isVehicleFlagged = useCallback(
+    (vehicleId: string) => {
+      return flaggedVehicles.some(
+        (f) => f.vehicleId === vehicleId && !f.resolved
+      );
+    },
+    [flaggedVehicles]
+  );
+
+  // Count of unresolved flagged vehicles
+  const unresolvedFlaggedCount = useMemo(
+    () => flaggedVehicles.filter((f) => !f.resolved).length,
+    [flaggedVehicles]
+  );
 
   const handleAddExpenseFromDrawer = (vehicleId: string) => {
     console.log('[Demo] Add expense for vehicle:', vehicleId);
@@ -376,6 +419,15 @@ ${filteredVehicles
               </Badge>
             )}
           </TabsTrigger>
+          <TabsTrigger value="flagged" className="gap-1.5">
+            <Flag className="h-4 w-4" />
+            Flagged
+            {unresolvedFlaggedCount > 0 && (
+              <Badge variant="destructive" className="ml-1 text-xs px-1.5 py-0">
+                {unresolvedFlaggedCount}
+              </Badge>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         {/* Vehicles Tab */}
@@ -491,6 +543,17 @@ ${filteredVehicles
             onDelete={handleDeleteExpense}
           />
         </TabsContent>
+
+        {/* Flagged Tab */}
+        <TabsContent value="flagged" className="flex-1 min-h-0">
+          <FlaggedVehiclesList
+            flaggedVehicles={flaggedVehicles}
+            vehicles={data.vehicles}
+            outliers={data.outlierSummary.outliers}
+            onViewDetails={handleRowClick}
+            onResolve={handleResolveFlag}
+          />
+        </TabsContent>
       </Tabs>
 
       {/* Vehicle Detail Drawer */}
@@ -501,6 +564,9 @@ ${filteredVehicles
         onClose={handleCloseDrawer}
         onFlagForReview={handleFlagForReview}
         onAddExpense={handleAddExpenseFromDrawer}
+        isFlagged={
+          drawerVehicle ? isVehicleFlagged(drawerVehicle.vehicleId) : false
+        }
       />
 
       {/* CSV Upload Dialog */}

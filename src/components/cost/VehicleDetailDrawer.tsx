@@ -33,6 +33,7 @@ interface VehicleDetailDrawerProps {
   onClose: () => void;
   onFlagForReview?: (vehicleId: string) => void;
   onAddExpense?: (vehicleId: string) => void;
+  isFlagged?: boolean;
 }
 
 // Vehicle type icon
@@ -125,6 +126,7 @@ export function VehicleDetailDrawer({
   onClose,
   onFlagForReview,
   onAddExpense,
+  isFlagged = false,
 }: VehicleDetailDrawerProps) {
   const [showDriverHistory, setShowDriverHistory] = useState(false);
 
@@ -788,22 +790,33 @@ export function VehicleDetailDrawer({
               : 'bg-slate-50'
           )}
         >
+          {isFlagged ? (
+            <Button
+              variant="outline"
+              className="flex-1 border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+              disabled
+            >
+              <CheckCircle2 className="h-4 w-4 mr-1.5" />
+              Flagged for Review
+            </Button>
+          ) : (
+            <Button
+              variant={isOutlier ? 'default' : 'outline'}
+              className={cn(
+                'flex-1',
+                isOutlier &&
+                  (effectiveSeverity === 'critical'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-amber-600 hover:bg-amber-700')
+              )}
+              onClick={() => onFlagForReview?.(vehicle.vehicleId)}
+            >
+              <Flag className="h-4 w-4 mr-1.5" />
+              {isOutlier ? 'Take Action' : 'Flag for Review'}
+            </Button>
+          )}
           <Button
-            variant={isOutlier ? 'default' : 'outline'}
-            className={cn(
-              'flex-1',
-              isOutlier &&
-                (effectiveSeverity === 'critical'
-                  ? 'bg-red-600 hover:bg-red-700'
-                  : 'bg-amber-600 hover:bg-amber-700')
-            )}
-            onClick={() => onFlagForReview?.(vehicle.vehicleId)}
-          >
-            <Flag className="h-4 w-4 mr-1.5" />
-            {isOutlier ? 'Take Action' : 'Flag for Review'}
-          </Button>
-          <Button
-            variant={isOutlier ? 'outline' : 'default'}
+            variant={isOutlier && !isFlagged ? 'outline' : 'default'}
             className="flex-1"
             onClick={() => onAddExpense?.(vehicle.vehicleId)}
           >
