@@ -654,8 +654,8 @@ export function VehicleDetailDrawer({
 
           {/* Cost Breakdown */}
           <div>
-            <h3 className="text-sm font-medium mb-3">Cost Breakdown</h3>
-            <div className="space-y-2">
+            <h3 className="text-sm font-medium mb-2">Cost Breakdown</h3>
+            <div className="space-y-1">
               {vehicle.costBreakdown
                 .filter((b) => b.amount > 0)
                 .sort((a, b) => b.amount - a.amount)
@@ -678,7 +678,7 @@ export function VehicleDetailDrawer({
                     <div
                       key={bucket.bucket}
                       className={cn(
-                        'flex items-center gap-3 p-2 -mx-2 rounded-lg transition-colors',
+                        'flex items-center gap-3 py-1 px-2 -mx-2 rounded-lg transition-colors',
                         isFlagged &&
                           (effectiveSeverity === 'critical'
                             ? 'bg-red-50'
