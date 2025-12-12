@@ -60,7 +60,7 @@ export const LivemapPreview = memo(function LivemapPreview({
       </CardHeader>
       <CardContent className="p-0">
         {/* Map container with overlay */}
-        <div className="relative h-[280px] overflow-hidden">
+        <div className="relative h-full overflow-hidden">
           {/* The actual map */}
           <div className="absolute inset-0">
             <FleetMap
