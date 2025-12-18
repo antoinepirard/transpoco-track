@@ -4,3 +4,6 @@ export { DriversTable } from './DriversTable';
 export { AssignmentsTable } from './AssignmentsTable';
 export { GroupDialog } from './GroupDialog';
 export { DeleteGroupDialog } from './DeleteGroupDialog';
+export { AddVehicleDialog } from './AddVehicleDialog';
+export { AddDriverDialog } from './AddDriverDialog';
+export { AddAssignmentDialog } from './AddAssignmentDialog';

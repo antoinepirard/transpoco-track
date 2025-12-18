@@ -17,9 +17,12 @@ import { DriversTable } from '@/components/garage/DriversTable';
 import { AssignmentsTable } from '@/components/garage/AssignmentsTable';
 import { GroupDialog } from '@/components/garage/GroupDialog';
 import { DeleteGroupDialog } from '@/components/garage/DeleteGroupDialog';
+import { AddVehicleDialog } from '@/components/garage/AddVehicleDialog';
+import { AddDriverDialog } from '@/components/garage/AddDriverDialog';
+import { AddAssignmentDialog } from '@/components/garage/AddAssignmentDialog';
 import {
-  VEHICLES,
-  DRIVERS,
+  VEHICLES as INITIAL_VEHICLES,
+  DRIVERS as INITIAL_DRIVERS,
   VEHICLE_GROUPS,
   DRIVER_GROUPS,
   VEHICLE_DRIVER_GROUPS,
@@ -30,6 +33,9 @@ import type {
   GarageTabStatus,
   GarageGroup,
   GroupType,
+  GarageVehicle,
+  GarageDriver,
+  VehicleDriverAssignment,
 } from '@/types/garage';
 import { cn } from '@/lib/utils';
 
@@ -50,7 +56,14 @@ export default function GaragePage() {
   const [tabStatus, setTabStatus] = useState<GarageTabStatus>('active');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Local state for groups (demo - would be API in production)
+  // Local state for data (demo - would be API in production)
+  const [vehicles, setVehicles] = useState<GarageVehicle[]>(INITIAL_VEHICLES);
+  const [drivers, setDrivers] = useState<GarageDriver[]>(INITIAL_DRIVERS);
+  const [assignments, setAssignments] = useState<VehicleDriverAssignment[]>(
+    () => getAssignmentsWithDetails()
+  );
+
+  // Local state for groups
   const [vehicleGroups, setVehicleGroups] =
     useState<GarageGroup[]>(VEHICLE_GROUPS);
   const [driverGroups, setDriverGroups] =
@@ -59,7 +72,7 @@ export default function GaragePage() {
     VEHICLE_DRIVER_GROUPS
   );
 
-  // Dialog state
+  // Group dialog state
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
   const [groupDialogMode, setGroupDialogMode] = useState<'add' | 'rename'>(
     'add'
@@ -68,56 +81,59 @@ export default function GaragePage() {
   const [selectedGroup, setSelectedGroup] = useState<GarageGroup | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+  // Entity dialog states
+  const [addVehicleDialogOpen, setAddVehicleDialogOpen] = useState(false);
+  const [addDriverDialogOpen, setAddDriverDialogOpen] = useState(false);
+  const [addAssignmentDialogOpen, setAddAssignmentDialogOpen] = useState(false);
+
   // Get all groups combined for lookups
   const allGroups = useMemo(
     () => [...vehicleGroups, ...driverGroups, ...vehicleDriverGroups],
     [vehicleGroups, driverGroups, vehicleDriverGroups]
   );
 
-  // Get data based on selection
-  const vehicles = useMemo(() => {
-    if (!selectedGroupId) return VEHICLES;
-    return VEHICLES.filter((v) => v.groupId === selectedGroupId);
-  }, [selectedGroupId]);
+  // Filter data based on selection
+  const filteredVehicles = useMemo(() => {
+    if (!selectedGroupId) return vehicles;
+    return vehicles.filter((v) => v.groupId === selectedGroupId);
+  }, [vehicles, selectedGroupId]);
 
-  const drivers = useMemo(() => {
-    if (!selectedGroupId) return DRIVERS;
-    return DRIVERS.filter((d) => d.groupId === selectedGroupId);
-  }, [selectedGroupId]);
+  const filteredDrivers = useMemo(() => {
+    if (!selectedGroupId) return drivers;
+    return drivers.filter((d) => d.groupId === selectedGroupId);
+  }, [drivers, selectedGroupId]);
 
-  const assignments = useMemo(() => {
-    const allAssignments = getAssignmentsWithDetails();
-    if (!selectedGroupId) return allAssignments;
-    return allAssignments.filter((a) => a.groupId === selectedGroupId);
-  }, [selectedGroupId]);
+  const filteredAssignments = useMemo(() => {
+    if (!selectedGroupId) return assignments;
+    return assignments.filter((a) => a.groupId === selectedGroupId);
+  }, [assignments, selectedGroupId]);
 
   // Calculate counts for sidebar
   const vehicleCounts = useMemo(() => {
     const byGroup: Record<string, number> = {};
     vehicleGroups.forEach((group) => {
-      byGroup[group.id] = VEHICLES.filter((v) => v.groupId === group.id).length;
+      byGroup[group.id] = vehicles.filter((v) => v.groupId === group.id).length;
     });
-    return { all: VEHICLES.length, byGroup };
-  }, [vehicleGroups]);
+    return { all: vehicles.length, byGroup };
+  }, [vehicleGroups, vehicles]);
 
   const driverCounts = useMemo(() => {
     const byGroup: Record<string, number> = {};
     driverGroups.forEach((group) => {
-      byGroup[group.id] = DRIVERS.filter((d) => d.groupId === group.id).length;
+      byGroup[group.id] = drivers.filter((d) => d.groupId === group.id).length;
     });
-    return { all: DRIVERS.length, byGroup };
-  }, [driverGroups]);
+    return { all: drivers.length, byGroup };
+  }, [driverGroups, drivers]);
 
   const assignmentCounts = useMemo(() => {
-    const allAssignments = getAssignmentsWithDetails();
     const byGroup: Record<string, number> = {};
     vehicleDriverGroups.forEach((group) => {
-      byGroup[group.id] = allAssignments.filter(
+      byGroup[group.id] = assignments.filter(
         (a) => a.groupId === group.id
       ).length;
     });
-    return { all: allAssignments.length, byGroup };
-  }, [vehicleDriverGroups]);
+    return { all: assignments.length, byGroup };
+  }, [vehicleDriverGroups, assignments]);
 
   // Handle selection change
   const handleSelectionChange = (
@@ -126,7 +142,72 @@ export default function GaragePage() {
   ) => {
     setSelectedSection(section);
     setSelectedGroupId(groupId);
-    setSearchQuery(''); // Reset search when changing selection
+    setSearchQuery('');
+  };
+
+  // Handle add button click
+  const handleAddButtonClick = () => {
+    switch (selectedSection) {
+      case 'vehicles':
+        setAddVehicleDialogOpen(true);
+        break;
+      case 'drivers':
+        setAddDriverDialogOpen(true);
+        break;
+      case 'assignments':
+        setAddAssignmentDialogOpen(true);
+        break;
+    }
+  };
+
+  // Handle add vehicle
+  const handleAddVehicle = (
+    vehicleData: Omit<GarageVehicle, 'id' | 'createdAt' | 'updatedAt'>
+  ) => {
+    const now = new Date().toISOString();
+    const newVehicle: GarageVehicle = {
+      ...vehicleData,
+      id: `v-${Date.now()}`,
+      createdAt: now,
+      updatedAt: now,
+    };
+    setVehicles((prev) => [newVehicle, ...prev]);
+  };
+
+  // Handle add driver
+  const handleAddDriver = (
+    driverData: Omit<GarageDriver, 'id' | 'createdAt' | 'updatedAt'>
+  ) => {
+    const now = new Date().toISOString();
+    const newDriver: GarageDriver = {
+      ...driverData,
+      id: `d-${Date.now()}`,
+      createdAt: now,
+      updatedAt: now,
+    };
+    setDrivers((prev) => [newDriver, ...prev]);
+  };
+
+  // Handle add assignment
+  const handleAddAssignment = (
+    assignmentData: Omit<
+      VehicleDriverAssignment,
+      'id' | 'createdAt' | 'updatedAt' | 'vehicle' | 'driver'
+    >
+  ) => {
+    const now = new Date().toISOString();
+    const vehicle = vehicles.find((v) => v.id === assignmentData.vehicleId);
+    const driver = drivers.find((d) => d.id === assignmentData.driverId);
+
+    const newAssignment: VehicleDriverAssignment = {
+      ...assignmentData,
+      id: `a-${Date.now()}`,
+      vehicle,
+      driver,
+      createdAt: now,
+      updatedAt: now,
+    };
+    setAssignments((prev) => [newAssignment, ...prev]);
   };
 
   // Handle add group
@@ -216,7 +297,6 @@ export default function GaragePage() {
         break;
     }
 
-    // If the deleted group was selected, go back to "All"
     if (selectedGroupId === selectedGroup.id) {
       setSelectedGroupId(null);
     }
@@ -295,7 +375,11 @@ export default function GaragePage() {
                 <DownloadIcon className="w-4 h-4 mr-2" />
                 Export
               </Button>
-              <Button size="sm" className="bg-[#3D88C5] hover:bg-[#3478a5]">
+              <Button
+                size="sm"
+                className="bg-[#3D88C5] hover:bg-[#3478a5]"
+                onClick={handleAddButtonClick}
+              >
                 <PlusIcon className="w-4 h-4 mr-2" />
                 {getAddButtonLabel()}
               </Button>
@@ -337,21 +421,21 @@ export default function GaragePage() {
         <div className="flex-1 p-6 overflow-auto">
           {selectedSection === 'vehicles' && (
             <VehiclesTable
-              vehicles={vehicles}
+              vehicles={filteredVehicles}
               tabStatus={tabStatus}
               searchQuery={searchQuery}
             />
           )}
           {selectedSection === 'drivers' && (
             <DriversTable
-              drivers={drivers}
+              drivers={filteredDrivers}
               tabStatus={tabStatus}
               searchQuery={searchQuery}
             />
           )}
           {selectedSection === 'assignments' && (
             <AssignmentsTable
-              assignments={assignments}
+              assignments={filteredAssignments}
               tabStatus={tabStatus}
               searchQuery={searchQuery}
             />
@@ -375,6 +459,32 @@ export default function GaragePage() {
         onOpenChange={setDeleteDialogOpen}
         group={selectedGroup}
         onConfirm={handleDeleteConfirm}
+      />
+
+      {/* Add Vehicle Dialog */}
+      <AddVehicleDialog
+        open={addVehicleDialogOpen}
+        onOpenChange={setAddVehicleDialogOpen}
+        vehicleGroups={vehicleGroups}
+        onSubmit={handleAddVehicle}
+      />
+
+      {/* Add Driver Dialog */}
+      <AddDriverDialog
+        open={addDriverDialogOpen}
+        onOpenChange={setAddDriverDialogOpen}
+        driverGroups={driverGroups}
+        onSubmit={handleAddDriver}
+      />
+
+      {/* Add Assignment Dialog */}
+      <AddAssignmentDialog
+        open={addAssignmentDialogOpen}
+        onOpenChange={setAddAssignmentDialogOpen}
+        vehicles={vehicles}
+        drivers={drivers}
+        assignmentGroups={vehicleDriverGroups}
+        onSubmit={handleAddAssignment}
       />
     </div>
   );
