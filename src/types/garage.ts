@@ -2,21 +2,62 @@
 export type VehicleType = 'truck' | 'van' | 'car' | 'motorcycle' | 'trailer';
 export type VehicleStatus = 'active' | 'archived';
 export type FuelType = 'diesel' | 'petrol' | 'electric' | 'hybrid' | 'lpg';
+export type LabelColor =
+  | 'white_label'
+  | 'blue_label'
+  | 'green_label'
+  | 'red_label'
+  | 'yellow_label'
+  | 'orange_label';
+export type VehicleIcon =
+  | 'stairs'
+  | 'electric_tractor'
+  | 'truck'
+  | 'van'
+  | 'car'
+  | 'motorcycle';
 
 export interface GarageVehicle {
   id: string;
-  name: string;
+  // Basic info
   registrationNumber: string;
-  type: VehicleType;
+  description: string; // Was "name"
+  secondaryDescription?: string;
   make?: string;
   model?: string;
-  year?: number;
   fuelType?: FuelType;
+  fleetNumber?: string;
+  // Mileage & Engine
+  mileage?: number; // Was "odometer"
+  currentEngineHours?: number;
+  initialEngineHours?: number;
+  engineType?: string;
+  // Identification
   vin?: string;
+  cameraSerialNumber?: string;
+  // Display & Labeling
+  label?: string;
+  labelColor?: LabelColor;
+  icon?: VehicleIcon;
+  // Operational
+  canbusEnabled?: boolean;
+  whitelistEnabled?: boolean;
+  division?: string; // Division/Station
+  passengers?: number;
+  // Financial
+  vehicleValue?: number;
+  purchaseCost?: number; // ex VAT
+  consumptionTarget?: number;
+  // Notes & Media
+  notes?: string;
+  photo?: string; // URL or base64
+  // Legacy fields (keeping for compatibility)
+  type?: VehicleType;
+  year?: number;
+  // Relationships
   status: VehicleStatus;
   groupId?: string;
   assignedDriverId?: string;
-  odometer?: number;
   createdAt: string;
   updatedAt: string;
 }

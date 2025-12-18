@@ -19,20 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type {
-  GarageVehicle,
-  GarageGroup,
-  VehicleType,
-  FuelType,
-} from '@/types/garage';
-
-const VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
-  { value: 'van', label: 'Van' },
-  { value: 'truck', label: 'Truck' },
-  { value: 'car', label: 'Car' },
-  { value: 'motorcycle', label: 'Motorcycle' },
-  { value: 'trailer', label: 'Trailer' },
-];
+import type { GarageVehicle, GarageGroup, FuelType } from '@/types/garage';
 
 const FUEL_TYPES: { value: FuelType; label: string }[] = [
   { value: 'diesel', label: 'Diesel' },
@@ -57,40 +44,43 @@ export function AddVehicleDialog({
   vehicleGroups,
   onSubmit,
 }: AddVehicleDialogProps) {
-  const [name, setName] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
-  const [type, setType] = useState<VehicleType>('van');
+  const [description, setDescription] = useState('');
+  const [secondaryDescription, setSecondaryDescription] = useState('');
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
-  const [year, setYear] = useState('');
-  const [fuelType, setFuelType] = useState<FuelType>('diesel');
+  const [fuelType, setFuelType] = useState<FuelType | ''>('');
+  const [fleetNumber, setFleetNumber] = useState('');
+  const [division, setDivision] = useState('');
   const [groupId, setGroupId] = useState<string>('');
 
   useEffect(() => {
     if (open) {
       // Reset form when dialog opens
-      setName('');
       setRegistrationNumber('');
-      setType('van');
+      setDescription('');
+      setSecondaryDescription('');
       setMake('');
       setModel('');
-      setYear('');
-      setFuelType('diesel');
+      setFuelType('');
+      setFleetNumber('');
+      setDivision('');
       setGroupId('');
     }
   }, [open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim() && registrationNumber.trim()) {
+    if (description.trim() && registrationNumber.trim()) {
       onSubmit({
-        name: name.trim(),
         registrationNumber: registrationNumber.trim().toUpperCase(),
-        type,
+        description: description.trim(),
+        secondaryDescription: secondaryDescription.trim() || undefined,
         make: make.trim() || undefined,
         model: model.trim() || undefined,
-        year: year ? parseInt(year, 10) : undefined,
-        fuelType,
+        fuelType: fuelType || undefined,
+        fleetNumber: fleetNumber.trim() || undefined,
+        division: division.trim() || undefined,
         groupId: groupId || undefined,
         status: 'active',
       });
@@ -98,7 +88,7 @@ export function AddVehicleDialog({
     }
   };
 
-  const isValid = name.trim() && registrationNumber.trim();
+  const isValid = description.trim() && registrationNumber.trim();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -114,18 +104,6 @@ export function AddVehicleDialog({
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="name">
-                  Vehicle Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Transit Custom 01"
-                  autoFocus
-                />
-              </div>
-              <div className="grid gap-2">
                 <Label htmlFor="registration">
                   Registration <span className="text-red-500">*</span>
                 </Label>
@@ -135,50 +113,45 @@ export function AddVehicleDialog({
                   onChange={(e) => setRegistrationNumber(e.target.value)}
                   placeholder="e.g. 191-D-12345"
                   className="uppercase"
+                  autoFocus
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="fleetNumber">Fleet Number</Label>
+                <Input
+                  id="fleetNumber"
+                  value={fleetNumber}
+                  onChange={(e) => setFleetNumber(e.target.value)}
+                  placeholder="e.g. FL001"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="type">Vehicle Type</Label>
-                <Select
-                  value={type}
-                  onValueChange={(v) => setType(v as VehicleType)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {VEHICLE_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="fuel">Fuel Type</Label>
-                <Select
-                  value={fuelType}
-                  onValueChange={(v) => setFuelType(v as FuelType)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FUEL_TYPES.map((f) => (
-                      <SelectItem key={f.value} value={f.value}>
-                        {f.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">
+                Description <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="e.g. Transit Custom 01"
+              />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="secondaryDescription">
+                Secondary Description
+              </Label>
+              <Input
+                id="secondaryDescription"
+                value={secondaryDescription}
+                onChange={(e) => setSecondaryDescription(e.target.value)}
+                placeholder="Optional additional description"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="make">Make</Label>
                 <Input
@@ -197,16 +170,37 @@ export function AddVehicleDialog({
                   placeholder="e.g. Transit"
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="year">Year</Label>
+                <Label htmlFor="fuel">Fuel Type</Label>
+                <Select
+                  value={fuelType || 'none'}
+                  onValueChange={(v) =>
+                    setFuelType(v === 'none' ? '' : (v as FuelType))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Not specified</SelectItem>
+                    {FUEL_TYPES.map((f) => (
+                      <SelectItem key={f.value} value={f.value}>
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="division">Division / Station</Label>
                 <Input
-                  id="year"
-                  type="number"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                  placeholder="e.g. 2024"
-                  min="1990"
-                  max="2030"
+                  id="division"
+                  value={division}
+                  onChange={(e) => setDivision(e.target.value)}
+                  placeholder="e.g. Dublin Fleet"
                 />
               </div>
             </div>

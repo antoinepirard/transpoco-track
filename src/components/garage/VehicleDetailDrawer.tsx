@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -30,19 +31,12 @@ import {
 import type {
   GarageVehicle,
   GarageGroup,
-  VehicleType,
   FuelType,
+  LabelColor,
+  VehicleIcon,
 } from '@/types/garage';
 import { getDriverName } from '@/lib/demo/garageData';
 import { cn } from '@/lib/utils';
-
-const VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
-  { value: 'van', label: 'Van' },
-  { value: 'truck', label: 'Truck' },
-  { value: 'car', label: 'Car' },
-  { value: 'motorcycle', label: 'Motorcycle' },
-  { value: 'trailer', label: 'Trailer' },
-];
 
 const FUEL_TYPES: { value: FuelType; label: string }[] = [
   { value: 'diesel', label: 'Diesel' },
@@ -50,6 +44,24 @@ const FUEL_TYPES: { value: FuelType; label: string }[] = [
   { value: 'electric', label: 'Electric' },
   { value: 'hybrid', label: 'Hybrid' },
   { value: 'lpg', label: 'LPG' },
+];
+
+const LABEL_COLORS: { value: LabelColor; label: string }[] = [
+  { value: 'white_label', label: 'White' },
+  { value: 'blue_label', label: 'Blue' },
+  { value: 'green_label', label: 'Green' },
+  { value: 'red_label', label: 'Red' },
+  { value: 'yellow_label', label: 'Yellow' },
+  { value: 'orange_label', label: 'Orange' },
+];
+
+const VEHICLE_ICONS: { value: VehicleIcon; label: string }[] = [
+  { value: 'van', label: 'Van' },
+  { value: 'truck', label: 'Truck' },
+  { value: 'car', label: 'Car' },
+  { value: 'motorcycle', label: 'Motorcycle' },
+  { value: 'stairs', label: 'Stairs' },
+  { value: 'electric_tractor', label: 'Electric Tractor' },
 ];
 
 interface VehicleDetailDrawerProps {
@@ -118,7 +130,7 @@ export function VehicleDetailDrawer({
 
   return (
     <Sheet open={open} onOpenChange={handleClose}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto p-0">
+      <SheetContent className="w-full sm:max-w-xl overflow-y-auto p-0">
         <SheetHeader className="p-6 pb-4 border-b">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -126,7 +138,7 @@ export function VehicleDetailDrawer({
             </div>
             <div className="flex-1 min-w-0">
               <SheetTitle className="text-lg truncate">
-                {vehicle.name}
+                {vehicle.description}
               </SheetTitle>
               <SheetDescription className="flex items-center gap-2">
                 {vehicle.registrationNumber}
@@ -144,29 +156,25 @@ export function VehicleDetailDrawer({
           </div>
         </SheetHeader>
 
-        <Tabs defaultValue="details" className="mt-4 px-6">
+        <Tabs defaultValue="basic" className="mt-4 px-6">
           <TabsList className="w-full">
-            <TabsTrigger value="details" className="flex-1">
-              Details
+            <TabsTrigger value="basic" className="flex-1">
+              Basic
             </TabsTrigger>
-            <TabsTrigger value="assignments" className="flex-1">
-              Assignments
+            <TabsTrigger value="technical" className="flex-1">
+              Technical
             </TabsTrigger>
-            <TabsTrigger value="history" className="flex-1">
-              History
+            <TabsTrigger value="display" className="flex-1">
+              Display
+            </TabsTrigger>
+            <TabsTrigger value="financial" className="flex-1">
+              Financial
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="details" className="mt-4 space-y-4">
+          {/* Basic Tab */}
+          <TabsContent value="basic" className="mt-4 space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Vehicle Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name || ''}
-                  onChange={(e) => updateField('name', e.target.value)}
-                />
-              </div>
               <div className="grid gap-2">
                 <Label htmlFor="registration">Registration</Label>
                 <Input
@@ -178,48 +186,39 @@ export function VehicleDetailDrawer({
                   className="uppercase"
                 />
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="fleetNumber">Fleet Number</Label>
+                <Input
+                  id="fleetNumber"
+                  value={formData.fleetNumber || ''}
+                  onChange={(e) => updateField('fleetNumber', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                value={formData.description || ''}
+                onChange={(e) => updateField('description', e.target.value)}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="secondaryDescription">
+                Secondary Description
+              </Label>
+              <Input
+                id="secondaryDescription"
+                value={formData.secondaryDescription || ''}
+                onChange={(e) =>
+                  updateField('secondaryDescription', e.target.value)
+                }
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="type">Vehicle Type</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(v) => updateField('type', v as VehicleType)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {VEHICLE_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="fuel">Fuel Type</Label>
-                <Select
-                  value={formData.fuelType}
-                  onValueChange={(v) => updateField('fuelType', v as FuelType)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FUEL_TYPES.map((f) => (
-                      <SelectItem key={f.value} value={f.value}>
-                        {f.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="make">Make</Label>
                 <Input
@@ -236,44 +235,39 @@ export function VehicleDetailDrawer({
                   onChange={(e) => updateField('model', e.target.value)}
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="year">Year</Label>
-                <Input
-                  id="year"
-                  type="number"
-                  value={formData.year || ''}
-                  onChange={(e) =>
-                    updateField(
-                      'year',
-                      e.target.value ? parseInt(e.target.value, 10) : undefined
-                    )
-                  }
-                />
-              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="vin">VIN</Label>
-                <Input
-                  id="vin"
-                  value={formData.vin || ''}
-                  onChange={(e) => updateField('vin', e.target.value)}
-                  placeholder="Vehicle Identification Number"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="odometer">Odometer (km)</Label>
-                <Input
-                  id="odometer"
-                  type="number"
-                  value={formData.odometer || ''}
-                  onChange={(e) =>
+                <Label htmlFor="fuel">Fuel Type</Label>
+                <Select
+                  value={formData.fuelType || 'none'}
+                  onValueChange={(v) =>
                     updateField(
-                      'odometer',
-                      e.target.value ? parseInt(e.target.value, 10) : undefined
+                      'fuelType',
+                      v === 'none' ? undefined : (v as FuelType)
                     )
                   }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {FUEL_TYPES.map((f) => (
+                      <SelectItem key={f.value} value={f.value}>
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="division">Division / Station</Label>
+                <Input
+                  id="division"
+                  value={formData.division || ''}
+                  onChange={(e) => updateField('division', e.target.value)}
                 />
               </div>
             </div>
@@ -308,6 +302,210 @@ export function VehicleDetailDrawer({
               </Select>
             </div>
 
+            <div className="grid gap-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Input
+                id="notes"
+                value={formData.notes || ''}
+                onChange={(e) => updateField('notes', e.target.value)}
+                placeholder="Additional notes..."
+              />
+            </div>
+          </TabsContent>
+
+          {/* Technical Tab */}
+          <TabsContent value="technical" className="mt-4 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="mileage">Mileage (km)</Label>
+                <Input
+                  id="mileage"
+                  type="number"
+                  value={formData.mileage || ''}
+                  onChange={(e) =>
+                    updateField(
+                      'mileage',
+                      e.target.value ? parseInt(e.target.value, 10) : undefined
+                    )
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="passengers">Passengers</Label>
+                <Input
+                  id="passengers"
+                  type="number"
+                  value={formData.passengers || ''}
+                  onChange={(e) =>
+                    updateField(
+                      'passengers',
+                      e.target.value ? parseInt(e.target.value, 10) : undefined
+                    )
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="vin">VIN</Label>
+              <Input
+                id="vin"
+                value={formData.vin || ''}
+                onChange={(e) => updateField('vin', e.target.value)}
+                placeholder="Vehicle Identification Number"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="currentEngineHours">Current Engine Hours</Label>
+                <Input
+                  id="currentEngineHours"
+                  type="number"
+                  step="0.1"
+                  value={formData.currentEngineHours ?? ''}
+                  onChange={(e) =>
+                    updateField(
+                      'currentEngineHours',
+                      e.target.value ? parseFloat(e.target.value) : undefined
+                    )
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="initialEngineHours">Initial Engine Hours</Label>
+                <Input
+                  id="initialEngineHours"
+                  type="number"
+                  step="0.1"
+                  value={formData.initialEngineHours ?? ''}
+                  onChange={(e) =>
+                    updateField(
+                      'initialEngineHours',
+                      e.target.value ? parseFloat(e.target.value) : undefined
+                    )
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="engineType">Engine Type</Label>
+                <Input
+                  id="engineType"
+                  value={formData.engineType || ''}
+                  onChange={(e) => updateField('engineType', e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="cameraSerialNumber">Camera Serial Number</Label>
+                <Input
+                  id="cameraSerialNumber"
+                  value={formData.cameraSerialNumber || ''}
+                  onChange={(e) =>
+                    updateField('cameraSerialNumber', e.target.value)
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 pt-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="canbusEnabled"
+                  checked={formData.canbusEnabled ?? false}
+                  onCheckedChange={(checked) =>
+                    updateField('canbusEnabled', checked === true)
+                  }
+                />
+                <Label
+                  htmlFor="canbusEnabled"
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  CANbus Enabled
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="whitelistEnabled"
+                  checked={formData.whitelistEnabled ?? false}
+                  onCheckedChange={(checked) =>
+                    updateField('whitelistEnabled', checked === true)
+                  }
+                />
+                <Label
+                  htmlFor="whitelistEnabled"
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Whitelist Enabled
+                </Label>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Display Tab */}
+          <TabsContent value="display" className="mt-4 space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="label">Label</Label>
+              <Input
+                id="label"
+                value={formData.label || ''}
+                onChange={(e) => updateField('label', e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="labelColor">Label Colour</Label>
+                <Select
+                  value={formData.labelColor || 'none'}
+                  onValueChange={(v) =>
+                    updateField(
+                      'labelColor',
+                      v === 'none' ? undefined : (v as LabelColor)
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {LABEL_COLORS.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="icon">Icon</Label>
+                <Select
+                  value={formData.icon || 'none'}
+                  onValueChange={(v) =>
+                    updateField(
+                      'icon',
+                      v === 'none' ? undefined : (v as VehicleIcon)
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {VEHICLE_ICONS.map((i) => (
+                      <SelectItem key={i.value} value={i.value}>
+                        {i.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             {/* Read-only info */}
             <div className="pt-4 border-t space-y-2">
               <div className="flex justify-between text-sm">
@@ -327,18 +525,56 @@ export function VehicleDetailDrawer({
             </div>
           </TabsContent>
 
-          <TabsContent value="assignments" className="mt-4">
-            <div className="text-center py-8 text-gray-500">
-              <p>Vehicle assignment history will appear here.</p>
-              <p className="text-sm mt-1">
-                Assigned to: {getDriverName(vehicle.assignedDriverId)}
-              </p>
+          {/* Financial Tab */}
+          <TabsContent value="financial" className="mt-4 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="vehicleValue">Vehicle Value</Label>
+                <Input
+                  id="vehicleValue"
+                  type="number"
+                  value={formData.vehicleValue || ''}
+                  onChange={(e) =>
+                    updateField(
+                      'vehicleValue',
+                      e.target.value ? parseFloat(e.target.value) : undefined
+                    )
+                  }
+                  placeholder="€"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="purchaseCost">Purchase Cost (ex VAT)</Label>
+                <Input
+                  id="purchaseCost"
+                  type="number"
+                  value={formData.purchaseCost || ''}
+                  onChange={(e) =>
+                    updateField(
+                      'purchaseCost',
+                      e.target.value ? parseFloat(e.target.value) : undefined
+                    )
+                  }
+                  placeholder="€"
+                />
+              </div>
             </div>
-          </TabsContent>
 
-          <TabsContent value="history" className="mt-4">
-            <div className="text-center py-8 text-gray-500">
-              <p>Activity history will appear here.</p>
+            <div className="grid gap-2">
+              <Label htmlFor="consumptionTarget">Consumption Target</Label>
+              <Input
+                id="consumptionTarget"
+                type="number"
+                step="0.1"
+                value={formData.consumptionTarget || ''}
+                onChange={(e) =>
+                  updateField(
+                    'consumptionTarget',
+                    e.target.value ? parseFloat(e.target.value) : undefined
+                  )
+                }
+                placeholder="L/100km or kWh/100km"
+              />
             </div>
           </TabsContent>
         </Tabs>

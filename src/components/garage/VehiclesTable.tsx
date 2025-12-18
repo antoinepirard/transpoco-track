@@ -32,14 +32,6 @@ const fuelTypeColors: Record<string, string> = {
   lpg: 'bg-purple-100 text-purple-800',
 };
 
-const vehicleTypeColors: Record<string, string> = {
-  truck: 'bg-gray-100 text-gray-800',
-  van: 'bg-blue-100 text-blue-800',
-  car: 'bg-indigo-100 text-indigo-800',
-  motorcycle: 'bg-orange-100 text-orange-800',
-  trailer: 'bg-slate-100 text-slate-800',
-};
-
 export function VehiclesTable({
   vehicles,
   tabStatus,
@@ -56,10 +48,12 @@ export function VehiclesTable({
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (v) =>
-          v.name.toLowerCase().includes(query) ||
+          v.description.toLowerCase().includes(query) ||
           v.registrationNumber.toLowerCase().includes(query) ||
           v.make?.toLowerCase().includes(query) ||
-          v.model?.toLowerCase().includes(query)
+          v.model?.toLowerCase().includes(query) ||
+          v.fleetNumber?.toLowerCase().includes(query) ||
+          v.division?.toLowerCase().includes(query)
       );
     }
 
@@ -93,50 +87,36 @@ export function VehiclesTable({
         size: 40,
       },
       {
-        accessorKey: 'name',
-        header: 'Vehicle Name',
-        size: 180,
-      },
-      {
         accessorKey: 'registrationNumber',
         header: 'Registration',
-        size: 120,
+        size: 110,
       },
       {
-        accessorKey: 'type',
-        header: 'Type',
-        cell: ({ row }) => (
-          <Badge
-            variant="secondary"
-            className={cn(
-              'capitalize',
-              vehicleTypeColors[row.original.type] || 'bg-gray-100'
-            )}
-          >
-            {row.original.type}
-          </Badge>
-        ),
+        accessorKey: 'description',
+        header: 'Description',
+        size: 160,
+      },
+      {
+        accessorKey: 'secondaryDescription',
+        header: 'Secondary Desc.',
+        cell: ({ row }) => row.original.secondaryDescription || '-',
+        size: 130,
+      },
+      {
+        accessorKey: 'make',
+        header: 'Make',
+        cell: ({ row }) => row.original.make || '-',
         size: 100,
       },
       {
-        id: 'makeModel',
-        header: 'Make / Model',
-        cell: ({ row }) => {
-          const make = row.original.make || '';
-          const model = row.original.model || '';
-          return make || model ? `${make} ${model}`.trim() : '-';
-        },
-        size: 180,
-      },
-      {
-        accessorKey: 'year',
-        header: 'Year',
-        cell: ({ row }) => row.original.year || '-',
-        size: 80,
+        accessorKey: 'model',
+        header: 'Model',
+        cell: ({ row }) => row.original.model || '-',
+        size: 120,
       },
       {
         accessorKey: 'fuelType',
-        header: 'Fuel',
+        header: 'Fuel Type',
         cell: ({ row }) =>
           row.original.fuelType ? (
             <Badge
@@ -154,24 +134,34 @@ export function VehiclesTable({
         size: 100,
       },
       {
+        accessorKey: 'fleetNumber',
+        header: 'Fleet #',
+        cell: ({ row }) => row.original.fleetNumber || '-',
+        size: 80,
+      },
+      {
+        accessorKey: 'mileage',
+        header: 'Mileage (km)',
+        cell: ({ row }) =>
+          row.original.mileage ? row.original.mileage.toLocaleString() : '-',
+        size: 100,
+      },
+      {
+        accessorKey: 'division',
+        header: 'Division',
+        cell: ({ row }) => row.original.division || '-',
+        size: 120,
+      },
+      {
         id: 'driver',
         header: 'Assigned Driver',
         cell: ({ row }) => getDriverName(row.original.assignedDriverId),
-        size: 150,
+        size: 140,
       },
       {
         id: 'group',
         header: 'Group',
         cell: ({ row }) => getGroupName(row.original.groupId),
-        size: 130,
-      },
-      {
-        accessorKey: 'odometer',
-        header: 'Odometer',
-        cell: ({ row }) =>
-          row.original.odometer
-            ? `${row.original.odometer.toLocaleString()} km`
-            : '-',
         size: 120,
       },
     ],
@@ -196,7 +186,7 @@ export function VehiclesTable({
 
   return (
     <div className="w-full overflow-auto rounded-lg border border-gray-200">
-      <table className="w-full text-sm bg-white" style={{ minWidth: '1200px' }}>
+      <table className="w-full text-sm bg-white" style={{ minWidth: '1400px' }}>
         <thead className="bg-gray-50 text-left text-gray-600">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="border-b border-gray-200">
