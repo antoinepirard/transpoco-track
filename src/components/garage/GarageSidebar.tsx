@@ -284,7 +284,7 @@ export function GarageSidebar({
   return (
     <div className="w-60 bg-white border-r border-gray-200 flex flex-col h-full">
       <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Garage</h2>
+        <h2 className="text-base font-bold text-gray-900">Garage</h2>
         <p className="text-sm text-gray-500">Manage your fleet</p>
       </div>
 
