@@ -46,7 +46,7 @@ function SidebarItem({
     <button
       onClick={onClick}
       className={cn(
-        'w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors',
+        'w-full flex items-center justify-between px-3 py-1.5 text-sm rounded-md transition-colors',
         isActive ? 'bg-[#3D88C5] text-white' : 'text-gray-700 hover:bg-gray-100'
       )}
     >
@@ -103,7 +103,7 @@ function GroupItem({
     >
       <button
         onClick={onClick}
-        className="flex-1 flex items-center justify-between px-3 py-2 text-sm min-w-0"
+        className="flex-1 flex items-center justify-between px-3 py-1.5 text-sm min-w-0"
       >
         <div className="flex items-center gap-2 min-w-0">
           {group.color && (
@@ -119,7 +119,7 @@ function GroupItem({
           className={cn(
             'ml-2 flex-shrink-0 transition-opacity',
             isActive && 'bg-white/20 text-white border-transparent',
-            (isHovered || isMenuOpen) && !isActive && 'opacity-0'
+            (isHovered || isMenuOpen) && 'opacity-0'
           )}
         >
           {count}
@@ -194,7 +194,7 @@ function SidebarSection({
     <div className="border-b border-gray-200 last:border-b-0">
       <button
         onClick={onToggle}
-        className="w-full flex items-center gap-2 px-3 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 transition-colors"
       >
         {isExpanded ? (
           <CaretDownIcon className="w-4 h-4 text-gray-500" />
@@ -205,11 +205,11 @@ function SidebarSection({
         <span>{title}</span>
       </button>
       {isExpanded && (
-        <div className="px-2 pb-3 space-y-0.5">
+        <div className="px-2 pb-2 space-y-0.5">
           {children}
           <button
             onClick={onAddGroup}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
           >
             <PlusIcon className="w-4 h-4" />
             <span>Add Group</span>
