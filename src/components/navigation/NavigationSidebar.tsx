@@ -303,29 +303,10 @@ const sidebarNavigationData: NavigationSection[] = [
             icon: ClockIcon,
           },
           {
-            id: 'vehicles',
-            label: 'Vehicles',
+            id: 'garage',
+            label: 'Garage',
             icon: TruckIcon,
-          },
-          {
-            id: 'vehicle-groups',
-            label: 'Vehicle Groups',
-            icon: ListIcon,
-          },
-          {
-            id: 'drivers',
-            label: 'Drivers',
-            icon: UsersIcon,
-          },
-          {
-            id: 'driver-groups',
-            label: 'Driver Groups',
-            icon: UsersIcon,
-          },
-          {
-            id: 'vehicle-driver-groups',
-            label: 'Vehicle Driver Groups',
-            icon: UsersIcon,
+            href: '/garage',
           },
         ],
       },
@@ -359,7 +340,7 @@ const sidebarNavigationData: NavigationSection[] = [
             href: '/maintain/types',
           },
           {
-            id: 'garage',
+            id: 'maintain-garage',
             label: 'Garage',
             icon: TruckIcon,
             href: '/maintain/garage',

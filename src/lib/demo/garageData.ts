@@ -1,0 +1,680 @@
+import type {
+  GarageVehicle,
+  GarageDriver,
+  GarageGroup,
+  VehicleDriverAssignment,
+  GarageSummary,
+} from '@/types/garage';
+
+// Vehicle Groups
+export const VEHICLE_GROUPS: GarageGroup[] = [
+  {
+    id: 'vg-1',
+    name: 'Dublin Fleet',
+    type: 'vehicle',
+    description: 'Vehicles operating in Dublin area',
+    color: '#3B82F6',
+    memberCount: 12,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-06-20T14:30:00Z',
+  },
+  {
+    id: 'vg-2',
+    name: 'Cork Fleet',
+    type: 'vehicle',
+    description: 'Vehicles operating in Cork area',
+    color: '#10B981',
+    memberCount: 8,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-06-20T14:30:00Z',
+  },
+  {
+    id: 'vg-3',
+    name: 'Galway Fleet',
+    type: 'vehicle',
+    description: 'Vehicles operating in Galway area',
+    color: '#F59E0B',
+    memberCount: 5,
+    createdAt: '2024-02-01T09:00:00Z',
+    updatedAt: '2024-06-15T11:00:00Z',
+  },
+  {
+    id: 'vg-4',
+    name: 'Electric Vehicles',
+    type: 'vehicle',
+    description: 'All electric and hybrid vehicles',
+    color: '#8B5CF6',
+    memberCount: 6,
+    createdAt: '2024-03-01T08:00:00Z',
+    updatedAt: '2024-07-01T16:00:00Z',
+  },
+];
+
+// Driver Groups
+export const DRIVER_GROUPS: GarageGroup[] = [
+  {
+    id: 'dg-1',
+    name: 'Day Shift',
+    type: 'driver',
+    description: 'Drivers working day shifts',
+    color: '#F97316',
+    memberCount: 15,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-06-20T14:30:00Z',
+  },
+  {
+    id: 'dg-2',
+    name: 'Night Shift',
+    type: 'driver',
+    description: 'Drivers working night shifts',
+    color: '#6366F1',
+    memberCount: 10,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-06-20T14:30:00Z',
+  },
+  {
+    id: 'dg-3',
+    name: 'HGV Certified',
+    type: 'driver',
+    description: 'Drivers with HGV certification',
+    color: '#EC4899',
+    memberCount: 8,
+    createdAt: '2024-02-01T09:00:00Z',
+    updatedAt: '2024-05-10T10:00:00Z',
+  },
+];
+
+// Vehicle-Driver Groups (Assignment Groups)
+export const VEHICLE_DRIVER_GROUPS: GarageGroup[] = [
+  {
+    id: 'vdg-1',
+    name: 'Dublin Operations',
+    type: 'vehicle-driver',
+    description: 'Dublin vehicle-driver assignments',
+    color: '#0EA5E9',
+    memberCount: 10,
+    createdAt: '2024-01-20T10:00:00Z',
+    updatedAt: '2024-07-01T09:00:00Z',
+  },
+  {
+    id: 'vdg-2',
+    name: 'Cork Operations',
+    type: 'vehicle-driver',
+    description: 'Cork vehicle-driver assignments',
+    color: '#14B8A6',
+    memberCount: 6,
+    createdAt: '2024-01-20T10:00:00Z',
+    updatedAt: '2024-07-01T09:00:00Z',
+  },
+  {
+    id: 'vdg-3',
+    name: 'Express Delivery',
+    type: 'vehicle-driver',
+    description: 'Express delivery team assignments',
+    color: '#F43F5E',
+    memberCount: 5,
+    createdAt: '2024-03-15T11:00:00Z',
+    updatedAt: '2024-06-25T15:00:00Z',
+  },
+];
+
+// Vehicles
+export const VEHICLES: GarageVehicle[] = [
+  {
+    id: 'v-1',
+    name: 'Transit Custom 01',
+    registrationNumber: '191-D-12345',
+    type: 'van',
+    make: 'Ford',
+    model: 'Transit Custom',
+    year: 2019,
+    fuelType: 'diesel',
+    vin: 'WF0XXXGCDXKA12345',
+    status: 'active',
+    groupId: 'vg-1',
+    assignedDriverId: 'd-1',
+    odometer: 87500,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-12-01T08:30:00Z',
+  },
+  {
+    id: 'v-2',
+    name: 'Sprinter 316',
+    registrationNumber: '201-D-54321',
+    type: 'van',
+    make: 'Mercedes-Benz',
+    model: 'Sprinter 316 CDI',
+    year: 2020,
+    fuelType: 'diesel',
+    vin: 'WDB9066331S123456',
+    status: 'active',
+    groupId: 'vg-1',
+    assignedDriverId: 'd-2',
+    odometer: 65200,
+    createdAt: '2024-02-20T09:00:00Z',
+    updatedAt: '2024-11-28T16:45:00Z',
+  },
+  {
+    id: 'v-3',
+    name: 'eVito',
+    registrationNumber: '221-D-11111',
+    type: 'van',
+    make: 'Mercedes-Benz',
+    model: 'eVito',
+    year: 2022,
+    fuelType: 'electric',
+    vin: 'WDF4470331J789012',
+    status: 'active',
+    groupId: 'vg-4',
+    assignedDriverId: 'd-3',
+    odometer: 32100,
+    createdAt: '2024-03-01T08:00:00Z',
+    updatedAt: '2024-12-10T10:00:00Z',
+  },
+  {
+    id: 'v-4',
+    name: 'Vivaro-e',
+    registrationNumber: '231-C-22222',
+    type: 'van',
+    make: 'Vauxhall',
+    model: 'Vivaro-e',
+    year: 2023,
+    fuelType: 'electric',
+    vin: 'W0V7E8EA5NV123456',
+    status: 'active',
+    groupId: 'vg-2',
+    assignedDriverId: 'd-4',
+    odometer: 18500,
+    createdAt: '2024-04-15T14:00:00Z',
+    updatedAt: '2024-12-05T09:15:00Z',
+  },
+  {
+    id: 'v-5',
+    name: 'Crafter 35',
+    registrationNumber: '181-G-33333',
+    type: 'van',
+    make: 'Volkswagen',
+    model: 'Crafter 35',
+    year: 2018,
+    fuelType: 'diesel',
+    vin: 'WV1ZZZ2KZK8123456',
+    status: 'active',
+    groupId: 'vg-3',
+    odometer: 125800,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-11-20T11:30:00Z',
+  },
+  {
+    id: 'v-6',
+    name: 'Transit Connect',
+    registrationNumber: '211-D-44444',
+    type: 'van',
+    make: 'Ford',
+    model: 'Transit Connect',
+    year: 2021,
+    fuelType: 'petrol',
+    vin: 'WF0TXXWPGTKY12345',
+    status: 'active',
+    groupId: 'vg-1',
+    assignedDriverId: 'd-5',
+    odometer: 45600,
+    createdAt: '2024-05-01T10:00:00Z',
+    updatedAt: '2024-12-08T14:00:00Z',
+  },
+  {
+    id: 'v-7',
+    name: 'Caddy Cargo',
+    registrationNumber: '221-C-55555',
+    type: 'van',
+    make: 'Volkswagen',
+    model: 'Caddy Cargo',
+    year: 2022,
+    fuelType: 'diesel',
+    vin: 'WV2ZZZ2KZNX123456',
+    status: 'active',
+    groupId: 'vg-2',
+    odometer: 28900,
+    createdAt: '2024-06-10T09:00:00Z',
+    updatedAt: '2024-11-15T16:00:00Z',
+  },
+  {
+    id: 'v-8',
+    name: 'Trafic E-Tech',
+    registrationNumber: '241-D-66666',
+    type: 'van',
+    make: 'Renault',
+    model: 'Trafic E-Tech',
+    year: 2024,
+    fuelType: 'electric',
+    vin: 'VF1FL2BTH12345678',
+    status: 'active',
+    groupId: 'vg-4',
+    assignedDriverId: 'd-6',
+    odometer: 5200,
+    createdAt: '2024-09-01T08:00:00Z',
+    updatedAt: '2024-12-12T11:00:00Z',
+  },
+  {
+    id: 'v-9',
+    name: 'Master ZE',
+    registrationNumber: '231-G-77777',
+    type: 'van',
+    make: 'Renault',
+    model: 'Master Z.E.',
+    year: 2023,
+    fuelType: 'electric',
+    vin: 'VF1MA2BTH12345678',
+    status: 'active',
+    groupId: 'vg-3',
+    odometer: 15800,
+    createdAt: '2024-07-15T10:00:00Z',
+    updatedAt: '2024-12-01T09:00:00Z',
+  },
+  {
+    id: 'v-10',
+    name: 'Old Transit',
+    registrationNumber: '151-D-88888',
+    type: 'van',
+    make: 'Ford',
+    model: 'Transit',
+    year: 2015,
+    fuelType: 'diesel',
+    vin: 'WF0XXXTTFXEA12345',
+    status: 'archived',
+    groupId: 'vg-1',
+    odometer: 245000,
+    createdAt: '2020-01-10T10:00:00Z',
+    updatedAt: '2024-06-01T14:00:00Z',
+  },
+  {
+    id: 'v-11',
+    name: 'Retired Sprinter',
+    registrationNumber: '161-C-99999',
+    type: 'van',
+    make: 'Mercedes-Benz',
+    model: 'Sprinter',
+    year: 2016,
+    fuelType: 'diesel',
+    vin: 'WDB9066331S654321',
+    status: 'archived',
+    groupId: 'vg-2',
+    odometer: 289000,
+    createdAt: '2020-03-15T09:00:00Z',
+    updatedAt: '2024-08-20T11:00:00Z',
+  },
+  {
+    id: 'v-12',
+    name: 'Actros 1845',
+    registrationNumber: '191-D-10001',
+    type: 'truck',
+    make: 'Mercedes-Benz',
+    model: 'Actros 1845',
+    year: 2019,
+    fuelType: 'diesel',
+    vin: 'WDB96340310123456',
+    status: 'active',
+    groupId: 'vg-1',
+    assignedDriverId: 'd-7',
+    odometer: 312000,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-12-15T08:00:00Z',
+  },
+];
+
+// Drivers
+export const DRIVERS: GarageDriver[] = [
+  {
+    id: 'd-1',
+    firstName: 'John',
+    lastName: 'Murphy',
+    email: 'john.murphy@example.com',
+    phone: '+353 87 123 4567',
+    licenseNumber: 'IE-DL-123456',
+    licenseExpiry: '2026-05-15',
+    status: 'active',
+    groupId: 'dg-1',
+    assignedVehicleId: 'v-1',
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-11-01T09:00:00Z',
+  },
+  {
+    id: 'd-2',
+    firstName: 'Mary',
+    lastName: "O'Brien",
+    email: 'mary.obrien@example.com',
+    phone: '+353 86 234 5678',
+    licenseNumber: 'IE-DL-234567',
+    licenseExpiry: '2025-09-20',
+    status: 'active',
+    groupId: 'dg-1',
+    assignedVehicleId: 'v-2',
+    createdAt: '2024-01-20T11:00:00Z',
+    updatedAt: '2024-10-15T14:00:00Z',
+  },
+  {
+    id: 'd-3',
+    firstName: 'Patrick',
+    lastName: 'Kelly',
+    email: 'patrick.kelly@example.com',
+    phone: '+353 85 345 6789',
+    licenseNumber: 'IE-DL-345678',
+    licenseExpiry: '2027-03-10',
+    status: 'active',
+    groupId: 'dg-2',
+    assignedVehicleId: 'v-3',
+    createdAt: '2024-02-01T08:00:00Z',
+    updatedAt: '2024-12-01T10:00:00Z',
+  },
+  {
+    id: 'd-4',
+    firstName: 'Sarah',
+    lastName: 'Walsh',
+    email: 'sarah.walsh@example.com',
+    phone: '+353 87 456 7890',
+    licenseNumber: 'IE-DL-456789',
+    licenseExpiry: '2026-11-30',
+    status: 'active',
+    groupId: 'dg-1',
+    assignedVehicleId: 'v-4',
+    createdAt: '2024-03-10T09:00:00Z',
+    updatedAt: '2024-11-20T16:00:00Z',
+  },
+  {
+    id: 'd-5',
+    firstName: 'Michael',
+    lastName: 'Ryan',
+    email: 'michael.ryan@example.com',
+    phone: '+353 86 567 8901',
+    licenseNumber: 'IE-DL-567890',
+    licenseExpiry: '2025-07-25',
+    status: 'active',
+    groupId: 'dg-2',
+    assignedVehicleId: 'v-6',
+    createdAt: '2024-04-01T10:00:00Z',
+    updatedAt: '2024-12-05T11:00:00Z',
+  },
+  {
+    id: 'd-6',
+    firstName: 'Emma',
+    lastName: "O'Connor",
+    email: 'emma.oconnor@example.com',
+    phone: '+353 85 678 9012',
+    licenseNumber: 'IE-DL-678901',
+    licenseExpiry: '2027-01-15',
+    status: 'active',
+    groupId: 'dg-1',
+    assignedVehicleId: 'v-8',
+    createdAt: '2024-05-15T08:00:00Z',
+    updatedAt: '2024-11-10T09:00:00Z',
+  },
+  {
+    id: 'd-7',
+    firstName: 'Sean',
+    lastName: 'Brennan',
+    email: 'sean.brennan@example.com',
+    phone: '+353 87 789 0123',
+    licenseNumber: 'IE-DL-789012',
+    licenseExpiry: '2026-08-20',
+    status: 'active',
+    groupId: 'dg-3',
+    assignedVehicleId: 'v-12',
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-12-10T14:00:00Z',
+  },
+  {
+    id: 'd-8',
+    firstName: 'Aoife',
+    lastName: 'Doyle',
+    email: 'aoife.doyle@example.com',
+    phone: '+353 86 890 1234',
+    licenseNumber: 'IE-DL-890123',
+    licenseExpiry: '2025-12-05',
+    status: 'active',
+    groupId: 'dg-2',
+    createdAt: '2024-06-01T09:00:00Z',
+    updatedAt: '2024-10-25T15:00:00Z',
+  },
+  {
+    id: 'd-9',
+    firstName: 'Conor',
+    lastName: 'McCarthy',
+    email: 'conor.mccarthy@example.com',
+    phone: '+353 85 901 2345',
+    licenseNumber: 'IE-DL-901234',
+    licenseExpiry: '2026-04-10',
+    status: 'active',
+    groupId: 'dg-3',
+    createdAt: '2024-07-10T10:00:00Z',
+    updatedAt: '2024-11-30T11:00:00Z',
+  },
+  {
+    id: 'd-10',
+    firstName: 'Ciara',
+    lastName: 'Fitzgerald',
+    email: 'ciara.fitzgerald@example.com',
+    phone: '+353 87 012 3456',
+    licenseNumber: 'IE-DL-012345',
+    licenseExpiry: '2024-02-28',
+    status: 'archived',
+    groupId: 'dg-1',
+    createdAt: '2022-06-15T08:00:00Z',
+    updatedAt: '2024-03-01T09:00:00Z',
+  },
+  {
+    id: 'd-11',
+    firstName: 'Declan',
+    lastName: 'Byrne',
+    email: 'declan.byrne@example.com',
+    phone: '+353 86 123 4560',
+    licenseNumber: 'IE-DL-123450',
+    licenseExpiry: '2023-11-15',
+    status: 'archived',
+    groupId: 'dg-2',
+    createdAt: '2021-03-20T10:00:00Z',
+    updatedAt: '2024-01-15T14:00:00Z',
+  },
+];
+
+// Vehicle-Driver Assignments
+export const ASSIGNMENTS: VehicleDriverAssignment[] = [
+  {
+    id: 'a-1',
+    vehicleId: 'v-1',
+    driverId: 'd-1',
+    groupId: 'vdg-1',
+    startDate: '2024-01-15',
+    status: 'active',
+    isPrimary: true,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-15T10:00:00Z',
+  },
+  {
+    id: 'a-2',
+    vehicleId: 'v-2',
+    driverId: 'd-2',
+    groupId: 'vdg-1',
+    startDate: '2024-02-20',
+    status: 'active',
+    isPrimary: true,
+    createdAt: '2024-02-20T09:00:00Z',
+    updatedAt: '2024-02-20T09:00:00Z',
+  },
+  {
+    id: 'a-3',
+    vehicleId: 'v-3',
+    driverId: 'd-3',
+    groupId: 'vdg-1',
+    startDate: '2024-03-01',
+    status: 'active',
+    isPrimary: true,
+    createdAt: '2024-03-01T08:00:00Z',
+    updatedAt: '2024-03-01T08:00:00Z',
+  },
+  {
+    id: 'a-4',
+    vehicleId: 'v-4',
+    driverId: 'd-4',
+    groupId: 'vdg-2',
+    startDate: '2024-04-15',
+    status: 'active',
+    isPrimary: true,
+    createdAt: '2024-04-15T14:00:00Z',
+    updatedAt: '2024-04-15T14:00:00Z',
+  },
+  {
+    id: 'a-5',
+    vehicleId: 'v-6',
+    driverId: 'd-5',
+    groupId: 'vdg-3',
+    startDate: '2024-05-01',
+    status: 'active',
+    isPrimary: true,
+    createdAt: '2024-05-01T10:00:00Z',
+    updatedAt: '2024-05-01T10:00:00Z',
+  },
+  {
+    id: 'a-6',
+    vehicleId: 'v-8',
+    driverId: 'd-6',
+    groupId: 'vdg-3',
+    startDate: '2024-09-01',
+    status: 'active',
+    isPrimary: true,
+    createdAt: '2024-09-01T08:00:00Z',
+    updatedAt: '2024-09-01T08:00:00Z',
+  },
+  {
+    id: 'a-7',
+    vehicleId: 'v-12',
+    driverId: 'd-7',
+    groupId: 'vdg-1',
+    startDate: '2024-01-15',
+    status: 'active',
+    isPrimary: true,
+    notes: 'HGV driver - long haul routes',
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-15T10:00:00Z',
+  },
+  {
+    id: 'a-8',
+    vehicleId: 'v-1',
+    driverId: 'd-8',
+    groupId: 'vdg-1',
+    startDate: '2024-06-01',
+    status: 'active',
+    isPrimary: false,
+    notes: 'Backup driver for Transit Custom 01',
+    createdAt: '2024-06-01T09:00:00Z',
+    updatedAt: '2024-06-01T09:00:00Z',
+  },
+  {
+    id: 'a-9',
+    vehicleId: 'v-10',
+    driverId: 'd-10',
+    groupId: 'vdg-1',
+    startDate: '2022-06-15',
+    endDate: '2024-03-01',
+    status: 'archived',
+    isPrimary: true,
+    createdAt: '2022-06-15T08:00:00Z',
+    updatedAt: '2024-03-01T09:00:00Z',
+  },
+  {
+    id: 'a-10',
+    vehicleId: 'v-11',
+    driverId: 'd-11',
+    groupId: 'vdg-2',
+    startDate: '2021-03-20',
+    endDate: '2024-01-15',
+    status: 'archived',
+    isPrimary: true,
+    createdAt: '2021-03-20T10:00:00Z',
+    updatedAt: '2024-01-15T14:00:00Z',
+  },
+];
+
+// Helper functions to get data with relationships populated
+export function getVehiclesWithDrivers(): GarageVehicle[] {
+  return VEHICLES.map((vehicle) => ({
+    ...vehicle,
+  }));
+}
+
+export function getDriversWithVehicles(): GarageDriver[] {
+  return DRIVERS.map((driver) => ({
+    ...driver,
+  }));
+}
+
+export function getAssignmentsWithDetails(): VehicleDriverAssignment[] {
+  return ASSIGNMENTS.map((assignment) => ({
+    ...assignment,
+    vehicle: VEHICLES.find((v) => v.id === assignment.vehicleId),
+    driver: DRIVERS.find((d) => d.id === assignment.driverId),
+  }));
+}
+
+export function getGarageSummary(): GarageSummary {
+  return {
+    totalVehicles: VEHICLES.length,
+    activeVehicles: VEHICLES.filter((v) => v.status === 'active').length,
+    archivedVehicles: VEHICLES.filter((v) => v.status === 'archived').length,
+    totalDrivers: DRIVERS.length,
+    activeDrivers: DRIVERS.filter((d) => d.status === 'active').length,
+    archivedDrivers: DRIVERS.filter((d) => d.status === 'archived').length,
+    totalAssignments: ASSIGNMENTS.length,
+    activeAssignments: ASSIGNMENTS.filter((a) => a.status === 'active').length,
+    archivedAssignments: ASSIGNMENTS.filter((a) => a.status === 'archived')
+      .length,
+    vehicleGroups: VEHICLE_GROUPS.length,
+    driverGroups: DRIVER_GROUPS.length,
+    vehicleDriverGroups: VEHICLE_DRIVER_GROUPS.length,
+  };
+}
+
+// Get vehicles filtered by group
+export function getVehiclesByGroup(groupId: string | null): GarageVehicle[] {
+  if (!groupId) return VEHICLES;
+  return VEHICLES.filter((v) => v.groupId === groupId);
+}
+
+// Get drivers filtered by group
+export function getDriversByGroup(groupId: string | null): GarageDriver[] {
+  if (!groupId) return DRIVERS;
+  return DRIVERS.filter((d) => d.groupId === groupId);
+}
+
+// Get assignments filtered by group
+export function getAssignmentsByGroup(
+  groupId: string | null
+): VehicleDriverAssignment[] {
+  const assignments = getAssignmentsWithDetails();
+  if (!groupId) return assignments;
+  return assignments.filter((a) => a.groupId === groupId);
+}
+
+// Get driver name by ID
+export function getDriverName(driverId: string | undefined): string {
+  if (!driverId) return '-';
+  const driver = DRIVERS.find((d) => d.id === driverId);
+  return driver ? `${driver.firstName} ${driver.lastName}` : '-';
+}
+
+// Get vehicle name by ID
+export function getVehicleName(vehicleId: string | undefined): string {
+  if (!vehicleId) return '-';
+  const vehicle = VEHICLES.find((v) => v.id === vehicleId);
+  return vehicle ? vehicle.name : '-';
+}
+
+// Get group name by ID
+export function getGroupName(groupId: string | undefined): string {
+  if (!groupId) return '-';
+  const allGroups = [
+    ...VEHICLE_GROUPS,
+    ...DRIVER_GROUPS,
+    ...VEHICLE_DRIVER_GROUPS,
+  ];
+  const group = allGroups.find((g) => g.id === groupId);
+  return group ? group.name : '-';
+}
