@@ -15,6 +15,8 @@ import { GarageSidebar } from '@/components/garage/GarageSidebar';
 import { VehiclesTable } from '@/components/garage/VehiclesTable';
 import { DriversTable } from '@/components/garage/DriversTable';
 import { AssignmentsTable } from '@/components/garage/AssignmentsTable';
+import { GroupDialog } from '@/components/garage/GroupDialog';
+import { DeleteGroupDialog } from '@/components/garage/DeleteGroupDialog';
 import {
   VEHICLES,
   DRIVERS,
@@ -22,11 +24,13 @@ import {
   DRIVER_GROUPS,
   VEHICLE_DRIVER_GROUPS,
   getAssignmentsWithDetails,
-  getVehiclesByGroup,
-  getDriversByGroup,
-  getAssignmentsByGroup,
 } from '@/lib/demo/garageData';
-import type { GarageSidebarSection, GarageTabStatus } from '@/types/garage';
+import type {
+  GarageSidebarSection,
+  GarageTabStatus,
+  GarageGroup,
+  GroupType,
+} from '@/types/garage';
 import { cn } from '@/lib/utils';
 
 type TabItem = {
@@ -46,47 +50,74 @@ export default function GaragePage() {
   const [tabStatus, setTabStatus] = useState<GarageTabStatus>('active');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Local state for groups (demo - would be API in production)
+  const [vehicleGroups, setVehicleGroups] =
+    useState<GarageGroup[]>(VEHICLE_GROUPS);
+  const [driverGroups, setDriverGroups] =
+    useState<GarageGroup[]>(DRIVER_GROUPS);
+  const [vehicleDriverGroups, setVehicleDriverGroups] = useState<GarageGroup[]>(
+    VEHICLE_DRIVER_GROUPS
+  );
+
+  // Dialog state
+  const [groupDialogOpen, setGroupDialogOpen] = useState(false);
+  const [groupDialogMode, setGroupDialogMode] = useState<'add' | 'rename'>(
+    'add'
+  );
+  const [groupDialogType, setGroupDialogType] = useState<GroupType>('vehicle');
+  const [selectedGroup, setSelectedGroup] = useState<GarageGroup | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Get all groups combined for lookups
+  const allGroups = useMemo(
+    () => [...vehicleGroups, ...driverGroups, ...vehicleDriverGroups],
+    [vehicleGroups, driverGroups, vehicleDriverGroups]
+  );
+
   // Get data based on selection
-  const vehicles = useMemo(
-    () => getVehiclesByGroup(selectedGroupId),
-    [selectedGroupId]
-  );
-  const drivers = useMemo(
-    () => getDriversByGroup(selectedGroupId),
-    [selectedGroupId]
-  );
-  const assignments = useMemo(
-    () => getAssignmentsByGroup(selectedGroupId),
-    [selectedGroupId]
-  );
+  const vehicles = useMemo(() => {
+    if (!selectedGroupId) return VEHICLES;
+    return VEHICLES.filter((v) => v.groupId === selectedGroupId);
+  }, [selectedGroupId]);
+
+  const drivers = useMemo(() => {
+    if (!selectedGroupId) return DRIVERS;
+    return DRIVERS.filter((d) => d.groupId === selectedGroupId);
+  }, [selectedGroupId]);
+
+  const assignments = useMemo(() => {
+    const allAssignments = getAssignmentsWithDetails();
+    if (!selectedGroupId) return allAssignments;
+    return allAssignments.filter((a) => a.groupId === selectedGroupId);
+  }, [selectedGroupId]);
 
   // Calculate counts for sidebar
   const vehicleCounts = useMemo(() => {
     const byGroup: Record<string, number> = {};
-    VEHICLE_GROUPS.forEach((group) => {
+    vehicleGroups.forEach((group) => {
       byGroup[group.id] = VEHICLES.filter((v) => v.groupId === group.id).length;
     });
     return { all: VEHICLES.length, byGroup };
-  }, []);
+  }, [vehicleGroups]);
 
   const driverCounts = useMemo(() => {
     const byGroup: Record<string, number> = {};
-    DRIVER_GROUPS.forEach((group) => {
+    driverGroups.forEach((group) => {
       byGroup[group.id] = DRIVERS.filter((d) => d.groupId === group.id).length;
     });
     return { all: DRIVERS.length, byGroup };
-  }, []);
+  }, [driverGroups]);
 
   const assignmentCounts = useMemo(() => {
     const allAssignments = getAssignmentsWithDetails();
     const byGroup: Record<string, number> = {};
-    VEHICLE_DRIVER_GROUPS.forEach((group) => {
+    vehicleDriverGroups.forEach((group) => {
       byGroup[group.id] = allAssignments.filter(
         (a) => a.groupId === group.id
       ).length;
     });
     return { all: allAssignments.length, byGroup };
-  }, []);
+  }, [vehicleDriverGroups]);
 
   // Handle selection change
   const handleSelectionChange = (
@@ -98,13 +129,103 @@ export default function GaragePage() {
     setSearchQuery(''); // Reset search when changing selection
   };
 
+  // Handle add group
+  const handleAddGroup = (type: GroupType) => {
+    setGroupDialogMode('add');
+    setGroupDialogType(type);
+    setSelectedGroup(null);
+    setGroupDialogOpen(true);
+  };
+
+  // Handle rename group
+  const handleRenameGroup = (group: GarageGroup) => {
+    setGroupDialogMode('rename');
+    setGroupDialogType(group.type);
+    setSelectedGroup(group);
+    setGroupDialogOpen(true);
+  };
+
+  // Handle delete group
+  const handleDeleteGroup = (group: GarageGroup) => {
+    setSelectedGroup(group);
+    setDeleteDialogOpen(true);
+  };
+
+  // Submit group dialog (add or rename)
+  const handleGroupSubmit = (name: string, color: string) => {
+    const now = new Date().toISOString();
+
+    if (groupDialogMode === 'add') {
+      const newGroup: GarageGroup = {
+        id: `${groupDialogType}-${Date.now()}`,
+        name,
+        type: groupDialogType,
+        color,
+        memberCount: 0,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      switch (groupDialogType) {
+        case 'vehicle':
+          setVehicleGroups((prev) => [...prev, newGroup]);
+          break;
+        case 'driver':
+          setDriverGroups((prev) => [...prev, newGroup]);
+          break;
+        case 'vehicle-driver':
+          setVehicleDriverGroups((prev) => [...prev, newGroup]);
+          break;
+      }
+    } else if (groupDialogMode === 'rename' && selectedGroup) {
+      const updateGroup = (groups: GarageGroup[]) =>
+        groups.map((g) =>
+          g.id === selectedGroup.id ? { ...g, name, color, updatedAt: now } : g
+        );
+
+      switch (selectedGroup.type) {
+        case 'vehicle':
+          setVehicleGroups(updateGroup);
+          break;
+        case 'driver':
+          setDriverGroups(updateGroup);
+          break;
+        case 'vehicle-driver':
+          setVehicleDriverGroups(updateGroup);
+          break;
+      }
+    }
+  };
+
+  // Confirm delete group
+  const handleDeleteConfirm = () => {
+    if (!selectedGroup) return;
+
+    const removeGroup = (groups: GarageGroup[]) =>
+      groups.filter((g) => g.id !== selectedGroup.id);
+
+    switch (selectedGroup.type) {
+      case 'vehicle':
+        setVehicleGroups(removeGroup);
+        break;
+      case 'driver':
+        setDriverGroups(removeGroup);
+        break;
+      case 'vehicle-driver':
+        setVehicleDriverGroups(removeGroup);
+        break;
+    }
+
+    // If the deleted group was selected, go back to "All"
+    if (selectedGroupId === selectedGroup.id) {
+      setSelectedGroupId(null);
+    }
+  };
+
   // Get page title based on selection
   const getPageTitle = () => {
     const groupName =
-      selectedGroupId &&
-      [...VEHICLE_GROUPS, ...DRIVER_GROUPS, ...VEHICLE_DRIVER_GROUPS].find(
-        (g) => g.id === selectedGroupId
-      )?.name;
+      selectedGroupId && allGroups.find((g) => g.id === selectedGroupId)?.name;
 
     switch (selectedSection) {
       case 'vehicles':
@@ -144,15 +265,18 @@ export default function GaragePage() {
     <div className="flex h-full">
       {/* Sidebar */}
       <GarageSidebar
-        vehicleGroups={VEHICLE_GROUPS}
-        driverGroups={DRIVER_GROUPS}
-        vehicleDriverGroups={VEHICLE_DRIVER_GROUPS}
+        vehicleGroups={vehicleGroups}
+        driverGroups={driverGroups}
+        vehicleDriverGroups={vehicleDriverGroups}
         vehicleCounts={vehicleCounts}
         driverCounts={driverCounts}
         assignmentCounts={assignmentCounts}
         selectedSection={selectedSection}
         selectedGroupId={selectedGroupId}
         onSelectionChange={handleSelectionChange}
+        onAddGroup={handleAddGroup}
+        onRenameGroup={handleRenameGroup}
+        onDeleteGroup={handleDeleteGroup}
       />
 
       {/* Main Content */}
@@ -234,6 +358,24 @@ export default function GaragePage() {
           )}
         </div>
       </div>
+
+      {/* Group Dialog */}
+      <GroupDialog
+        open={groupDialogOpen}
+        onOpenChange={setGroupDialogOpen}
+        mode={groupDialogMode}
+        groupType={groupDialogType}
+        group={selectedGroup}
+        onSubmit={handleGroupSubmit}
+      />
+
+      {/* Delete Group Dialog */}
+      <DeleteGroupDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        group={selectedGroup}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }
