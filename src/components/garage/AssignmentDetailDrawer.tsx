@@ -131,8 +131,8 @@ export function AssignmentDetailDrawer({
                 )}
               </SheetTitle>
               <SheetDescription className="flex items-center gap-2">
-                {assignment.vehicle?.name} → {assignment.driver?.firstName}{' '}
-                {assignment.driver?.lastName}
+                {assignment.vehicle?.description} →{' '}
+                {assignment.driver?.firstName} {assignment.driver?.lastName}
                 <Badge
                   variant={isArchived ? 'secondary' : 'default'}
                   className={cn(

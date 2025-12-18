@@ -115,7 +115,7 @@ export function AddAssignmentDialog({
                   {activeVehicles.map((v) => (
                     <SelectItem key={v.id} value={v.id}>
                       <div className="flex flex-col">
-                        <span>{v.name}</span>
+                        <span>{v.description}</span>
                         <span className="text-xs text-gray-500">
                           {v.registrationNumber}
                         </span>

@@ -45,7 +45,7 @@ export function AssignmentsTable({
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (a) =>
-          a.vehicle?.name.toLowerCase().includes(query) ||
+          a.vehicle?.description.toLowerCase().includes(query) ||
           a.vehicle?.registrationNumber.toLowerCase().includes(query) ||
           a.driver?.firstName.toLowerCase().includes(query) ||
           a.driver?.lastName.toLowerCase().includes(query) ||
@@ -85,11 +85,11 @@ export function AssignmentsTable({
       {
         id: 'vehicle',
         header: 'Vehicle',
-        accessorFn: (row) => row.vehicle?.name || '-',
+        accessorFn: (row) => row.vehicle?.description || '-',
         cell: ({ row }) => (
           <div>
             <div className="font-medium">
-              {row.original.vehicle?.name || '-'}
+              {row.original.vehicle?.description || '-'}
             </div>
             <div className="text-xs text-gray-500">
               {row.original.vehicle?.registrationNumber || ''}
