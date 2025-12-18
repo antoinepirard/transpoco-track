@@ -21,6 +21,7 @@ interface VehiclesTableProps {
   vehicles: GarageVehicle[];
   tabStatus: GarageTabStatus;
   searchQuery: string;
+  onRowClick?: (vehicle: GarageVehicle) => void;
 }
 
 const fuelTypeColors: Record<string, string> = {
@@ -43,6 +44,7 @@ export function VehiclesTable({
   vehicles,
   tabStatus,
   searchQuery,
+  onRowClick,
 }: VehiclesTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -248,13 +250,23 @@ export function VehiclesTable({
             table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                className={cn(
+                  'border-b border-gray-100 hover:bg-gray-50 transition-colors',
+                  onRowClick && 'cursor-pointer'
+                )}
+                onClick={() => onRowClick?.(row.original)}
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
                     className="px-4 py-3"
                     style={{ width: cell.column.getSize() }}
+                    onClick={(e) => {
+                      // Prevent row click when clicking on checkbox
+                      if (cell.column.id === 'select') {
+                        e.stopPropagation();
+                      }
+                    }}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>

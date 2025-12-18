@@ -7,3 +7,6 @@ export { DeleteGroupDialog } from './DeleteGroupDialog';
 export { AddVehicleDialog } from './AddVehicleDialog';
 export { AddDriverDialog } from './AddDriverDialog';
 export { AddAssignmentDialog } from './AddAssignmentDialog';
+export { VehicleDetailDrawer } from './VehicleDetailDrawer';
+export { DriverDetailDrawer } from './DriverDetailDrawer';
+export { AssignmentDetailDrawer } from './AssignmentDetailDrawer';

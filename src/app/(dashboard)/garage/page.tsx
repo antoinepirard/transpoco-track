@@ -20,6 +20,9 @@ import { DeleteGroupDialog } from '@/components/garage/DeleteGroupDialog';
 import { AddVehicleDialog } from '@/components/garage/AddVehicleDialog';
 import { AddDriverDialog } from '@/components/garage/AddDriverDialog';
 import { AddAssignmentDialog } from '@/components/garage/AddAssignmentDialog';
+import { VehicleDetailDrawer } from '@/components/garage/VehicleDetailDrawer';
+import { DriverDetailDrawer } from '@/components/garage/DriverDetailDrawer';
+import { AssignmentDetailDrawer } from '@/components/garage/AssignmentDetailDrawer';
 import {
   VEHICLES as INITIAL_VEHICLES,
   DRIVERS as INITIAL_DRIVERS,
@@ -85,6 +88,19 @@ export default function GaragePage() {
   const [addVehicleDialogOpen, setAddVehicleDialogOpen] = useState(false);
   const [addDriverDialogOpen, setAddDriverDialogOpen] = useState(false);
   const [addAssignmentDialogOpen, setAddAssignmentDialogOpen] = useState(false);
+
+  // Detail drawer states
+  const [selectedVehicle, setSelectedVehicle] = useState<GarageVehicle | null>(
+    null
+  );
+  const [selectedDriver, setSelectedDriver] = useState<GarageDriver | null>(
+    null
+  );
+  const [selectedAssignment, setSelectedAssignment] =
+    useState<VehicleDriverAssignment | null>(null);
+  const [vehicleDrawerOpen, setVehicleDrawerOpen] = useState(false);
+  const [driverDrawerOpen, setDriverDrawerOpen] = useState(false);
+  const [assignmentDrawerOpen, setAssignmentDrawerOpen] = useState(false);
 
   // Get all groups combined for lookups
   const allGroups = useMemo(
@@ -160,6 +176,22 @@ export default function GaragePage() {
     }
   };
 
+  // Handle row clicks to open drawers
+  const handleVehicleRowClick = (vehicle: GarageVehicle) => {
+    setSelectedVehicle(vehicle);
+    setVehicleDrawerOpen(true);
+  };
+
+  const handleDriverRowClick = (driver: GarageDriver) => {
+    setSelectedDriver(driver);
+    setDriverDrawerOpen(true);
+  };
+
+  const handleAssignmentRowClick = (assignment: VehicleDriverAssignment) => {
+    setSelectedAssignment(assignment);
+    setAssignmentDrawerOpen(true);
+  };
+
   // Handle add vehicle
   const handleAddVehicle = (
     vehicleData: Omit<GarageVehicle, 'id' | 'createdAt' | 'updatedAt'>
@@ -208,6 +240,113 @@ export default function GaragePage() {
       updatedAt: now,
     };
     setAssignments((prev) => [newAssignment, ...prev]);
+  };
+
+  // Handle save vehicle
+  const handleSaveVehicle = (vehicle: GarageVehicle) => {
+    setVehicles((prev) => prev.map((v) => (v.id === vehicle.id ? vehicle : v)));
+    setSelectedVehicle(vehicle);
+  };
+
+  // Handle archive/restore vehicle
+  const handleArchiveVehicle = (vehicle: GarageVehicle) => {
+    const updated = {
+      ...vehicle,
+      status: 'archived' as const,
+      updatedAt: new Date().toISOString(),
+    };
+    setVehicles((prev) => prev.map((v) => (v.id === vehicle.id ? updated : v)));
+    setSelectedVehicle(updated);
+  };
+
+  const handleRestoreVehicle = (vehicle: GarageVehicle) => {
+    const updated = {
+      ...vehicle,
+      status: 'active' as const,
+      updatedAt: new Date().toISOString(),
+    };
+    setVehicles((prev) => prev.map((v) => (v.id === vehicle.id ? updated : v)));
+    setSelectedVehicle(updated);
+  };
+
+  // Handle delete vehicle
+  const handleDeleteVehicle = (vehicle: GarageVehicle) => {
+    setVehicles((prev) => prev.filter((v) => v.id !== vehicle.id));
+    setVehicleDrawerOpen(false);
+  };
+
+  // Handle save driver
+  const handleSaveDriver = (driver: GarageDriver) => {
+    setDrivers((prev) => prev.map((d) => (d.id === driver.id ? driver : d)));
+    setSelectedDriver(driver);
+  };
+
+  // Handle archive/restore driver
+  const handleArchiveDriver = (driver: GarageDriver) => {
+    const updated = {
+      ...driver,
+      status: 'archived' as const,
+      updatedAt: new Date().toISOString(),
+    };
+    setDrivers((prev) => prev.map((d) => (d.id === driver.id ? updated : d)));
+    setSelectedDriver(updated);
+  };
+
+  const handleRestoreDriver = (driver: GarageDriver) => {
+    const updated = {
+      ...driver,
+      status: 'active' as const,
+      updatedAt: new Date().toISOString(),
+    };
+    setDrivers((prev) => prev.map((d) => (d.id === driver.id ? updated : d)));
+    setSelectedDriver(updated);
+  };
+
+  // Handle delete driver
+  const handleDeleteDriver = (driver: GarageDriver) => {
+    setDrivers((prev) => prev.filter((d) => d.id !== driver.id));
+    setDriverDrawerOpen(false);
+  };
+
+  // Handle save assignment
+  const handleSaveAssignment = (assignment: VehicleDriverAssignment) => {
+    setAssignments((prev) =>
+      prev.map((a) => (a.id === assignment.id ? assignment : a))
+    );
+    setSelectedAssignment(assignment);
+  };
+
+  // Handle archive/restore assignment
+  const handleArchiveAssignment = (assignment: VehicleDriverAssignment) => {
+    const updated = {
+      ...assignment,
+      status: 'archived' as const,
+      endDate: new Date().toISOString().split('T')[0],
+      updatedAt: new Date().toISOString(),
+    };
+    setAssignments((prev) =>
+      prev.map((a) => (a.id === assignment.id ? updated : a))
+    );
+    setSelectedAssignment(updated);
+  };
+
+  const handleRestoreAssignment = (assignment: VehicleDriverAssignment) => {
+    const updated = {
+      ...assignment,
+      status: 'active' as const,
+      endDate: undefined,
+      updatedAt: new Date().toISOString(),
+    };
+    setAssignments((prev) =>
+      prev.map((a) => (a.id === assignment.id ? updated : a))
+    );
+    setSelectedAssignment(updated);
+  };
+
+  // Handle delete assignment
+  const handleDeleteAssignment = (assignment: VehicleDriverAssignment) => {
+    setAssignments((prev) => prev.filter((a) => a.id !== assignment.id));
+    setAssignmentDrawerOpen(false);
   };
 
   // Handle add group
@@ -424,6 +563,7 @@ export default function GaragePage() {
               vehicles={filteredVehicles}
               tabStatus={tabStatus}
               searchQuery={searchQuery}
+              onRowClick={handleVehicleRowClick}
             />
           )}
           {selectedSection === 'drivers' && (
@@ -431,6 +571,7 @@ export default function GaragePage() {
               drivers={filteredDrivers}
               tabStatus={tabStatus}
               searchQuery={searchQuery}
+              onRowClick={handleDriverRowClick}
             />
           )}
           {selectedSection === 'assignments' && (
@@ -438,6 +579,7 @@ export default function GaragePage() {
               assignments={filteredAssignments}
               tabStatus={tabStatus}
               searchQuery={searchQuery}
+              onRowClick={handleAssignmentRowClick}
             />
           )}
         </div>
@@ -485,6 +627,44 @@ export default function GaragePage() {
         drivers={drivers}
         assignmentGroups={vehicleDriverGroups}
         onSubmit={handleAddAssignment}
+      />
+
+      {/* Vehicle Detail Drawer */}
+      <VehicleDetailDrawer
+        open={vehicleDrawerOpen}
+        onOpenChange={setVehicleDrawerOpen}
+        vehicle={selectedVehicle}
+        vehicleGroups={vehicleGroups}
+        onSave={handleSaveVehicle}
+        onArchive={handleArchiveVehicle}
+        onRestore={handleRestoreVehicle}
+        onDelete={handleDeleteVehicle}
+      />
+
+      {/* Driver Detail Drawer */}
+      <DriverDetailDrawer
+        open={driverDrawerOpen}
+        onOpenChange={setDriverDrawerOpen}
+        driver={selectedDriver}
+        driverGroups={driverGroups}
+        onSave={handleSaveDriver}
+        onArchive={handleArchiveDriver}
+        onRestore={handleRestoreDriver}
+        onDelete={handleDeleteDriver}
+      />
+
+      {/* Assignment Detail Drawer */}
+      <AssignmentDetailDrawer
+        open={assignmentDrawerOpen}
+        onOpenChange={setAssignmentDrawerOpen}
+        assignment={selectedAssignment}
+        vehicles={vehicles}
+        drivers={drivers}
+        assignmentGroups={vehicleDriverGroups}
+        onSave={handleSaveAssignment}
+        onArchive={handleArchiveAssignment}
+        onRestore={handleRestoreAssignment}
+        onDelete={handleDeleteAssignment}
       />
     </div>
   );

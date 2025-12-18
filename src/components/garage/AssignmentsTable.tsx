@@ -26,12 +26,14 @@ interface AssignmentsTableProps {
   assignments: VehicleDriverAssignment[];
   tabStatus: GarageTabStatus;
   searchQuery: string;
+  onRowClick?: (assignment: VehicleDriverAssignment) => void;
 }
 
 export function AssignmentsTable({
   assignments,
   tabStatus,
   searchQuery,
+  onRowClick,
 }: AssignmentsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});
@@ -249,13 +251,22 @@ export function AssignmentsTable({
             table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                className={cn(
+                  'border-b border-gray-100 hover:bg-gray-50 transition-colors',
+                  onRowClick && 'cursor-pointer'
+                )}
+                onClick={() => onRowClick?.(row.original)}
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
                     className="px-4 py-3"
                     style={{ width: cell.column.getSize() }}
+                    onClick={(e) => {
+                      if (cell.column.id === 'select') {
+                        e.stopPropagation();
+                      }
+                    }}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
