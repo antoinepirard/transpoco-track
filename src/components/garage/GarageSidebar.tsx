@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import {
   TruckIcon,
   UsersIcon,
@@ -11,8 +12,11 @@ import {
   PlusIcon,
   PencilSimpleIcon,
   TrashIcon,
+  MagnifyingGlassIcon,
+  CaretRightIcon as ChevronRightIcon,
 } from '@phosphor-icons/react';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +29,8 @@ import type {
   GroupType,
 } from '@/types/garage';
 import { cn } from '@/lib/utils';
+
+const MAX_VISIBLE_GROUPS = 5;
 
 interface SidebarItemProps {
   label: string;
@@ -179,6 +185,9 @@ interface SidebarSectionProps {
   onToggle: () => void;
   onAddGroup: () => void;
   children: React.ReactNode;
+  totalGroupCount: number;
+  visibleGroupCount: number;
+  sectionType: GroupType;
 }
 
 function SidebarSection({
@@ -188,7 +197,12 @@ function SidebarSection({
   onToggle,
   onAddGroup,
   children,
+  totalGroupCount,
+  visibleGroupCount,
+  sectionType,
 }: SidebarSectionProps) {
+  const hasMoreGroups = totalGroupCount > visibleGroupCount;
+
   return (
     <div className="border-b border-gray-200 last:border-b-0">
       <button
@@ -206,6 +220,18 @@ function SidebarSection({
       {isExpanded && (
         <div className="px-2 pb-2 space-y-0.5">
           {children}
+
+          {/* See all groups link */}
+          {hasMoreGroups && (
+            <Link
+              href={`/garage/groups?type=${sectionType}`}
+              className="w-full flex items-center justify-between px-3 py-1.5 text-sm text-[#3D88C5] hover:text-[#2d6a9e] hover:bg-gray-100 rounded-md transition-colors"
+            >
+              <span>See all {totalGroupCount} groups</span>
+              <ChevronRightIcon className="w-4 h-4" />
+            </Link>
+          )}
+
           <button
             onClick={onAddGroup}
             className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
@@ -254,6 +280,56 @@ export function GarageSidebar({
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['vehicles', 'drivers', 'assignments'])
   );
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Sort groups by updatedAt (most recent first) and filter by search
+  const processGroups = useMemo(() => {
+    const sortByRecent = (groups: GarageGroup[]) =>
+      [...groups].sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
+
+    const filterBySearch = (groups: GarageGroup[]) =>
+      searchQuery.trim()
+        ? groups.filter((g) =>
+            g.name.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        : groups;
+
+    const limitGroups = (groups: GarageGroup[], isSearching: boolean) =>
+      isSearching ? groups : groups.slice(0, MAX_VISIBLE_GROUPS);
+
+    const isSearching = searchQuery.trim().length > 0;
+
+    return {
+      vehicles: {
+        all: sortByRecent(vehicleGroups),
+        filtered: filterBySearch(sortByRecent(vehicleGroups)),
+        visible: limitGroups(
+          filterBySearch(sortByRecent(vehicleGroups)),
+          isSearching
+        ),
+      },
+      drivers: {
+        all: sortByRecent(driverGroups),
+        filtered: filterBySearch(sortByRecent(driverGroups)),
+        visible: limitGroups(
+          filterBySearch(sortByRecent(driverGroups)),
+          isSearching
+        ),
+      },
+      assignments: {
+        all: sortByRecent(vehicleDriverGroups),
+        filtered: filterBySearch(sortByRecent(vehicleDriverGroups)),
+        visible: limitGroups(
+          filterBySearch(sortByRecent(vehicleDriverGroups)),
+          isSearching
+        ),
+      },
+      isSearching,
+    };
+  }, [vehicleGroups, driverGroups, vehicleDriverGroups, searchQuery]);
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => {
@@ -287,6 +363,20 @@ export function GarageSidebar({
         <p className="text-sm text-gray-500">Manage your fleet</p>
       </div>
 
+      {/* Global Search */}
+      <div className="px-3 py-2 border-b border-gray-200">
+        <div className="relative">
+          <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search groups..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 h-8 text-sm"
+          />
+        </div>
+      </div>
+
       <div className="flex-1 overflow-y-auto">
         {/* Vehicles Section */}
         <SidebarSection
@@ -295,6 +385,9 @@ export function GarageSidebar({
           isExpanded={expandedSections.has('vehicles')}
           onToggle={() => toggleSection('vehicles')}
           onAddGroup={() => onAddGroup?.('vehicle')}
+          totalGroupCount={processGroups.vehicles.all.length}
+          visibleGroupCount={processGroups.vehicles.visible.length}
+          sectionType="vehicle"
         >
           <SidebarItem
             label="All Vehicles"
@@ -302,7 +395,13 @@ export function GarageSidebar({
             isActive={isItemActive('vehicles', null)}
             onClick={() => onSelectionChange('vehicles', null)}
           />
-          {vehicleGroups.map((group) => (
+          {processGroups.vehicles.visible.length > 0 &&
+            !processGroups.isSearching && (
+              <p className="px-3 pt-2 pb-1 text-xs text-gray-400 uppercase tracking-wide">
+                Recently used
+              </p>
+            )}
+          {processGroups.vehicles.visible.map((group) => (
             <GroupItem
               key={group.id}
               group={group}
@@ -313,6 +412,10 @@ export function GarageSidebar({
               onDelete={handleDelete}
             />
           ))}
+          {processGroups.isSearching &&
+            processGroups.vehicles.filtered.length === 0 && (
+              <p className="px-3 py-2 text-xs text-gray-400">No groups found</p>
+            )}
         </SidebarSection>
 
         {/* Drivers Section */}
@@ -322,6 +425,9 @@ export function GarageSidebar({
           isExpanded={expandedSections.has('drivers')}
           onToggle={() => toggleSection('drivers')}
           onAddGroup={() => onAddGroup?.('driver')}
+          totalGroupCount={processGroups.drivers.all.length}
+          visibleGroupCount={processGroups.drivers.visible.length}
+          sectionType="driver"
         >
           <SidebarItem
             label="All Drivers"
@@ -329,7 +435,13 @@ export function GarageSidebar({
             isActive={isItemActive('drivers', null)}
             onClick={() => onSelectionChange('drivers', null)}
           />
-          {driverGroups.map((group) => (
+          {processGroups.drivers.visible.length > 0 &&
+            !processGroups.isSearching && (
+              <p className="px-3 pt-2 pb-1 text-xs text-gray-400 uppercase tracking-wide">
+                Recently used
+              </p>
+            )}
+          {processGroups.drivers.visible.map((group) => (
             <GroupItem
               key={group.id}
               group={group}
@@ -340,6 +452,10 @@ export function GarageSidebar({
               onDelete={handleDelete}
             />
           ))}
+          {processGroups.isSearching &&
+            processGroups.drivers.filtered.length === 0 && (
+              <p className="px-3 py-2 text-xs text-gray-400">No groups found</p>
+            )}
         </SidebarSection>
 
         {/* Assignments Section */}
@@ -349,6 +465,9 @@ export function GarageSidebar({
           isExpanded={expandedSections.has('assignments')}
           onToggle={() => toggleSection('assignments')}
           onAddGroup={() => onAddGroup?.('vehicle-driver')}
+          totalGroupCount={processGroups.assignments.all.length}
+          visibleGroupCount={processGroups.assignments.visible.length}
+          sectionType="vehicle-driver"
         >
           <SidebarItem
             label="All Assignments"
@@ -356,7 +475,13 @@ export function GarageSidebar({
             isActive={isItemActive('assignments', null)}
             onClick={() => onSelectionChange('assignments', null)}
           />
-          {vehicleDriverGroups.map((group) => (
+          {processGroups.assignments.visible.length > 0 &&
+            !processGroups.isSearching && (
+              <p className="px-3 pt-2 pb-1 text-xs text-gray-400 uppercase tracking-wide">
+                Recently used
+              </p>
+            )}
+          {processGroups.assignments.visible.map((group) => (
             <GroupItem
               key={group.id}
               group={group}
@@ -367,6 +492,10 @@ export function GarageSidebar({
               onDelete={handleDelete}
             />
           ))}
+          {processGroups.isSearching &&
+            processGroups.assignments.filtered.length === 0 && (
+              <p className="px-3 py-2 text-xs text-gray-400">No groups found</p>
+            )}
         </SidebarSection>
       </div>
     </div>
