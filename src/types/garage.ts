@@ -35,6 +35,7 @@ export interface GarageVehicle {
   // Identification
   vin?: string;
   cameraSerialNumber?: string;
+  trackerId?: string; // Tracker device ID
   // Display & Labeling
   label?: string;
   labelColor?: LabelColor;
@@ -121,8 +122,8 @@ export interface GarageSidebarSelection {
   groupId: string | null; // null means "All"
 }
 
-// Tab types for Active/Archived views
-export type GarageTabStatus = 'active' | 'archived';
+// Tab types for Active/Archived/Untracked views
+export type GarageTabStatus = 'active' | 'archived' | 'untracked';
 
 // Dashboard summary
 export interface GarageSummary {

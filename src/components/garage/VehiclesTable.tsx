@@ -42,7 +42,15 @@ export function VehiclesTable({
   const [rowSelection, setRowSelection] = useState({});
 
   const filteredVehicles = useMemo(() => {
-    let filtered = vehicles.filter((v) => v.status === tabStatus);
+    let filtered: GarageVehicle[];
+
+    if (tabStatus === 'untracked') {
+      // Untracked: active vehicles without a tracker device
+      filtered = vehicles.filter((v) => v.status === 'active' && !v.trackerId);
+    } else {
+      // Active/Archived: filter by status
+      filtered = vehicles.filter((v) => v.status === tabStatus);
+    }
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();

@@ -49,6 +49,7 @@ type TabItem = {
 
 const tabs: TabItem[] = [
   { id: 'active', label: 'Active' },
+  { id: 'untracked', label: 'Untracked' },
   { id: 'archived', label: 'Archived' },
 ];
 
